@@ -1,0 +1,90 @@
+---
+
+# In the second task we are looking at CurrentBuild since that value is used by winver.exe, the atlernative was CurrentBuildNumber.
+- name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level."
+  block:
+      - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level. | Get OS Release value"
+        win_reg_stat:
+            path: HKLM:\Software\Microsoft\Windows NT\CurrentVersion
+            name: ReleaseId
+        changed_when: false
+        register: win10_00_000040_audit_releaseid
+        failed_when:
+            - win10_00_000040_audit_releaseid.value is not version('1909','>=') or
+              win10_00_000040_audit_releaseid.value is version('1507', '==') or
+              win10_00_000040_audit_releaseid.value is version('1607', '==') or
+              win10_00_000040_audit_releaseid.value is version('1809', '==')
+
+      - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level | Get OS Build value"
+        win_reg_stat:
+            path: HKLM:\Software\Microsoft\Windows NT\CurrentVersion
+            name: CurrentBuild
+        changed_when: false
+        register: win10_00_000040_audit_currentbuild
+        failed_when:
+            - win10_00_000040_audit_currentbuild.value is not version('1863', '>=') or
+              win10_00_000040_audit_currentbuild.value is version('10240', '==') or
+              win10_00_000040_audit_currentbuild.value is version('14393', '==') or
+              win10_00_000040_audit_currentbuild.value is version('17763', '==')
+  when:
+      - win10_00_000040
+  tags:
+      - WN10-00-000040
+      - CAT1
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220706r646212_rule
+      - V-220706
+
+# Using ansible.windows.win_service_info because there is a bug in win_service with permissions
+# Below is the link to the most recent thing I can find on the issue. There are a few others that are the same but a bit older
+# https://githubmemory.com/repo/ansible-collections/ansible.windows/issues/269
+- name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program"
+  block:
+      - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program | Get AV service status"
+        ansible.windows.win_service_info:
+            name: "{{ win10stig_av_sftw }}"
+        changed_when: false
+        failed_when: false
+        register: win10_00_000045_av_sftw_status
+
+      - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program | Alert on service not running"
+        debug:
+            msg:
+                - "ALERT! You do not have any AV software running"
+                - "Please enable defender or a 3rd party AV software like McAfee or Symantec"
+        when:
+            - win10_00_000045_av_sftw_status.services[0].state != "started"
+  when:
+      - win10_00_000045
+  tags:
+      - WIN10-00-000045
+      - CAT1
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220707r569187_rule
+      - V-220707
+
+- name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS"
+  block:
+      - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS | Get disk facts"
+        win_disk_facts:
+
+      - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS | Set file system type variable"
+        set_fact:
+            win10_00_000050_c_volume_info: "{{ ansible_facts.disks[0].partitions | json_query('[?drive_letter == `C`] | [0].volumes') | json_query('[?type == `NTFS`] | [0].type') }}"
+
+      - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS | Alert on non-NTFS File System"
+        debug:
+            msg:
+                - "AERT! You do not have an NTFS file system. Please format the C:\ to NTFS"
+        when: win10_00_000050_c_volume_info != "NTFS"
+  when:
+      - win10_00_000050
+  tags:
+      - WN10-00-000050
+      - CAT1
+      - CCI-000213
+      - SRG-OS-000080-GPOS-00048
+      - SV-220708r569187_rule
+      - V-220708

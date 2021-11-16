@@ -1,2 +1,55 @@
 ---
-# defaults file for .
+
+win10stig_cat1_patch: yes
+win10stig_cat2_patch: yes
+win10stig_cat3_patch: yes
+
+win10stig_min_ansible_version: "2.6"
+
+# We've defined complexity-high to mean that we cannot automatically remediate
+# the rule in question.  In the future this might mean that the remediation
+# may fail in some cases.
+win10stig_complexity_high: no
+
+# Show "changed" for complex items not remediated per complexity-high setting
+# to make them stand out.  "changed" items on a second run of the role would
+# indicate items requiring manual review.
+win10stig_audit_complex: yes
+
+# We've defined disruption-high to indicate items that are likely to cause
+# disruption in a normal workflow.  These items can be remediated automatically
+# but are disabled by default to avoid disruption.
+win10stig_disruption_high: no
+
+# Show "changed" for disruptive items not remediated per disruption-high
+# setting to make them stand out.
+win10stig_audit_disruptive: yes
+
+winstig_skip_for_travis: false
+
+# Some tasks need to be skipped for CI/CD testing to work correctly
+winstig_skip_for_test: false
+
+win10stig_workaround_for_disa_benchmark: true
+win10stig_workaround_for_ssg_benchmark: true
+
+# tweak role to run in a non-privileged container
+win10stig_system_is_container: no
+
+# These variables correspond with the STIG IDs defined in the STIG and allows you to enable/disable specific rules.
+# PLEASE NOTE: These work in coordination with the cat1, cat2, cat3 group variables. You must enable an entire group
+# in order for the variables below to take effect.
+# CAT 1 rules
+win10_00_000040: true
+win10_00_000045: true
+win10_00_000050: true
+
+
+# Variables related to individual tasks
+# CAT1
+
+# WN10-00-000045 
+# win10stig_av_sftw is the service name of the AV software you are using. This is Service Name, not Display Name
+# Windows Defender = WinDefend
+# To be STIG compliant you need to have either Windows Defender AV enabled/running or a 3rd party AV running (McAfee or Symantec for example)
+win10stig_av_sftw: WinDefend

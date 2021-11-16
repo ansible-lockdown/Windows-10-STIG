@@ -1,0 +1,19 @@
+---
+
+# - name: "PRELIM | Detect if Trusted Platform Module (TPM) is available"
+#   win_shell: (Get-CimInstance -ClassName Win32_OperatingSystem).ProductType
+#   register: win10stig_tpm_enabled
+#   changed_when: no
+#   failed_when: no
+#   tags:
+#       - always
+
+# - name: "PRELIM | Detect if Remote Desktop Services (RDP) is enabled"
+#   win_reg_stat:
+#       path: HKLM:\System\CurrentControlSet\Control\Terminal Server
+#       name: fDenyTSConnections
+#   register: win10stig_rdp_enabled
+#   changed_when: no
+#   failed_when: no
+#   tags:
+#       - always

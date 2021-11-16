@@ -1,2 +1,38 @@
 ---
-# tasks file for .
+
+- name: Gather distribution info
+  setup:
+      gather_subset: distribution,!all,!min
+  when:
+      - ansible_distribution is not defined
+  tags:
+      - always
+
+- name: Check OS version and family
+  assert:
+      that:
+          - ansible_os_family == 'Windows'
+          - ansible_distribution | regex_search('(Microsoft Windows 10)')
+      success_msg: "{{ ansible_distribution }} {{ ansible_distribution_major_version }} is the detected operating system."
+      fail_msg: "This role can only be run against Windows 10 Editions. {{ ansible_distribution }} {{ ansible_distribution_major_version }} is not supported."
+  tags:
+      - always
+
+- name: Check ansible version
+  assert:
+      that: ansible_version.full is version_compare(win2016stig_min_ansible_version, '>=')
+      msg: You must use Ansible {{ win10stig_min_ansible_version }} or greater
+  tags:
+      - always
+
+- name: Include the preliminary tasks
+  include_tasks: prelim.yml
+  tags:
+      - prelim_tasks
+
+- name: Execute the category 1 (highest severity) tasks
+  import_tasks: cat1.yml
+  when: win10stig_cat1_patch | bool
+  tags:
+      - cat1
+      - high
