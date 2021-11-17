@@ -20,7 +20,7 @@
 
 - name: Check ansible version
   assert:
-      that: ansible_version.full is version_compare(win2016stig_min_ansible_version, '>=')
+      that: ansible_version.full is version_compare(win10stig_min_ansible_version, '>=')
       msg: You must use Ansible {{ win10stig_min_ansible_version }} or greater
   tags:
       - always

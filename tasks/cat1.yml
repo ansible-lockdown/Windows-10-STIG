@@ -27,7 +27,7 @@
               win10_00_000040_audit_currentbuild.value is version('14393', '==') or
               win10_00_000040_audit_currentbuild.value is version('17763', '==')
   when:
-      - win10_00_000040
+      - wn10_00_000040
   tags:
       - WN10-00-000040
       - CAT1
@@ -56,7 +56,7 @@
         when:
             - win10_00_000045_av_sftw_status.services[0].state != "started"
   when:
-      - win10_00_000045
+      - wn10_00_000045
   tags:
       - WIN10-00-000045
       - CAT1
@@ -80,7 +80,7 @@
                 - "AERT! You do not have an NTFS file system. Please format the C:\ to NTFS"
         when: win10_00_000050_c_volume_info != "NTFS"
   when:
-      - win10_00_000050
+      - wn10_00_000050
   tags:
       - WN10-00-000050
       - CAT1
@@ -88,3 +88,383 @@
       - SRG-OS-000080-GPOS-00048
       - SV-220708r569187_rule
       - V-220708
+
+- name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system."
+  debug:
+      msg:
+          - The following users or groups have Administrator rights on this system
+          - "{{ wn10stig_admin_users_groups.stdout.split('\n') }}"
+  when:
+      - wn10_00_000070
+  tags:
+      - WN10-00-000070
+      - CAT1
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220712r569187_rule
+      - V-220712
+
+- name: "HIGH | WN10-00-000100 | PATCH | Internet Information System (IIS) or its subcomponents must not be installed on a workstation."
+  win_optional_feature:
+      name: "{{ item }}"
+      state: absent
+  with_items:
+      - IIS-WebServer
+      - IIS-HostableWebCore
+  when:
+      - wn10_00_000100
+      - not win10stig_web_server
+  tags:
+      - WN10-00-000100
+      - CAT1
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220718r569187_rule
+      - V-220718
+
+- name: "HIGH | WN10-00-000145 | PATCH | Data Execution Prevention (DEP) must be configured to at least OptOut."
+  win_command: bcdedit.exe /set {current} nx {{ wn10stig_dep_value }}
+  when:
+      - wn10_00_000145
+  tags:
+      - WN10-00-000145
+      - CAT1
+      - CCI-002824
+      - SRG-OS-000433-GPOS-00192
+      - SV-220726r569187_rule
+      - V-220726
+
+- name: "HIGH | WN10-00-000150 | PATCH | Structured Exception Handling Overwrite Protection (SEHOP) must be enabled."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel
+      value: DisableExceptionChainValidation
+      state: present
+      data: 0
+      datatype: dword
+  when:
+      - wn10_00_000150
+  tags:
+      - WN10-00-000150
+      - CAT1
+      - CCI-002824
+      - SRG-OS-000433-GPOS-00192
+      - SV-220727r569187_rule
+      - V-220727
+
+- name: "HIGH | WN10-00-000240 | AUDIT | Administrative accounts must not be used with applications that access the Internet, such as web browsers, or with potential Internet sources, such as email."
+  debug:
+      msg:
+          - "The following users or groups have Administrator rights on this system"
+          - "You will need to confirm that none of these accounts have access to the internet, such as web browsers, or with potential Internet soruces, such as email"
+          - "{{ wn10stig_admin_users_groups.stdout.split('\n') }}"
+  when:
+      - wn10_00_000240
+  tags:
+      - WN10-00-000240
+      - CAT1
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220737r569187_rule
+      - V-220737
+
+- name: "HIGH | WN10-AC-000045 | PATCH | Reversible password encryption must be disabled."
+  win_security_policy:
+      section: System Access
+      key: ClearTextPassword
+      value: "0"
+  when:
+      - wn10_AC_000045
+  tags:
+      - WN10-AC-000045
+      - CAT1
+      - CCI-000196
+      - SRG-OS-000073-GPOS-00041
+      - SV-220747r569187_rule
+      - V-220747
+
+- name: "HIGH | WN10-CC-000075 | PATCH | Credential Guard must be running on Windows 10 domain-joined systems."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard
+      value: "{{ item }}"
+      state: present
+      data: 1
+      datatype: dword
+  with_items:
+      - EnableVirtualizationBasedSecurity
+      - RequirePlatformSecurityFeatures
+      - HypervisorEnforcedCodeIntegrity
+      - HVCIMATRequired
+      - LsaCfgFlags
+  when:
+      - wn10_CC_000075
+  tags:
+      - WN10-CC-000075
+      - CAT1
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220812r569187_rule
+      - V-220812
+
+- name: "HIGH | WN10-CC-000155 | PATCH | Solicited Remote Assistance must not be allowed."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+      value: fAllowToGetHelp
+      state: present
+      data: 0
+      datatype: dword
+  when:
+      - wn10_CC_000155
+  tags:
+      - WN10-CC-000155
+      - CAT1
+      - CCI-001090
+      - SRG-OS-000138-GPOS-00069
+      - SV-220823r569187_rule
+      - V-220823
+
+- name: "HIGH | WN10-CC-000180 | PATCH | Autoplay must be turned off for non-volume devices"
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer
+      value: NoAutoplayfornonVolume
+      state: present
+      data: 1
+      datatype: dword
+  when:
+      - wn10_CC_000180
+  tags:
+      - WN10-CC-000180
+      - CAT1
+      - CCI-001764
+      - SRG-OS-000368-GPOS-00154
+      - SV-220827r569187_rule
+      - V-220827
+
+- name: "HIGH | WN10-CC-000185 | PATCH | The default autorun behavior must be configured to prevent autorun commands."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
+      value: NoAutorun
+      state: present
+      data: 1
+      datatype: dword
+  when:
+      - wn10_CC_000185
+  tags:
+      - WN10-CC-000185
+      - CAT1
+      - CCI-001764
+      - SRG-OS-000368-GPOS-00154
+      - SV-220828r569187_rule
+      - V-220828
+
+- name: "HIGH | WN10-CC-000190 | PATCH | Autoplay must be disabled for all drives."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\policies\Explorer
+      value: NoDriveTypeAutoRun
+      state: present
+      data: 255
+      datatype: dword
+  when:
+      - wn10_CC_000190
+  tags:
+      - WN10-CC-000190
+      - CAT1
+      - CCI-001764
+      - SRG-OS-000368-GPOS-00154
+      - SV-220829r569187_rule
+      - V-220829
+
+- name: "HIGH | WN10-CC-000315 | PATCH | The Windows Installer Always install with elevated privileges must be disabled."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer
+      value: AlwaysInstallElevated
+      state: present
+      data: 0
+      datatype: dword
+  when:
+      - wn10_CC_000315
+  tags:
+      - WN10-CC-000315
+      - CAT1
+      - CCI-001812
+      - SRG-OS-000362-GPOS-00149
+      - SV-220857r569187_rule
+      - V-220857
+
+- name: "HIGH | WN10-CC-000330 | PATCH | The Windows Remote Management (WinRM) client must not use Basic authentication."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client
+      value: AllowBasic
+      state: present
+      data: 0
+      datatype: dword
+  when:
+      - wn10_CC_000330
+  tags:
+      - WN10-CC-000330
+      - CAT1
+      - CCI-000877
+      - SRG-OS-000125-GPOS-00065
+      - SV-220862r569187_rule
+      - V-220862
+
+- name: "HIGH | WN10-CC-000345 | PATCH | The Windows Remote Management (WinRM) service must not use Basic authentication."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service
+      value: AllowBasic
+      state: present
+      data: 0
+      datatype: dword
+  when:
+      - wn10_CC_000345
+  tags:
+      - WN10-CC-000345
+      - CAT1
+      - CCI-000877
+      - SRG-OS-000125-GPOS-00065
+      - SV-220865r654974_rule
+      - V-220865
+
+- name: "HIGH | WN10-SO-000140 | PATCH | Anonymous SID/Name translation must not be allowed."
+  win_security_policy:
+      section: System Access
+      key: LSAAnonymousNameLookup
+      value: 0
+  when:
+      - wn10_SO_000140
+  tags:
+      - WN10-SO-000140
+      - CAT1
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220928r569187_rule
+      - V-220928
+
+- name: "HIGH | WN10-SO-000145 | PATCH | Anonymous enumeration of SAM accounts must not be allowed."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+      value: RestrictAnonymousSAM
+      state: present
+      data: 1
+      datatype: dword
+  when:
+      - wn10_SO_000145
+  tags:
+      - WN10-SO-000145
+      - CAT1
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - V-220929r569187_rule
+      - V-220929
+
+- name: "HIGH | WN10-SO-000150 | PATCH | Anonymous enumeration of shares must be restricted."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+      value: RestrictAnonymous
+      state: present
+      data: 1
+      datatype: dword
+  when:
+      - wn10_SO_000150
+  tags:
+      - WN10-SO-000150
+      - CAT1
+      - CCI-001090
+      - SRG-OS-000138-GPOS-00069
+      - SV-220930r569187_rule
+      - V-220930
+
+- name: "HIGH | WN10-SO-000165 | PATCH | Anonymous access to Named Pipes and Shares must be restricted."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\LanManServer\Parameters
+      value: RestrictNullSessAccess
+      state: present
+      data: 1
+      datatype: dword
+  when:
+      - wn10_SO_000165
+  tags:
+      - WN10-SO-000165
+      - CAT1
+      - CCI-001090
+      - SRG-OS-000138-GPOS-00069
+      - SV-220932r569187_rule
+      - V-220932
+
+- name: "HIGH | WN10-SO-000195 | PATCH | The system must be configured to prevent the storage of the LAN Manager hash of passwords."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+      value: NoLMHash
+      state: present
+      data: 1
+      datatype: dword
+  when:
+      - wn10_SO_000195
+  tags:
+      - WN10-SO-000195
+      - CAT1
+      - CCI-000196
+      - SRG-OS-000073-GPOS-00041
+      - SV-220937r569187_rule
+      - V-220937
+
+- name: "HIGH | WN10-SO-000205 | PATCH | The LanMan authentication level must be set to send NTLMv2 response only, and to refuse LM and NTLM."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+      value: LmCompatibilityLevel
+      state: present
+      data: 5
+      datatype: dword
+  when:
+      - wn10_SO_000205
+  tags:
+      - WN10-SO-000205
+      - CAT1
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220938r569187_rule
+      - V-220938
+
+- name: "HIGH | WN10-UR-000015 | PATCH | The Act as part of the operating system user right must not be assigned to any groups or accounts."
+  win_user_right:
+    name: SeTcbPrivilege
+    users: []
+    action: set
+  when:
+      - wn10_UR_000015
+  tags:
+      - WN10-UR-000015
+      - CAT1
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220958r569187_rule
+      - V-220958
+
+- name: "HIGH | WN10-UR-000045 | PATCH | The Create a token object user right must not be assigned to any groups or accounts."
+  win_security_policy:
+      section: Privilege Rights
+      key: SeCreateTokenPrivilege
+      value: ""
+  when:
+      - wn10_UR_000045
+  tags:
+      - WN10-UR-000045
+      - CAT1
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220963r569187_rule
+      - V-220963
+
+- name: "HIGH | WN10-UR-000065 | PATCH | The Debug programs user right must only be assigned to the Administrators group."
+  win_user_right:
+      name: SeDebugPrivilege
+      users: Administrators
+      action: set
+  when:
+      - wn10_UR_000065
+  tags:
+      - WN10-UR-000065
+      - CAT1
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220967r569187_rule
+      - V-220967

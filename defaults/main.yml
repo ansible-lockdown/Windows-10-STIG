@@ -40,9 +40,36 @@ win10stig_system_is_container: no
 # PLEASE NOTE: These work in coordination with the cat1, cat2, cat3 group variables. You must enable an entire group
 # in order for the variables below to take effect.
 # CAT 1 rules
-win10_00_000040: true
-win10_00_000045: true
-win10_00_000050: true
+wn10_00_000040: true
+wn10_00_000045: true
+wn10_00_000050: true
+wn10_00_000070: true
+wn10_00_000100: true
+wn10_00_000145: true
+wn10_00_000150: true
+wn10_00_000240: true
+wn10_AC_000045: true
+wn10_CC_000075: true
+wn10_CC_000155: true
+wn10_CC_000180: true
+wn10_CC_000185: true
+wn10_CC_000190: true
+wn10_CC_000315: true
+wn10_CC_000330: true
+wn10_CC_000345: true
+wn10_SO_000140: true
+wn10_SO_000145: true
+wn10_SO_000150: true
+wn10_SO_000165: true
+wn10_SO_000195: true
+wn10_SO_000205: true
+wn10_UR_000015: true
+wn10_UR_000045: true
+wn10_UR_000065: true
+
+# Variables related to what types of services should be running on Windows 10
+# True means Windows 10 will be running that server/service. For example win10stig_web_server: true means you are running as a web server
+win10stig_web_server: false
 
 
 # Variables related to individual tasks
@@ -53,3 +80,8 @@ win10_00_000050: true
 # Windows Defender = WinDefend
 # To be STIG compliant you need to have either Windows Defender AV enabled/running or a 3rd party AV running (McAfee or Symantec for example)
 win10stig_av_sftw: WinDefend
+
+# WN10-00-000145
+# wn10stig_dep_value is the value to set DEP to. To comply with STIG standards at least OptOut level needs to be set. 
+# Value options are AlwaysOn or OptOut. If OptOut is used you will need to manually select what applications to opt out of DEP
+wn10stig_dep_value: AlwaysOn

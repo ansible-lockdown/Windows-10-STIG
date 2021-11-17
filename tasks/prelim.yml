@@ -17,3 +17,11 @@
 #   failed_when: no
 #   tags:
 #       - always
+- name: "PRELIM | Get Admin Users and Groups"
+  win_shell: Get-LocalGroupMember -Name 'Administrators'
+  changed_when: false
+  failed_when: false
+  register: wn10stig_admin_users_groups
+  when:
+      - wn10_00_000070 or
+        wn10_00_000240
