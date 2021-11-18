@@ -1,0 +1,322 @@
+---
+
+- name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems"
+  debug:
+      msg:
+          - "Alert! Manually confirm if Secure Boot is disabled."
+          - "This control is NA if you are on a virtual system"
+  when:
+      - wn10_00_000020
+  tags:
+      - WN10-00-000020
+      - CAT3
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220700r569187_rule
+      - V-220700
+
+- name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_00_000065
+  tags: 
+      - WN10-00-000065
+      - CAT3
+      - CCI-000795
+      - SRG-OS-000118-GPOS-00060
+      - SV-220711r569187_rule
+      - V-220711
+
+
+- name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain."
+  block:
+      - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Get Local Users list"
+        win_shell: get-localuser | Where-Object -Property Enabled -eq True | Select-Object -Property Name | format-table -hidetableheaders
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000085_local_users
+
+      - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Show Local Users list"
+        debug:
+            msg:
+                - "ALERT! Below are the local users that are not built in accounts and enabled."
+                - "Please review and remove these local accounts, only AD logins should be occuring."
+                - "{{ wn10_00_000085_local_users.stdout_lines }}"
+  when:
+      - wn10_00_000085
+  tags:
+      - WN10-00-000085
+      - CAT3
+      - SRG-OS-000480-GPOS-00227
+      - SV-220715r569187_rule
+      - V-220715
+
+- name: "LOW | WN10-CC-000030 | PATCH | The system must be configured to prevent Internet Control Message Protocol (ICMP) redirects from overriding Open Shortest Path First (OSPF) generated routes."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters
+      value: EnableICMPRedirect
+      state: present
+      data: 0
+      datatype: dword
+  when:
+      - wn10_CC_000030
+  tags:
+      - WN10-CC-000030
+      - CAT3
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220797r569187_rule
+      - V-220797
+
+- name: "LOW | WN10-CC-000035 | PATCH | The system must be configured to ignore NetBIOS name release requests except from WINS servers."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\Netbt\Parameter
+      value: NoNameReleaseOnDemand
+      state: present
+      data: 1
+      datatype: dword
+  when:
+      - wn10_CC_000035
+  tags:
+      - WN10-CC-000035
+      - CAT3
+      - CCI-002385
+      - SRG-OS-000420-GPOS-00186
+      - SV-220798r569187_rule
+      - V-220798
+
+- name: "LOW | WN10-CC-000070 | AUDIT | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection"
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_CC_000070
+  tags:
+      - WN10-CC-000070
+      - CAT3
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220811r569187_rule
+      - V-220811
+
+- name: "LOW | WN10-CC-000170 | PATCH | The setting to allow Microsoft accounts to be optional for modern style apps must be enabled"
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+      value: MSAOptional
+      state: present
+      data: 1
+      datatype: dword
+  when:
+      - wn10_CC_000170
+  tags:
+      - WN10-CC-000170
+      - CAT3
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220825r569187_rule
+      - V-220825
+
+- name: "LOW | WN10-CC-000175 | PATCH | The Application Compatibility Program Inventory must be prevented from collecting data and sending the information to Microsoft."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\AppCompat
+      value: DisableInventory
+      state: present
+      data: 1
+      datatype: dword
+  when:
+      - wn10_CC_000175
+  tags:
+      - WN10-CC-000175
+      - CAT3
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220826r569187_rule
+      - V-220826
+
+- name: "LOW | WN10-CC-000197 | PATCH | Microsoft consumer experiences must be turned off."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent
+      value: DisableWindowsConsumerFeatures
+      state: present
+      data: 1
+      datatype: dword
+  when:
+      - wn10_CC_000197
+  tags:
+      - WN10-CC-000197
+      - CAT3
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220831r569187_rule
+      - V-220831
+
+- name: "LOW | WN10-CC-000206 | PATCH | Windows Update must not obtain updates from other PCs on the Internet."
+  block:
+      - name: "LOW | WN10-CC-000206 | PATCH | Windows Update must not obtain updates from other PCs on the Internet. | On a domain"
+        win_regedit:
+            path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization
+            value: DODownloadMode
+            state: present
+            data: "{{ win10stig_dodownloadmod_domain }}"
+            datatype: dword
+        when: ansible_windows_domain_member
+
+      - name: "LOW | WN10-CC-000206 | PATCH | Windows Update must not obtain updates from other PCs on the Internet. | Stand-alone"
+        win_regedit:
+            path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization\Config
+            value: DODownloadMode
+            state: present
+            data: "{{ win10stig_dodownloadmod_standalone }}"
+            datatype: dword
+        when: not ansible_windows_domain_member
+  when:
+      - wn10_CC_000206
+  tags:
+      - WN10-CC-000206
+      - CAT3
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220835r569187_rule
+      - V-220835
+
+- name: "LOW | WN10-CC-000220 | PATCH | Turning off File Explorer heap termination on corruption must be disabled."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer
+      value: NoHeapTerminationOnCorruption
+      state: present
+      data: 0
+      datatype: dword
+  when:
+      - wn10_CC_000220
+  tags:
+      - WN10-CC-000220
+      - CAT3
+      - CCI-002385
+      - SRG-OS-000420-GPOS-00186
+      - SV-220838r569187_rule
+      - V-220838
+
+- name: "LOW | WN10-CC-000390 | PATCH | Windows 10 should be configured to prevent users from receiving suggestions for third-party or additional applications."
+  win_regedit:
+      path: HKCU:\SOFTWARE\Policies\Microsoft\Windows\CloudContent
+      value: DisableThirdPartySuggestions
+      state: present
+      data: 1
+      datatype: dword
+  when:
+      - wn10_CC_000390
+  tags:
+      - WN10-CC-000390
+      - CAT3
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220872r569187_rule
+      - V-220872
+
+- name: "LOW | WN10-SO-000050 | PATCH | The computer account password must not be prevented from being reset."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
+      value: DisablePasswordChange
+      state: present
+      data: 0
+      datatype: dword
+  when:
+      - wn10_SO_000050
+  tags:
+      - WN10-SO-000050
+      - CAT3
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220917r569187_rule
+      - V-220917
+
+- name: "LOW | WN10-SO-000055 | PATCH | The maximum age for machine account passwords must be configured to 30 days or less."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
+      value: MaximumPasswordAge
+      state: present
+      data: "{{ win10stig_max_pw_age }}"
+      datatype: dword
+  when:
+      - wn10_SO_000055
+  tags:
+      - WN10-SO-000055
+      - CAT3
+      - CCI-000366
+      - SV-220918r569187_rule
+      - V-220918
+
+- name: "LOW | WN10-SO-000080 | PATCH | The Windows dialog box title for the legal banner must be configured."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+      value: LegalNoticeCaption
+      state: present
+      data: "{{ win10stig_legalnotice }}"
+      datatype: string
+  when:
+      - wn10_SO_000080
+  tags:
+      - WN10-SO-000080
+      - CAT3
+      - CCI-000048
+      - CCI-001384
+      - CCI-001385
+      - CCI-001386
+      - CCI-001387
+      - CCI-001388
+      - SRG-OS-000023-GPOS-00006
+      - SV-220922r569187_rule
+      - V-220922
+
+- name: "LOW | WN10-SO-000085 | PATCH | Caching of logon credentials must be limited."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon
+      value: CachedLogonsCount
+      state: present
+      data: "{{ win10stig_cached_logon_count }}"
+      datatype: string
+  when:
+      - wn10_SO_000085
+  tags:
+      - WN10-SO-000085
+      - CAT3
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220923r569187_rule
+      - V-220923
+
+- name: "LOW | WN10-SO-000240 | PATCH | The default permissions of global system objects must be increased."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager
+      value: ProtectionMode
+      state: present
+      data: 1
+      datatype: dword
+  when:
+      - wn10_SO_000240
+  tags:
+      - WN10-SO-000240
+      - CAT3
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220943r569187_rule
+      - V-220943
+
+- name: "LOW | WN10-UC-000015 | PATCH | Toast notifications to the lock screen must be turned off."
+  win_regedit:
+      path: HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications
+      value: NoToastApplicationNotificationOnLockScreen
+      state: present
+      data: 1
+      datatype: dword
+  when:
+      - wn10_UC_000015
+  tags:
+      - WN10-UC-000015
+      - CAT3
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220954r569187_rule
+      - V-220954

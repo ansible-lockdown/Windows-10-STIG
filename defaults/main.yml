@@ -1,8 +1,8 @@
 ---
 
-win10stig_cat1_patch: yes
-win10stig_cat2_patch: yes
-win10stig_cat3_patch: yes
+win10stig_cat1_patch: true
+win10stig_cat2_patch: true
+win10stig_cat3_patch: true
 
 win10stig_min_ansible_version: "2.6"
 
@@ -39,7 +39,7 @@ win10stig_system_is_container: no
 # These variables correspond with the STIG IDs defined in the STIG and allows you to enable/disable specific rules.
 # PLEASE NOTE: These work in coordination with the cat1, cat2, cat3 group variables. You must enable an entire group
 # in order for the variables below to take effect.
-# CAT 1 rules
+# CAT 1 Rules
 wn10_00_000040: true
 wn10_00_000045: true
 wn10_00_000050: true
@@ -67,9 +67,33 @@ wn10_UR_000015: true
 wn10_UR_000045: true
 wn10_UR_000065: true
 
+# CAT 3 Rules
+wn10_00_000020: true
+wn10_00_000065: true
+wn10_00_000085: true
+wn10_CC_000030: true
+wn10_CC_000035: true
+wn10_CC_000070: true
+wn10_CC_000170: true
+wn10_CC_000175: true
+wn10_CC_000197: true
+wn10_CC_000206: true
+wn10_CC_000220: true
+wn10_CC_000390: true
+wn10_SO_000050: true
+wn10_SO_000055: true
+wn10_SO_000080: true
+wn10_SO_000085: true
+wn10_SO_000240: true
+wn10_UC_000015: true
+
 # Variables related to what types of services should be running on Windows 10
 # True means Windows 10 will be running that server/service. For example win10stig_web_server: true means you are running as a web server
 win10stig_web_server: false
+
+# After running this role you should reboot. This control will toggle if you want to manaually reboot the system after applying this role.
+# Value of true will always reboot after the role has run, value of false will prevent system from rebooting after the role has run.
+win10stig_always_reboot: true
 
 
 # Variables related to individual tasks
@@ -85,3 +109,44 @@ win10stig_av_sftw: WinDefend
 # wn10stig_dep_value is the value to set DEP to. To comply with STIG standards at least OptOut level needs to be set. 
 # Value options are AlwaysOn or OptOut. If OptOut is used you will need to manually select what applications to opt out of DEP
 wn10stig_dep_value: AlwaysOn
+
+
+# CAT 3
+
+# WN10-CC-000206
+# win10stig_dodownloadmod_domain: is the DODownloadMode variable for systems that are a member of a domain. 
+# This can be any of the below values, the only available option that is not within STIG standards is Internet value of 3
+# HTTP Only = 0, LAN(1) = 1, Group (2) = 2, Simple (99) = 99
+# Documenation on values: https://admx.help/?Category=Windows_11_2022&Policy=Microsoft.Policies.DeliveryOptimization::DownloadMode
+win10stig_dodownloadmod_domain: 0
+# win10stig_dodownloadmod_standalone is the DODownloadMode variable for systems that are in a stand-alone mode, not on a domain.
+# The can be the values below
+# Off (0) = 0 LAN (1) = 1
+win10stig_dodownloadmod_standalone: 0
+
+# WN10-SO-000055
+# win10stig_max_pw_age is the maximum password age set in days.
+# To conform to STIG standards this needs to be set to 30 or less, excluding 0
+win10stig_max_pw_age: 30
+
+# WN10-SO-000080
+# win10stig_legalnotice is the legal banner/notice displayed prior to a logon attempt
+win10stig_legalnotice: |
+    You are accessing a U.S. Government (USG) Information System (IS) that is provided for USG-authorized use only.
+
+    By using this IS (which includes any device attached to this IS), you consent to the following conditions:
+
+    -The USG routinely intercepts and monitors communications on this IS for purposes including, but not limited to, penetration testing, COMSEC monitoring, network operations and defense, personnel misconduct (PM), law enforcement (LE), and counterintelligence (CI) investigations.
+
+    -At any time, the USG may inspect and seize data stored on this IS.
+
+    -Communications using, or data stored on, this IS are not private, are subject to routine monitoring, interception, and search, and may be disclosed or used for any USG-authorized purpose.
+
+    -This IS includes security measures (e.g., authentication and access controls) to protect USG interests--not for your personal benefit or privacy.
+
+    -Notwithstanding the above, using this IS does not constitute consent to PM, LE or CI investigative searching or monitoring of the content of privileged communications, or work product, related to personal representation or services by attorneys, psychotherapists, or clergy, and their assistants. Such communications and work product are private and confidential. See User Agreement for details.
+
+# WN10-SO-000085
+# win10stig_cached_logon_count is the number of logons cached
+# To conform to STIG standards this needs to be set to 10 or less
+win10stig_cached_logon_count: 10
