@@ -1,0 +1,168 @@
+---
+
+- name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version."
+  debug:
+      msg:
+          - "Alert! You need to be on a 64-bit operating system when joined to a domain"
+          - "This is a requirement for STIG compliance"
+  when:
+      - wn10_00_000005
+      - ansible_architecture != "64-bit"
+  tags:
+      - WN10-00-000005
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220697r569187_rule
+      - -220697
+
+- name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use."
+  debug:
+      msg:
+          - "Aert! Please confirm TPM status is Ready for use"
+  when:
+      - wn10_00_000010
+      - ansible_windows_domain_member
+  tags:
+      - WN10-00-000010
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220698r569187_rule
+      - V-220698
+
+- name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS."
+  debug:
+      msg: "Alert! Please make sure to configure UEFI Mode, not Legacy BIOS
+  when:
+      - wn10_00_000015
+      - not win10stig_system_is_container
+      - not win10stig_system_is_vm
+  tags:
+      - WN10-00-000015
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220699r569187_rule
+      - V-220699
+
+- name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: continuously, where HBSS is used; 30 days, for any additional internal network scans not covered by HBSS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP)"
+  debug:
+      msg:
+          - "Alert! Please install DoD-approved ESS software and ensure it is operating continuously"
+          - "Ask site ISSM for documenation fo the ESS software installation and configuration"
+  when:
+      - wn10_00_000025
+  tags:
+      - WN10-00-000025
+      - CAT2
+      - CCI-001233
+      - SRG-OS-000191-GPOS-00080
+      - SV-220701r569187_rule
+      - V-220701
+
+- name: "MEDIUM | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest."
+  block:
+      - name: "MEDIUM | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest."
+        win_shell: get-bitlockervolume -MountPoint "C:" | select ProtectionStatus | format-list
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000030_bitlocker_status
+
+      - name: "MEDIUM | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest."
+        debug:
+            msg:
+                - "ALERT! BitLocker is not enabled for the C:\ drive"
+                - "Please enable BitLocker for at least the OS drive to conform to STIG Standards"
+        when: "'On' not in wn10_00_000030_bitlocker_status.stdout"
+  when:
+      - wn10_00_000030
+  tags:
+      - WN10-00-000030
+      - CAT2
+      - CCI-001199
+      - CCI-002475
+      - CCI-002476
+      - SRG-OS-000185-GPOS-00079
+      - SV-220702r569228_rule
+      - V-220702
+
+- name: "MEDIUM | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication."
+  block:
+      - name: "MEDIUM | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication. | Set Advanced Startup value"
+        win_regedit:
+            path: HKLM:\SOFTWARE\Policies\Microsoft\FVE
+            value: UseAdvancedStartup
+            state: present
+            data: 1
+            datatype: dword
+
+      - name: "MEDIUM | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication. | Set BitLocker Pin settings"
+        win_regedit:
+            path: HKLM:\SOFTWARE\Policies\Microsoft\FVE
+            value: "{{ win10stig_bitlocker_pin_type }}"
+            state: present
+            data: "{{ win10stig_bitlocker_tpmpin_registry_value }}"
+            datatype: dword
+  when:
+      - wn10_00_000031
+      - wn10_00_000030
+      - "'On' in wn10_00_000030_bitlocker_status.stdout"
+  tags:
+      - WN10-00-000031
+      - CAT2
+      - CCI-002476
+      - CCI-002475
+      - CCI-001199
+      - SRG-OS-000185-GPOS-00079
+      - SV-220703r569288_rule
+      - V-220703
+
+- name: "MEDIUM | WN10-00-000032 | PATCH | Windows 10 systems must use a BitLocker PIN with a minimum length of 6 digits for pre-boot authentication."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\FVE
+      value: MinimumPIN
+      state: present
+      data: "{{ win10stig_bitlocker_min_pin_length }}"
+      datatype: dword
+  when:
+      - wn10_00_000032
+  tags:
+      - WN10-00-000032
+      - CAT2
+      - CCI-001199
+      - CCI-002475
+      - CCI-002476
+      - SRG-OS-000185-GPOS-00079
+      - SV-220704r569290_rule
+      - V-220704
+
+- name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception policy to allow the execution of authorized software programs."
+  debug:
+      msg:
+          - "Alert! Please confirm you have a deny-all policy in place that utilizes a whitelist for applications."
+          - "This can be done through a utility like AppLocker to limit applications only to authorized applications"
+          - "There is an AppLocker white paper from NASA that can be used as a guide"
+          - "https://www.iad.gov/iad/library/ia-guidance/tech-briefs/application-whitelisting-using-microsoft-applocker.cfm"
+  when:
+      - wn10_00_000035
+  tags:
+      - WN10-00-000035
+      - CAT2
+      - CCI-001774
+      - SRG-OS-000370-GPOS-00155
+      - SV-220705r569187_rule
+      - V-220705
+
+- name: "MEDIUM | WN10-00-000055 | Alternate operating systems must not be permitted on the same system"
+  debug:
+      msg: "Alert! Please confirm that no other atlernative operating systems exist on this system"
+  when:
+      - wn10_00_000055
+  tags:
+      - WN10-00-000055
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220709r569187_rule
+      - V-220709

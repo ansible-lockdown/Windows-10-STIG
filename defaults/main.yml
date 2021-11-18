@@ -36,6 +36,9 @@ win10stig_workaround_for_ssg_benchmark: true
 # tweak role to run in a non-privileged container
 win10stig_system_is_container: no
 
+# tweak role to run skip tasks irrelevant for virtualized computers
+win10stig_system_is_vm: true
+
 # These variables correspond with the STIG IDs defined in the STIG and allows you to enable/disable specific rules.
 # PLEASE NOTE: These work in coordination with the cat1, cat2, cat3 group variables. You must enable an entire group
 # in order for the variables below to take effect.
@@ -66,6 +69,17 @@ wn10_SO_000205: true
 wn10_UR_000015: true
 wn10_UR_000045: true
 wn10_UR_000065: true
+
+# CAT 2 Rules
+wn10_00_000005: true
+wn10_00_000010: true
+wn10_00_000015: true
+wn10_00_000025: true
+wn10_00_000030: true
+wn10_00_000031: true
+wn10_00_000032: true
+wn10_00_000035: true
+wn10_00_000055: true
 
 # CAT 3 Rules
 wn10_00_000020: true
@@ -110,8 +124,23 @@ win10stig_av_sftw: WinDefend
 # Value options are AlwaysOn or OptOut. If OptOut is used you will need to manually select what applications to opt out of DEP
 wn10stig_dep_value: AlwaysOn
 
+# CAT2
 
-# CAT 3
+# WN10-00-000031
+# win10stig_bitlocker_pin_type sets if you are using TPM PIN's for BitLockder
+# Values are UseTPMPIN or UseTPMKeyPIN
+win10stig_bitlocker_pin_type: UseTPMPIN
+# win10stig_bitlocker_usetpmpin_value is the value set to the UseTPMPIN or UseTPMKeyPIN registry entries
+# Value of 2 is for Network Unlock and value of 1 is not Network Unlock
+win10stig_bitlocker_tpmpin_registry_value: 1
+
+# WN10-00-000032
+# win10stig_bitlocker_min_pin_length is the minimum length for the BitLocker PIN
+# This value needs to be 6 or greater
+win10stig_bitlocker_min_pin_length: 6
+
+
+# CAT3
 
 # WN10-CC-000206
 # win10stig_dodownloadmod_domain: is the DODownloadMode variable for systems that are a member of a domain. 
