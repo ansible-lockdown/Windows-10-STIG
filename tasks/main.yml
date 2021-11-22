@@ -18,6 +18,12 @@
   tags:
       - always
 
+- name: Get Disk Facts
+  win_disk_facts:
+  when:
+      - wn10_00_000050 or
+        wn10_00_000130
+
 - name: Check ansible version
   assert:
       that: ansible_version.full is version_compare(win10stig_min_ansible_version, '>=')

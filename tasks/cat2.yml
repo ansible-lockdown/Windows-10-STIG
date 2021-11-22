@@ -33,7 +33,7 @@
 
 - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS."
   debug:
-      msg: "Alert! Please make sure to configure UEFI Mode, not Legacy BIOS
+      msg: "Alert! Please make sure to configure UEFI Mode, not Legacy BIOS"
   when:
       - wn10_00_000015
       - not win10stig_system_is_container
@@ -154,7 +154,7 @@
       - SV-220705r569187_rule
       - V-220705
 
-- name: "MEDIUM | WN10-00-000055 | Alternate operating systems must not be permitted on the same system"
+- name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system."
   debug:
       msg: "Alert! Please confirm that no other atlernative operating systems exist on this system"
   when:
@@ -166,3 +166,275 @@
       - SRG-OS-000480-GPOS-00227
       - SV-220709r569187_rule
       - V-220709
+
+- name: "MEDIUM | WN10-00-000060 | PATCH | Non system-created file shares on a system must limit access to groups that require it."
+  block:
+      - name: "MEDIUM | WN10-00-000060 | AUDIT | Non system-created file shares on a system must limit access to groups that require it. | Get Share Names"
+        win_shell: Get-SmbShare | Where-Object { ($_.Name -notlike "ADMIN$") -and ($_.Name -notlike 'C$') -and ($_.Name -notlike 'IPC$') } | Select-Object -Property Name | format-table -hidetableheaders
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000060_share_names
+
+      - name: "MEDIUM | WN10-00-000060 | AUDIT | Non system-created file shares on a system must limit access to groups that require it. | Alert Share Names"
+        debug:
+            msg:
+                - "Alert! You have shares that non-system created. Please manually review those shares listed below to make sure appropriate permissions are applied"
+                - "{{ wn10_00_000060_share_names.stdout_lines | select() | list }}"
+        when: wn10_00_000060_share_names.stdout_lines | select() | length > 0
+  when:
+      - wn10_00_000060
+  tags:
+      - WN10-00-000060
+      - CAT2
+      - CCI-001090
+      - SRG-OS-000138-GPOS-00069
+      - SV-220710r569187_rule
+      - V-220710
+
+- name: "MEDIUM | WN10-00-000075 | AUDIT | Only accounts responsible for the backup operations must be members of the Backup Operators group."
+  block:
+      - name: "MEDIUM | WN10-00-000075 | AUDIT | Only accounts responsible for the backup operations must be members of the Backup Operators group. | Get Backup Operator users"
+        win_shell: get-localgroupmember -Name "Backup Operators" | Select-Object -Property Name | Format-Table -hidetableheaders
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000075_bo_members
+
+      - name: "MEDIUM | WN10-00-000075 | AUDIT | Only accounts responsible for the backup operations must be members of the Backup Operators group. | Display Backup Operator users"
+        debug:
+            msg:
+                - "Alert! Below are the users in the Backup Operators group. Please review accounts are appropriate"
+                - "{{ wn10_00_000075_bo_members.stdout_lines | select() | list }}"
+        when: wn10_00_000075_bo_members.stdout_lines | select() | list | length > 0
+  when:
+      - wn10_00_000075
+  tags:
+      - WN10-00-000075
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220713r569187_rule
+      - V-220713
+
+- name: "MEDIUM | WN10-00-000080 | AUDIT | Only authorized user accounts must be allowed to create or run virtual machines on Windows 10 systems."
+  block:
+      - name: "MEDIUM | WN10-00-000080 | AUDIT | Only authorized user accounts must be allowed to create or run virtual machines on Windows 10 systems. | Get Hyper-V group users"
+        win_shell: get-localgroupmember -Name "Hyper-V Administrators" | Select-Object -Property Name | Format-Table -hidetableheaders
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000080_hyperv_members
+
+      - name: "MEDIUM | WN10-00-000080 | AUDIT | Only authorized user accounts must be allowed to create or run virtual machines on Windows 10 systems. | Display Hyper-V group users"
+        debug:
+            msg:
+                - "Alert! Below are the users in the Hyper-V Administrators group, please remove any unnecessary accounts"
+                - "{{ wn10_00_000080_hyperv_members.stdout_lines | select() | list }}"
+        when: wn10_00_000080_hyperv_members | select() | list | length > 0
+  when:
+      - wn10_00_000080
+  tags:
+      - WN10-00-000080
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220714r569187_rule
+      - V-220714
+
+- name: "MEDIUM | WN10-00-000090 | PATCH | Accounts must be configured to require password expiration."
+  block:
+      - name: "MEDIUM | WN10-00-000090 | AUDIT | Accounts must be configured to require password expiration. | Get list of PW Never Expire users"
+        win_shell: get-localuser  | select Name, Enabled, PasswordExpires | Where-Object -Property Enabled -eq True | Where { $_.PasswordExpires -eq $null } | Select-Object -Property Name | Format-Table -hidetableheaders
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000090_neverexpire_passwords
+
+      - name: "MEDIUM | WN10-00-000090 | AUDIT | Accounts must be configured to require password expiration. | Display list of PW Never Expire users"
+        debug:
+            msg:
+                - "Alert! You have some accounts that are set to never expire. Please review the below accounts and set an expiration"
+                - "{{ wn10_00_000090_neverexpire_passwords.stdout_lines | select() | list }}"
+        when:
+            - wn10_00_000090_neverexpire_passwords.stdout_lines | select() | list | length > 0
+            - not win10stig_disruption_high
+    
+      - name: "MEDIUM | WN10-00-000090 | PATCH | Accounts must be configured to require password expiration. | Set PW to Expire for PW Never Expire users"
+        win_user:
+            name: "{{ item }}"
+            password_never_expires: false
+        with_items:
+            - "{{ wn10_00_000090_neverexpire_passwords.stdout_lines | select() | list }}"
+        when:
+            - wn10_00_000090_neverexpire_passwords.stdout_lines | select() | list | length > 0
+            - win10stig_disruption_high
+  when:
+      - wn10_00_000090
+  tags:
+      - WN10-00-000090
+      - CAT2
+      - CCI-000199
+      - SRG-OS-000076-GPOS-00044
+      - SV-220716r569187_rule
+      - V-220716
+
+- name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_00_000095
+  tags:
+      - WN10-00-000095
+      - CAT2
+      - CCI-002165
+      - SRG-OS-000312-GPOS-00122
+      - SV-220717r569187_rule
+      - V-220717
+
+- name: "MEDIUM | WN10-00-000105 | PATCH | Simple Network Management Protocol (SNMP) must not be installed on the system."
+  block:
+      - name: "MEDIUM | WN10-00-000105 | AUDIT | Simple Network Management Protocol (SNMP) must not be installed on the system. | Get SNMP State"
+        win_shell: Get-WindowsCapability  -Online -Name "SNMP*" | Select-Object -Property State | Format-Table -hidetableheaders
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000105_snmp_state
+
+      - name: "MEDIUM | WN10-00-000105 | PATCH | Simple Network Management Protocol (SNMP) must not be installed on the system. | Remove SNMP"
+        win_shell: remove-WindowsCapability  -Online -Name "SNMP.Client~~~~0.0.1.0"
+        notify: reboot windows
+        when: "'Installed' in wn10_00_000105_snmp_state.stdout"
+  when:
+      - wn10_00_000105
+  tags:
+      - WN10-00-000105
+      - CCI-000382
+      - SRG-OS-000096-GPOS-00050
+      - SV-220719r569187_rule
+      - V-220719
+
+- name: "MEDIUM | WN10-00-000110 | PATCH | Simple TCP/IP Services must not be installed on the system."
+  win_optional_feature:
+      name: SimpleTCP
+      state: absent
+  when:
+      - wn10_00_000110
+  tags:
+      - WN10-00-000110
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220720r569187_rule
+      - V-220720
+
+- name: "MEDIUM | WN10-00-000115 | PATCH | The Telnet Client must not be installed on the system."
+  win_optional_feature:
+      name: TelnetClient
+      state: absent
+  when:
+      - wn10_00_000115
+  tags:
+      - WN10-00-000115
+      - CAT2
+      - CCI-000382
+      - SRG-OS-000096-GPOS-00050
+      - SV-220721r569187_rule
+      - V-220721
+
+- name: "MEDIUM | WN10-00-000120 | PATCH | The TFTP Client must not be installed on the system."
+  win_optional_feature:
+      name: TFTP
+      state: absent
+  when:
+      - wn10_00_000120
+  tags:
+      - WN10-00-000120
+      - CAT2
+      - CCI-000382
+      - SRG-OS-000096-GPOS-00050
+      - SV-220722r569187_rule
+      - V-220722
+
+- name: "MEDIUM | WN10-00-000130 | PATCH | Software certificate installation files must be removed from Windows 10."
+  block:
+      - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Get Drive Letters"
+        win_shell: Get-PSDrive | Select-Object -ExpandProperty 'Name' | Select-String -Pattern '^[a-z]$'
+        changed_when: false
+        register: wn10_00_000130_drive_letters
+
+      - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Search for files"
+        win_find:
+          paths: '{{ item }}:\'
+          recurse: yes
+          patterns: ['*.p12','*.pfx']
+        register: wn10_00_000130_files
+        with_items:
+            - "{{ wn10_00_000130_drive_letters.stdout_lines | select() | list }}"
+
+      - name: "MEDIUM | WN10-00-000130 | PATCH  | Software certificate installation files must be removed from Windows 10. | Remove Files"
+        win_file:
+          path: "{{ item.path }}"
+          state: absent
+        with_items:
+            - "{{ wn10_00_000130_files.results[0].files }}"
+        loop_control:
+            label: "{{ item.path }}"
+        when: win10stig_disruption_high
+
+      - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Alert on files if not Disruptive High"
+        debug:
+            msg:
+                - "Alert! You have .p12 and/or .pfx files on your system"
+                - "Please review and remove the following files"
+                - "{{ wn10_00_000130_files.results[0].files | map(attribute='path') | list }}"
+        when: not win10stig_disruption_high
+  when:
+      - wn10_00_000130
+      - win10stig_lengthy_search
+  tags:
+      - WN10-00-000130
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220723r569187_rule
+      - V-220723
+
+- name: "MEDIUM | WN10-00-000135 | PATCH | A host-based firewall must be installed and enabled on the system."
+  block:
+      - name: "MEDIUM | WN10-00-000135 | PATCH | A host-based firewall must be installed and enabled on the system. | Get Defender Firewall status"
+        win_shell: get-netfirewallprofile -all | Where-Object -Property Enabled -eq True | Select-Object -Property Name | Format-Table -hidetableheaders
+        changed_when: false
+        register: wn10_00_000135_defender_fw_status
+        when:  win10stig_firewall_type == "defender"
+
+      - block:
+          - name: "MEDIUM | WN10-00-000135 | PATCH | A host-based firewall must be installed and enabled on the system. | Warn on Defender Firewall enabled"
+            debug:
+                msg:
+                    - "Warning! You are using defender and 1 or more profiles are enabled"
+                    - "Please confirm the firewall profiles match the Firewall STIG"
+                    - "{{ wn10_00_000135_defender_fw_status.stdout_lines | select() | list }}"
+            when:
+                - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
+          
+          - name: "MEDIUM | WN10-00-000135 | PATCH | A host-based firewall must be installed and enabled on the system. | Alert! on Defender Firewall disabled"
+            debug:
+                msg:
+                    - "ALERT! You are using Windows Defender as your filewall and it is fully disabled"
+                    - "Please enable the firewall using a Firewall profile provided by STIG"
+                    - "If you are not using Windows Defender as your firewall please adjust the win10stig_firewall_type variable to reflect that"
+            when:
+                - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length == 0
+        when: win10stig_firewall_type == "defender"
+
+      - name: "MEDIUM | WN10-00-000135 | PATCH | A host-based firewall must be installed and enabled on the system. | Warn on 3rd party firewall"
+        debug:
+            msg:
+                - "Warning! You are not using Windows Defender as your firewall."
+                - "Please review the required profiles/settings for that firewall to confirm it alligns with STIG standards."
+        when: win10stig_firewall_type != "defender"
+  when:
+      - wn10_00_000135
+  tags:
+      - WN10-00-000135
+      - CAT2
+      - CCI-000366
+      - SV-220724r569187_rule
+      - V-220724

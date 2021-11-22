@@ -67,9 +67,6 @@
 
 - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS"
   block:
-      - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS | Get disk facts"
-        win_disk_facts:
-
       - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS | Set file system type variable"
         set_fact:
             win10_00_000050_c_volume_info: "{{ ansible_facts.disks[0].partitions | json_query('[?drive_letter == `C`] | [0].volumes') | json_query('[?type == `NTFS`] | [0].type') }}"

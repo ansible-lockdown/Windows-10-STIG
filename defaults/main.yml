@@ -9,21 +9,17 @@ win10stig_min_ansible_version: "2.6"
 # We've defined complexity-high to mean that we cannot automatically remediate
 # the rule in question.  In the future this might mean that the remediation
 # may fail in some cases.
-win10stig_complexity_high: no
-
-# Show "changed" for complex items not remediated per complexity-high setting
-# to make them stand out.  "changed" items on a second run of the role would
-# indicate items requiring manual review.
-win10stig_audit_complex: yes
+win10stig_complexity_high: false
 
 # We've defined disruption-high to indicate items that are likely to cause
 # disruption in a normal workflow.  These items can be remediated automatically
 # but are disabled by default to avoid disruption.
-win10stig_disruption_high: no
+win10stig_disruption_high: false
 
-# Show "changed" for disruptive items not remediated per disruption-high
-# setting to make them stand out.
-win10stig_audit_disruptive: yes
+# This parameter disables controls that could have a very lengthy find. For example
+# removing all files of a specific file type that search the entire drive.
+# If there is an action tied to the lengthy search the action task will be disabled as well
+win10stig_lengthy_search: true
 
 winstig_skip_for_travis: false
 
@@ -34,7 +30,7 @@ win10stig_workaround_for_disa_benchmark: true
 win10stig_workaround_for_ssg_benchmark: true
 
 # tweak role to run in a non-privileged container
-win10stig_system_is_container: no
+win10stig_system_is_container: false
 
 # tweak role to run skip tasks irrelevant for virtualized computers
 win10stig_system_is_vm: true
@@ -80,6 +76,17 @@ wn10_00_000031: true
 wn10_00_000032: true
 wn10_00_000035: true
 wn10_00_000055: true
+wn10_00_000060: true
+wn10_00_000075: true
+wn10_00_000080: true
+wn10_00_000090: true
+wn10_00_000095: true
+wn10_00_000105: true
+wn10_00_000110: true
+wn10_00_000115: true
+wn10_00_000120: true
+wn10_00_000130: true
+wn10_00_000135: true
 
 # CAT 3 Rules
 wn10_00_000020: true
@@ -139,6 +146,13 @@ win10stig_bitlocker_tpmpin_registry_value: 1
 # This value needs to be 6 or greater
 win10stig_bitlocker_min_pin_length: 6
 
+# WN10-00-000135
+# win10stig_firewall_type is the firewall type that is being used on the host
+# The value of defender will search for the Windows Defender Firewall status, any other value will skip that check
+# When using defender please confirm your profiles align with the Defender Firewall STIG
+# When using a different firewall solution, please confirm it aligns with STIG compliance
+# THIS CONTROL DOES NOT SET PROFILE SETTINGS OF ANY KIND!!!
+win10stig_firewall_type: defender
 
 # CAT3
 

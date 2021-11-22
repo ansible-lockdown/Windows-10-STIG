@@ -1,2 +1,4 @@
 ---
-# handlers file for .
+
+- name: reboot windows
+  win_reboot:
