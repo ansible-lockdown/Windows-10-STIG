@@ -288,6 +288,7 @@
       - SRG-OS-000312-GPOS-00122
       - SV-220717r569187_rule
       - V-220717
+      - notimplemented
 
 - name: "MEDIUM | WN10-00-000105 | PATCH | Simple Network Management Protocol (SNMP) must not be installed on the system."
   block:
@@ -396,16 +397,16 @@
       - SV-220723r569187_rule
       - V-220723
 
-- name: "MEDIUM | WN10-00-000135 | PATCH | A host-based firewall must be installed and enabled on the system."
+- name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system."
   block:
-      - name: "MEDIUM | WN10-00-000135 | PATCH | A host-based firewall must be installed and enabled on the system. | Get Defender Firewall status"
+      - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Get Defender Firewall status"
         win_shell: get-netfirewallprofile -all | Where-Object -Property Enabled -eq True | Select-Object -Property Name | Format-Table -hidetableheaders
         changed_when: false
         register: wn10_00_000135_defender_fw_status
         when:  win10stig_firewall_type == "defender"
 
       - block:
-          - name: "MEDIUM | WN10-00-000135 | PATCH | A host-based firewall must be installed and enabled on the system. | Warn on Defender Firewall enabled"
+          - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on Defender Firewall enabled"
             debug:
                 msg:
                     - "Warning! You are using defender and 1 or more profiles are enabled"
@@ -414,7 +415,7 @@
             when:
                 - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
           
-          - name: "MEDIUM | WN10-00-000135 | PATCH | A host-based firewall must be installed and enabled on the system. | Alert! on Defender Firewall disabled"
+          - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Alert! on Defender Firewall disabled"
             debug:
                 msg:
                     - "ALERT! You are using Windows Defender as your filewall and it is fully disabled"
@@ -424,7 +425,7 @@
                 - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length == 0
         when: win10stig_firewall_type == "defender"
 
-      - name: "MEDIUM | WN10-00-000135 | PATCH | A host-based firewall must be installed and enabled on the system. | Warn on 3rd party firewall"
+      - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on 3rd party firewall"
         debug:
             msg:
                 - "Warning! You are not using Windows Defender as your firewall."
@@ -438,3 +439,209 @@
       - CCI-000366
       - SV-220724r569187_rule
       - V-220724
+
+- name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts." 
+  block:
+      - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Alert if automation managed not enabled" 
+        debug:
+            msg:
+                - "Alert! You are using Windows Defender as your firewall on this host. Please confirm Inbound Rules only allow authorized inbound traffic"
+        when:
+            - win10stig_firewall_type == "defender"
+            - ansible_windows_domain_member
+            - not win10stig_firewall_automation_managed_inbound
+      # - block:
+      #     - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Deny all"
+      #       win_firewall_rule:
+      #           name: deny_all
+      #           group: automation_created
+      #           action: block
+      #           direction: in
+      #           remoteip: any
+      #           state: present
+      #           enabled: false
+
+      #     - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Allow list"
+      #       win_firewall_rule:
+      #           name: "Allow Remote IP {{ item }}"
+      #           group: automation_created
+      #           action: allow
+      #           direction: in
+      #           remoteip: "{{ item }}"
+      #           state: present
+      #           enabled: false
+      #       with_items:
+      #           - "{{ win10stig_defender_fw_allow_list }}"
+      #       loop_control:
+      #           label: "{{ item }}"
+
+      #     - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Enable both rules"
+      #       win_firewall_rule:
+      #           group: automation_created
+      #           enabled: true
+      #   when: win10stig_firewall_automation_managed_inbound 
+  when:
+      - wn10_00_000140
+  tags:
+      - WN10-00-000140
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220725r569187_rule
+      - V-220725
+      - notimplemented
+
+- name: "MEDIUM | WN10-00-000155 | PATCH | The Windows PowerShell 2.0 feature must be disabled on the system."
+  win_optional_feature:
+      name: MicrosoftWindowsPowerShellV2Root
+      state: absent
+  when:
+      - wn10_00_000155
+  tags:
+      - WN10-00-000155
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220728r569187_rule
+      - V-220728
+
+- name: "MEDIUM | WN10-00-000160 | PATCH | The Server Message Block (SMB) v1 protocol must be disabled on the system."
+  win_optional_feature:
+      name: SMB1Protocol
+      state: absent
+  when:
+      - wn10_00_000160
+  tags:
+      - WN10-00-000160
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220729r569187_rule
+      - V-220729
+
+- name: "MEDIUM | WN10-00-000165 | PATCH | The Server Message Block (SMB) v1 protocol must be disabled on the SMB server."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters
+      value: SMB1
+      state: present
+      data: 0
+      datatype: dword
+  when:
+      - wn10_00_000165
+  tags:
+      - WN10-00-000165
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220730r569187_rule
+      - V-220730
+
+- name: "MEDIUM | WN10-00-000170 | PATCH | The Server Message Block (SMB) v1 protocol must be disabled on the SMB client."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\mrxsmb10
+      value: Start
+      state: present
+      data: 4
+      datatype: dword
+  notify: reboot windows
+  when:
+      - wn10_00_000170
+  tags:
+      - WN10-00-000170
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220731r569187_rule
+      - V-220731
+
+- name: "MEDIUM | WN10-00-000175 | PATCH | The Secondary Logon service must be disabled on Windows 10."
+  win_service:
+      name: seclogon
+      state: stopped
+      start_mode: disabled
+  when:
+      - wn10_00_000175
+  tags:
+      - WN10-00-000175
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220732r569187_rule
+      - V-220732
+
+- name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10."
+  debug:
+      msg: "Warning! Please review the User Right listed for each of any unresolved SID to determine whether they are valid"
+  when:
+      - wn10_00_000190
+  tags:
+      - WN10-00-000190
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220733r569187_rule
+      - V-220733
+
+- name: "MEDIUM | WN10-00-000210 | PATCH | Bluetooth must be turned off unless approved by the organization."
+  block:
+      - name: "MEDIUM | WN10-00-000210 | PATCH | Bluetooth must be turned off unless approved by the organization. | Disable BT in the registry"
+        win_regedit:
+            path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ActionCenter\QuickActions\All\SystemSettings_Device_BluetoothQuickAction
+            value: Type
+            state: present
+            data: 1
+            datatype: dword
+        notify: reboot windows
+
+      - name: "MEDIUM | WN10-00-000210 | PATCH | Bluetooth must be turned off unless approved by the organization. | Disable BT service"
+        win_service:
+            name: bthserv
+            state: stopped
+            start_mode: disabled
+  when:
+      - wn10_00_000210
+  tags:
+      - WN10-00-000210
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220734r569187_rule
+      - V-220734
+
+- name: "MEDIUM | WN10-00-000220 | PATCH | Bluetooth must be turned off when not in use."
+  block:
+      - name: "MEDIUM | WN10-00-000220 | PATCH | Bluetooth must be turned off when not in use. | Disable BT in the registry"
+        win_regedit:
+            path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ActionCenter\QuickActions\All\SystemSettings_Device_BluetoothQuickAction
+            value: Type
+            state: present
+            data: 1
+            datatype: dword
+        notify: reboot windows
+
+      - name: "MEDIUM | WN10-00-000220 | PATCH | Bluetooth must be turned off when not in use. | Disable BT service"
+        win_service:
+            name: bthserv
+            state: stopped
+            start_mode: disabled
+  when:
+      - wn10_00_000220
+  tags:
+      - WN10-00-000220
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220735r569187_rule
+      - V-220735
+
+# - name: "MEDIUM | WN10-00-000230 | PATCH | The system must notify the user when a Bluetooth device attempts to connect."
+
+#   when:
+#       - WN10-00-000230
+#   tags:
+#       - WN10-00-000230
+#       - CAT2
+#       - CCI-000366
+#       - SRG-OS-000480-GPOS-00227
+#       - SV-220736r569187_rule
+#       - V-220736
