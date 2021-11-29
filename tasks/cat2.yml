@@ -634,14 +634,181 @@
       - SV-220735r569187_rule
       - V-220735
 
-# - name: "MEDIUM | WN10-00-000230 | PATCH | The system must notify the user when a Bluetooth device attempts to connect."
+- name: "MEDIUM | WN10-00-000230 | PATCH | The system must notify the user when a Bluetooth device attempts to connect."
+  win_regedit:
+      name: HKU:\Software\Microsoft\BluetoothAuthenticationAgent
+      value: AcceptIncomingRequests
+      state: present
+      data: 1
+      datatype: dword
+  when:
+      - wn10_00_000230
+  tags:
+      - WN10-00-000230
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220736r569187_rule
+      - V-220736
 
-#   when:
-#       - WN10-00-000230
-#   tags:
-#       - WN10-00-000230
-#       - CAT2
-#       - CCI-000366
-#       - SRG-OS-000480-GPOS-00227
-#       - SV-220736r569187_rule
-#       - V-220736
+- name: "MEDIUM | WN10-00-000250 | AUDIT | Windows 10 non-persistent VM sessions should not exceed 24 hours."
+  debug:
+      msg: "Alert! Please investigate VDI settings to make sure they are non-persistent and do not exceed 24 hours"
+  when:
+      - wn10_00_000250
+  tags:
+      - WN10-00-000250
+      - CAT2
+      - CCI-001199
+      - SRG-OS-000185-GPOS-00079
+      - SV-220738r569187_rule
+      - V-220738
+
+# Needs to go before WN10-AC-000005 since the Lockout Duration could be disabled if the Lockout Policy is set to 0 causing the task to fail
+- name: "MEDIUM | WN10-AC-000010 | PATCH | The number of allowed bad logon attempts must be configured to 3 or less."
+  win_security_policy:
+      section: System Access
+      key: LockoutBadCount
+      value: "{{ win10stig_account_settings.lockoutbadcount }}"
+  when:
+      - wn10_AC_000010
+  tags:
+      - WN10-AC-000010
+      - CAT2
+      - CCI-000044
+      - SRG-OS-000021-GPOS-00005
+      - SV-220740r569187_rule
+      - V-220740
+
+# Putting this before WN10-AC-000005 ensures the value being set conforms to the needed standard for account settings
+# The Lockout Duration must be greater or equal to the Reset Account Lockout counter. 
+- name: "MEDIUM | WN10-AC-000015 | PATCH | The period of time before the bad logon counter is reset must be configured to 15 minutes."
+  win_security_policy:
+      section: System Access
+      key: ResetLockoutCount
+      value: "{{ win10stig_account_settings.resetlockoutcount }}"
+  when:
+      - wn10_AC_000015
+  tags:
+      - WN10-AC-000015
+      - CAT2
+      - CCI-000044
+      - CCI-002238
+      - SRG-OS-000021-GPOS-00005
+      - SV-220741r569187_rule
+      - V-220741
+
+- name: "MEDIUM | WN10-AC-000005 | PATCH | Windows 10 account lockout duration must be configured to 15 minutes or greater."
+  win_security_policy:
+      section: System Access
+      key: LockoutDuration
+      value: "{{ win10stig_account_settings.lockoutduration }}"
+  when:
+      - wn10_AC_000005
+  tags:
+      - WN10-AC-000005
+      - CAT2
+      - CCI-002238
+      - SRG-OS-000329-GPOS-00128
+      - SV-220739r569187_rule
+
+- name: "MEDIUM | WN10-AC-000020 | PATCH | The password history must be configured to 24 passwords remembered."
+  win_security_policy:
+      section: System Access
+      key: PasswordHistorySize
+      value: "{{ win10stig_account_settings.passwordhistory }}"
+  when:
+      - wn10_AC_000020
+  tags:
+      - WN10-AC-000020
+      - CAT2
+      - CCI-000200
+      - SRG-OS-000077-GPOS-00045
+      - SV-220742r569187_rule
+      - V-220742
+
+- name: "MEDIUM | WN10-AC-000025 | PATCH | The maximum password age must be configured to 60 days or less."
+  win_security_policy:
+      section: System Access
+      key: MaximumPasswordAge
+      value: "{{ win10stig_account_settings.max_pass_age }}"
+  when:
+      - wn10_AC_000025
+  tags:
+      - WN10-AC-000025
+      - CAT2
+      - CCI-000199
+      - SRG-OS-000076-GPOS-00044
+      - SV-220743r569187_rule
+      - V-220743
+
+- name: "MEDIUM | WN10-AC-000030 | PATCH | The minimum password age must be configured to at least 1 day."
+  win_security_policy:
+      section: System Access
+      key: MinimumPasswordAge
+      value: "{{ win10stig_account_settings.min_pass_age }}"
+  when:
+      - wn10_AC_000030
+  tags:
+      - WN10-AC-000030
+      - CAT2
+      - CCI-000198
+      - SRG-OS-000075-GPOS-00043
+      - SV-220744r569187_rule
+      - V-220744
+
+- name: "MEDIUM | WN10-AC-000035 | PATCH | Passwords must, at a minimum, be 14 characters."
+  win_security_policy:
+      section: System Access
+      key: MinimumPasswordLength
+      value: "{{ win10stig_account_settings.min_pass_length }}"
+  when:
+      - wn10_AC_000035
+  tags:
+      - WN10-AC-000035
+      - CAT2
+      - CCI-000205
+      - SRG-OS-000078-GPOS-00046
+      - SV-220745r569187_rule
+      - V-220745
+
+- name: "MEDIUM | WN10-AC-000040 | PATCH | The built-in Microsoft password complexity filter must be enabled."
+  win_security_policy:
+      section: System Access
+      key: PasswordComplexity
+      value: 1
+  when:
+      - wn10_AC_000040
+  tags:
+      - WN10-AC-000040
+      - CAT2
+      - CCI-000192
+      - CCI-000193
+      - CCI-000194
+      - CCI-001619
+      - SRG-OS-000069-GPOS-00037
+      - SV-220746r569187_rule
+      - V-220746
+
+- name: "MEDIUM | WN10-AU-000005 | PATCH | The system must be configured to audit Account Logon - Credential Validation failures."
+  block:
+      - name: "MEDIUM | WN10-AU-000005 | PATCH | The system must be configured to audit Account Logon - Credential Validation failures. | Get Credential Validation status"
+        win_shell: AuditPol /get /subcategory:"Credential Validation" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+        changed_when: false
+        failed_when: false
+        check_mode: no
+        ignore_errors: yes
+        register: wn10_au_000005_cred_validation_status
+
+      - name: "MEDIUM | WN10-AU-000005 | PATCH | The system must be configured to audit Account Logon - Credential Validation failures. | Set Success to Credential Validation"
+        win_shell: AuditPol /set /subcategory:"Credential Validation" /failure:enable
+        when: "'Failure' not in wn10_au_000005_cred_validation_status.stdout"
+  when:
+      - wn10_AU_000005
+  tags:
+      - WN10-AU-000005
+      - CAT2
+      - CCI-000172
+      - SRG-OS-000470-GPOS-00214
+      - SV-220748r569187_rule
+      - V-220748

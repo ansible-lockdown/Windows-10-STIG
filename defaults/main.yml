@@ -96,6 +96,17 @@ wn10_00_000175: true
 wn10_00_000190: true
 wn10_00_000210: true
 wn10_00_000220: true
+wn10_00_000230: true
+wn10_00_000250: true
+wn10_AC_000005: true
+wn10_AC_000010: true
+wn10_AC_000015: true
+wn10_AC_000020: true
+wn10_AC_000025: true
+wn10_AC_000030: true
+wn10_AC_000035: true
+wn10_AC_000040: true
+wn10_AU_000005: true
 
 # CAT 3 Rules
 wn10_00_000020: true
@@ -162,6 +173,40 @@ win10stig_bitlocker_min_pin_length: 6
 # When using a different firewall solution, please confirm it aligns with STIG compliance
 # THIS CONTROL DOES NOT SET PROFILE SETTINGS OF ANY KIND!!!
 win10stig_firewall_type: defender
+
+# win10stig_account are all of the related account security settings
+# WN10-AC-000005
+# lockoutduration is the duration in minutes for an account to be locked after a certain number of failed login attempts
+# To conform to STIG standards this value needs to be 15 minutes or greater
+# WN10-AC-000010
+# lockoutbadcount is the number of failed account login attempts before locking the account
+# To conform to STIG standards this value needs to be 3 or less
+# WN10-AC-000015
+# resetlockoutcount is the duration in minutes between failed login attempts for the counter to zero
+# To conform to STIG standards this value needs to be 15 minutes or greater
+# !!!!! Important !!!!!!!
+# The lockoutduration value has to be equal to or greater than resetlockoutcount value. 
+# Failure to follow that standard will result in tasks failing since that is out of bounds for those settings in the OS
+# WN10-AC-000020
+# passwordhistory is the number of passwords to cycle through
+# To conform to STIG standards this needs to be set to 24
+# WN10-AC-000025
+# max_pass_age is the maximum age in days a password can be
+# To conform to STIG standards this needs to be 60 days or less
+# WN10-AC-000030
+# min_pass_age is the minimum password age in days
+# To conform to STIG standards this value of 1 or greater
+# WN10-AC-000035
+# min_pass_length is the minimum length in characters that a password can be
+# To conform to STIG standards this value needs to be 14 or greater
+win10stig_account_settings:
+    lockoutduration: 15
+    lockoutbadcount: 3
+    resetlockoutcount: 15
+    passwordhistory: 24
+    max_pass_age: 60
+    min_pass_age: 1
+    min_pass_length: 14
 
 # CAT3
 
