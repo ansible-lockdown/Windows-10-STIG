@@ -107,6 +107,36 @@ wn10_AC_000030: true
 wn10_AC_000035: true
 wn10_AC_000040: true
 wn10_AU_000005: true
+wn10_AU_000010: true
+wn10_AU_000030: true
+wn10_AU_000035: true
+wn10_AU_000040: true
+wn10_AU_000045: true
+wn10_AU_000050: true
+wn10_AU_000054: true
+wn10_AU_000060: true
+wn10_AU_000065: true
+wn10_AU_000070: true
+wn10_AU_000075: true
+wn10_AU_000080: true
+wn10_AU_000081: true
+wn10_AU_000082: true
+wn10_AU_000083: true
+wn10_AU_000084: true
+wn10_AU_000085: true
+wn10_AU_000090: true
+wn10_AU_000100: true
+wn10_AU_000105: true
+wn10_AU_000107: true
+wn10_AU_000110: true
+wn10_AU_000115: true
+wn10_AU_000120: true
+wn10_AU_000130: true
+wn10_AU_000135: true
+wn10_AU_000140: true
+wn10_AU_000150: true
+wn10_AU_000155: true
+wn10_AU_000160: true
 
 # CAT 3 Rules
 wn10_00_000020: true
@@ -207,6 +237,63 @@ win10stig_account_settings:
     max_pass_age: 60
     min_pass_age: 1
     min_pass_length: 14
+
+# win10stig_audit_settings is the group of variables used to enable success/failure loging for various audit logging categories. 
+# There will only be values here for controls that don't have a corresponding success and failure STIG control
+# This gives control to the end user to set the required STIG value but also give flexabilty to add the other setting if needed
+# WN10-AU-000030
+# security_group_mngmnt_include_failure set to false will set Secuirty Group Management to log only successful changes to Security Group Management settings
+# security_group_mngmnt_include_failure set to true will set Security Group Management to log both successful and failed changes to Security Group Management settings
+# WN10-AU-000045
+# pnp_activity_include_failure set to false will set Plug and Play Events logging only to successful connections to external devices
+# pnp_activity_include_failure set to true will set Plug and Play Events loggin to both successful and failed connections to external devices
+# WN10-AU-000050
+# process_creation_include_failure set to false will set Process Creation logging to log only successful process creation
+# process_creation_include_failure set to true will set Process Creation logging to log both successful and failed process creation
+# WN10-AU-000054
+# accnt_lockout_include_success set to false will set Account Lockout logging to log only failed Account Lockout events
+# accnt_lockout_include_success set to true will set Account Lockout logging to log both successful and failed Account Lockout events
+# WN10-AU-000060
+# group_membership_include_failure set to false will set Group Membership logging to log only successful group membership changes
+# group_membership_include_failure set to true will set Group Membership logging to log both successful and failed group membership changes
+# WN10-AU-000065
+# logoff_include_failure set to false will set Logoff logging to log only succesful logoffs
+# logoff_include_failure set to true will set Logoff logging to log both successful and failed logoffs
+# WN10-AU-000080
+# special_logon_include_failure set to false will set Special Logon to log only successful special logons
+# special_logon_include_failure set to true will set Special Logon to log both successful and failed special logons
+# WN10-AU-000100
+# audit_policy_change_include_failure set to false will set Audit Policy Change to log only successful changes to the audit policy
+# audit_policy_change_include_failure set to true will set Audit Policy Change to log both successful and failed changes to the audit policy
+# WN10-AU-000105
+# authentication_policy_change_include_failure set to false will set Authentication Policy Change to log only successful changes to the authentication policy
+# authentication_policy_change_include_failure Set to true will set Authentication Policy Change to log both successful and failed changes to the authentication policy
+# WN10-AU-000107
+# authorization_policy_change_include_failure set to false will set Authorization Policy Change to log only successful changes to the authorization policy
+# authorization_policy_change_include_failure set to true will set Authorization Policy Change to log both successful and failed changes to teh authorization policy
+# WN10-AU-000120
+# ipsec_drive_include_success set to false will set IPSec Driver to log only failed events related to IPSec Driver
+# ipsec_drive_include_success set to true will set IPSec Driver to log both failed and successful events related to IPSec Driver
+# WN10-AU-000140
+# security_state_change_include_failure set to false will set Security State Change to log only successful events related to changes in the security state
+# security_state_change_include_failure set to true will set Security State Change to log both successful and failed events related to changes in the security state
+# WN10-AU-000150
+# security_system_extension_include_failure set to false will set Security System Extension to log only successful events related to extension codes being loaded by the security subsystem
+# security_system_extension_include_failure set to true will set Security System Extension to log both successful and failed events related to extension codes being loaded by the security subsystem
+win10stig_audit_settings:
+    security_group_mngmnt_include_failure: false
+    pnp_activity_include_failure: false
+    process_creation_include_failure: false
+    accnt_lockout_include_success: false
+    group_membership_include_failure: false
+    logoff_include_failure: false
+    special_logon_include_failure: false
+    audit_policy_change_include_failure: false
+    authentication_policy_change_include_failure: false
+    authorization_policy_change_include_failure: false
+    ipsec_drive_include_success: false
+    security_state_change_include_failure: false
+    security_system_extension_include_failure: false
 
 # CAT3
 

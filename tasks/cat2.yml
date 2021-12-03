@@ -137,7 +137,7 @@
       - SV-220704r569290_rule
       - V-220704
 
-- name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception policy to allow the execution of authorized software programs."
+- name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs."
   debug:
       msg:
           - "Alert! Please confirm you have a deny-all policy in place that utilizes a whitelist for applications."
@@ -554,11 +554,13 @@
       - SV-220731r569187_rule
       - V-220731
 
+# This service can't be stopped manually (through automation or manually through Services)
+# You need to disable then reboot Windows for the service to be stopped
 - name: "MEDIUM | WN10-00-000175 | PATCH | The Secondary Logon service must be disabled on Windows 10."
   win_service:
       name: seclogon
-      state: stopped
       start_mode: disabled
+  notify: reboot windows
   when:
       - wn10_00_000175
   tags:
@@ -636,7 +638,7 @@
 
 - name: "MEDIUM | WN10-00-000230 | PATCH | The system must notify the user when a Bluetooth device attempts to connect."
   win_regedit:
-      name: HKU:\Software\Microsoft\BluetoothAuthenticationAgent
+      path: HKCU:\Software\Microsoft\BluetoothAuthenticationAgent
       value: AcceptIncomingRequests
       state: present
       data: 1
@@ -790,25 +792,755 @@
       - SV-220746r569187_rule
       - V-220746
 
-- name: "MEDIUM | WN10-AU-000005 | PATCH | The system must be configured to audit Account Logon - Credential Validation failures."
-  block:
-      - name: "MEDIUM | WN10-AU-000005 | PATCH | The system must be configured to audit Account Logon - Credential Validation failures. | Get Credential Validation status"
-        win_shell: AuditPol /get /subcategory:"Credential Validation" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
-        changed_when: false
-        failed_when: false
-        check_mode: no
-        ignore_errors: yes
-        register: wn10_au_000005_cred_validation_status
-
-      - name: "MEDIUM | WN10-AU-000005 | PATCH | The system must be configured to audit Account Logon - Credential Validation failures. | Set Success to Credential Validation"
-        win_shell: AuditPol /set /subcategory:"Credential Validation" /failure:enable
-        when: "'Failure' not in wn10_au_000005_cred_validation_status.stdout"
+- name: |
+    "MEDIUM | WN10-AU-000005 | PATCH | The system must be configured to audit Account Logon - Credential Validation failures."
+    "MEDIUM | WN10-AU-000010 | PATCH |  The system must be configured to audit Account Logon - Credential Validation successes."
+  win_audit_policy_system:
+      subcategory: Credential Validation
+      audit_type: "{{ (wn10_AU_000005 and not wn10_AU_000010) | ternary ('failure', '') }}{{ (wn10_AU_000010 and not wn10_AU_000005) | ternary ('success', '') }}{{ (wn10_AU_000005 and wn10_AU_000010) | ternary ('success, failure', '') }}"
   when:
-      - wn10_AU_000005
+      - wn10_AU_000005 or
+        wn10_AU_000010
   tags:
       - WN10-AU-000005
+      - WN10-AU-000010
       - CAT2
       - CCI-000172
       - SRG-OS-000470-GPOS-00214
       - SV-220748r569187_rule
+      - SV-220749r569187_rule
       - V-220748
+      - V-220749
+
+# - name: "MEDIUM | WN10-AU-000005 | PATCH | The system must be configured to audit Account Logon - Credential Validation failures."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000005 | AUDIT | The system must be configured to audit Account Logon - Credential Validation failures. | Get Credential Validation status"
+#         win_shell: AuditPol /get /subcategory:"Credential Validation" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000005_cred_validation_status
+
+#       - name: "MEDIUM | WN10-AU-000005 | PATCH | The system must be configured to audit Account Logon - Credential Validation failures. | Set Failure to Credential Validation"
+#         win_shell: AuditPol /set /subcategory:"Credential Validation" /failure:enable
+#         when: "'Failure' not in wn10_au_000005_cred_validation_status.stdout"
+#   when:
+#       - wn10_AU_000005
+#   tags:
+#       - WN10-AU-000005
+#       - CAT2
+#       - CCI-000172
+#       - SRG-OS-000470-GPOS-00214
+#       - SV-220748r569187_rule
+#       - V-220748
+
+# - name: "MEDIUM | WN10-AU-000010 | PATCH |  The system must be configured to audit Account Logon - Credential Validation successes."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000010 | AUDIT |  The system must be configured to audit Account Logon - Credential Validation successes. | Get Credential Validation status"
+#         win_shell: AuditPol /get /subcategory:"Credential Validation" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000010_cred_validation_status
+
+#       - name: "MEDIUM | WN10-AU-000010 | PATCH |  The system must be configured to audit Account Logon - Credential Validation successes. | Set Success to Credential Validation"
+#         win_shell: AuditPol /set /subcategory:"Credential Validation" /success:enable
+#         when: "'Success' not in wn10_au_000010_cred_validation_status.stdout"
+#   when:
+#       - wn10_AU_000010
+#   tags:
+#       - WN10-AU-000010
+#       - CAT2
+#       - CCI-000172
+#       - SRG-OS-000470-GPOS-00214
+#       - SV-220749r569187_rule
+#       - V-220749
+
+- name: "MEDIUM | WN10-AU-000030 | PATCH | The system must be configured to audit Account Management - Security Group Management successes."
+  win_audit_policy_system:
+      subcategory: Security Group Management
+      audit_type: "{{ win10stig_audit_settings.security_group_mngmnt_include_failure | ternary ('success, failure', 'success' ) }}"
+  when:
+      - wn10_AU_000030
+  tags:
+      - WN10-AU-000030
+      - CAT2
+      - CCI-000018
+      - CCI-000172
+      - CCI-001403
+      - CCI-001404
+      - CCI-001405
+      - CCI-002130
+      - CCI-002234
+      - SRG-OS-000004-GPOS-00004
+      - SV-220750r569187_rule
+      - V-220750
+
+# - name: "MEDIUM | WN10-AU-000030 | PATCH | The system must be configured to audit Account Management - Security Group Management successes."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000030 | AUDIT | The system must be configured to audit Account Management - Security Group Management successes. | Get Account Management status"
+#         win_shell: AuditPol /get /subcategory:"Security Group Management" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000030_acct_mngmnt_status
+
+#       - name: "MEDIUM | WN10-AU-000030 | AUDIT | The system must be configured to audit Account Management - Security Group Management successes. | Set Success to Account Management"
+#         win_shell: AuditPol /set /subcategory:"Security Group Management" /success:enable
+#         when: "'Success' not in wn10_au_000030_acct_mngmnt_status.stdout"
+#   when:
+#       - wn10_AU_000030
+#   tags:
+#       - WN10-AU-000030
+#       - CAT2
+#       - CCI-000018
+#       - CCI-000172
+#       - CCI-001403
+#       - CCI-001404
+#       - CCI-001405
+#       - CCI-002130
+#       - CCI-002234
+#       - SRG-OS-000004-GPOS-00004
+#       - SV-220750r569187_rule
+#       - V-220750
+
+- name: |
+    "MEDIUM | WN10-AU-000035 | PATCH | The system must be configured to audit Account Management - User Account Management failures."
+    "MEDIUM | WN10-AU-000040 | PATCH | The system must be configured to audit Account Management - User Account Management successes."
+  win_audit_policy_system:
+      subcategory: Credential Validation
+      audit_type: "{{ (wn10_AU_000035 and not wn10_AU_000040) | ternary ('failure', '') }}{{ (wn10_AU_000040 and not wn10_AU_000035) | ternary ('success', '') }}{{ (wn10_AU_000035 and wn10_AU_000040) | ternary ('success, failure', '') }}"
+  when:
+      - wn10_AU_000035 or
+        wn10_AU_000040
+  tags:
+      - WN10-AU-000035
+      - WN10-AU-000040
+      - CAT2
+      - CCI-000018
+      - CCI-000172
+      - CCI-001403
+      - CCI-001404
+      - CCI-001405
+      - CCI-002130
+      - CCI-002234
+      - SRG-OS-000004-GPOS-00004
+      - SV-220751r569187_rule
+      - SV-220752r569187_rule
+      - V-220751
+      - V-220752
+
+# - name: "MEDIUM | WN10-AU-000035 | PATCH | The system must be configured to audit Account Management - User Account Management failures."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000035 | AUDIT | The system must be configured to audit Account Management - User Account Management failures. | Get Account Management status"
+#         win_shell: AuditPol /get /subcategory:"User Account Management" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000035_acct_mngmnt_status
+
+#       - name: "MEDIUM | WN10-AU-000035 | PATCH | The system must be configured to audit Account Management - User Account Management failures. | Set Failure to Account Management"
+#         win_shell: AuditPol /set /subcategory:"User Account Management" /failure:enable
+#         when: "'Failure' not in wn10_au_000035_acct_mngmnt_status.stdout"
+#   when:
+#       - wn10_AU_000035
+#   tags:
+#       - WN10-AU-000035
+#       - CAT2
+#       - CCI-000018
+#       - CCI-000172
+#       - CCI-001403
+#       - CCI-001404
+#       - CCI-001405
+#       - CCI-002130
+#       - CCI-002234
+#       - SRG-OS-000004-GPOS-00004
+#       - SV-220751r569187_rule
+#       - V-220751
+
+# - name: "MEDIUM | WN10-AU-000040 | PATCH | The system must be configured to audit Account Management - User Account Management successes."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000040 | AUDIT | The system must be configured to audit Account Management - User Account Management successes. | Get User Account Management status"
+#         win_shell: AuditPol /get /subcategory:"User Account Management" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000040_user_acct_mngmnt_status
+
+#       - name: "MEDIUM | WN10-AU-000040 | PATCH | The system must be configured to audit Account Management - User Account Management successes. | Set Successes to User Account Management"
+#         win_shell: AuditPol /set /subcategory:"User Account Management" /success:enable
+#         when: "'Success' not in wn10_au_000040_user_acct_mngmnt_status.stdout"
+#   when:
+#       - wn10_AU_000040
+#   tags:
+#       - WN10-AU-000040
+#       - CAT2
+#       - CCI-000018
+#       - CCI-000172
+#       - CCI-001403
+#       - CCI-001404
+#       - CCI-001405
+#       - CCI-002130
+#       - CCI-002234
+#       - SRG-OS-000004-GPOS-00004
+#       - SV-220752r569187_rule
+#       - V-220752
+
+- name: "MEDIUM | WN10-AU-000045 | PATCH | The system must be configured to audit Detailed Tracking - PNP Activity successes."
+  win_audit_policy_system:
+      subcategory: Plug and Play Events
+      audit_type: "{{ win10stig_audit_settings.pnp_activity_include_failure | ternary ('success, failure', 'success' ) }}"
+  when:
+      - wn10_AU_000045
+  tags:
+      - WN10-AU-000045
+      - CAT2
+      - CCI-001814
+      - CCI-000172
+      - SRG-OS-000365-GPOS-00152
+      - SV-220753r569187_rule
+      - V-220753
+
+# - name: "MEDIUM | WN10-AU-000045 | PATCH | The system must be configured to audit Detailed Tracking - PNP Activity successes."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000045 | AUDIT | The system must be configured to audit Detailed Tracking - PNP Activity successes. | Get PNP Activity status"
+#         win_shell: AuditPol /get /subcategory:"Plug and Play Events" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000045_pnp_actvity_status
+
+#       - name: "MEDIUM | WN10-AU-000045 | PATCH | The system must be configured to audit Detailed Tracking - PNP Activity successes. | Set Successes to PNP Activity"
+#         win_shell: AuditPol /set /subcategory:"Plug and Play Events" /success:enable
+#         when: "'Success' not in wn10_au_000045_pnp_actvity_status.stdout"
+#   when:
+#       - wn10_AU_000045
+#   tags:
+#       - WN10-AU-000045
+#       - CAT2
+#       - CCI-001814
+#       - CCI-000172
+#       - SRG-OS-000365-GPOS-00152
+#       - SV-220753r569187_rule
+#       - V-220753
+
+- name: "MEDIUM | WN10-AU-000050 | PATCH | The system must be configured to audit Detailed Tracking - Process Creation successes."
+  win_audit_policy_system:
+      subcategory: Process Creation
+      audit_type: "{{ win10stig_audit_settings.process_creation_include_failure | ternary ('success, failure', 'success' ) }}"
+  when:
+      - wn10_AU_000050
+  tags:
+      - WN10-AU-000050
+      - CAT2
+      - CCI-001814
+      - CCI-000172
+      - SRG-OS-000365-GPOS-00152
+      - SV-220754r569187_rule
+      - V-220754
+
+# - name: "MEDIUM | WN10-AU-000050 | PATCH | The system must be configured to audit Detailed Tracking - Process Creation successes."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000050 | AUDIT | The system must be configured to audit Detailed Tracking - Process Creation successes. | Get Detailed Tracking status"
+#         win_shell: AuditPol /get /subcategory:"Process Creation" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000050_process_creation_status
+
+#       - name: "MEDIUM | WN10-AU-000050 | PATCH | The system must be configured to audit Detailed Tracking - Process Creation successes. | Set Successes to Detailed Tracking"
+#         win_shell: AuditPol /set /subcategory:"Process Creation" /success:enable
+#         when: "'Success' not in wn10_au_000050_process_creation_status.stdout"
+#   when:
+#       - wn10_AU_000050
+#   tags:
+#       - WN10-AU-000050
+#       - CAT2
+#       - CCI-001814
+#       - CCI-000172
+#       - SRG-OS-000365-GPOS-00152
+#       - SV-220754r569187_rule
+#       - V-220754
+
+- name: "MEDIUM | WN10-AU-000054 | PATCH | The system must be configured to audit Logon/Logoff - Account Lockout failures."
+  win_audit_policy_system:
+      subcategory: Account Lockout
+      audit_type: "{{ win10stig_audit_settings.accnt_lockout_include_success | ternary ('success, failure', 'failure' ) }}"
+  when:
+      - wn10_AU_000054
+  tags:
+      - WN10-AU-000054
+      - CAT2
+      - CCI-000172
+      - SRG-OS-000470-GPOS-00214
+      - SV-220755r569187_rule
+      - V-220755
+
+# - name: "MEDIUM | WN10-AU-000054 | PATCH | The system must be configured to audit Logon/Logoff - Account Lockout failures."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000054 | AUDIT | The system must be configured to audit Logon/Logoff - Account Lockout failures. | Get Logon/Logoff status"
+#         win_shell: AuditPol /get /subcategory:"Account Lockout" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000054_account_lockout_failure_status
+
+#       - name: "MEDIUM | WN10-AU-000054 | PATCH | The system must be configured to audit Logon/Logoff - Account Lockout failures. | Set failure to  Logon/Logoff"
+#         win_shell: AuditPol /set /subcategory:"Account Lockout" /failure:enable
+#         when: "'Failure' not in wn10_au_000054_account_lockout_failure_status.stdout"
+#   when:
+#       - wn10_AU_000054
+#   tags:
+#       - WN10-AU-000054
+#       - CAT2
+#       - CCI-000172
+#       - SRG-OS-000470-GPOS-00214
+#       - SV-220755r569187_rule
+#       - V-220755
+
+- name: "MEDIUM | WN10-AU-000060 | PATCH | The system must be configured to audit Logon/Logoff - Group Membership successes."
+  win_audit_policy_system:
+      subcategory: Group Membership
+      audit_type: "{{ win10stig_audit_settings.group_membership_include_failure | ternary ('success, failure', 'success' ) }}"
+  when:
+      - wn10_AU_000060
+  tags:
+      - WN10-AU-000060
+      - CAT2
+      - CCI-000172
+      - SRG-OS-000470-GPOS-00214
+      - SV-220756r569187_rule
+      - V-220756
+
+# - name: "MEDIUM | WN10-AU-000060 | PATCH | The system must be configured to audit Logon/Logoff - Group Membership successes."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000060 | AUDIT | The system must be configured to audit Logon/Logoff - Group Membership successes. | Get Group Membership status"
+#         win_shell: AuditPol /get /subcategory:"Group Membership" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000060_group_membership_status
+
+#       - name: "MEDIUM | WN10-AU-000060 | PATCH | The system must be configured to audit Logon/Logoff - Group Membership successes. | Set Success to Group Membership"
+#         win_shell: AuditPol /set /subcategory:"Group Membership" /success:enable
+#         when: "'Success' not in wn10_au_000060_group_membership_status.stdout"
+#   when:
+#       - wn10_AU_000060
+#   tags:
+#       - WN10-AU-000060
+#       - CAT2
+#       - CCI-000172
+#       - SRG-OS-000470-GPOS-00214
+#       - SV-220756r569187_rule
+#       - V-220756
+
+- name: "MEDIUM | WN10-AU-000065 | PATCH | The system must be configured to audit Logon/Logoff - Logoff successes."
+  win_audit_policy_system:
+      subcategory: Logoff
+      audit_type: "{{ win10stig_audit_settings.logoff_include_failure | ternary ('success, failure', 'success' ) }}"
+  when:
+      - wn10_AU_000065
+  tags:
+      - WN10-AU-000065
+      - CAT2
+      - CCI-000067
+      - CCI-000172
+      - SRG-OS-000032-GPOS-00013
+      - SV-220757r569187_rule
+      - V-220757
+
+# - name: "MEDIUM | WN10-AU-000065 | PATCH | The system must be configured to audit Logon/Logoff - Logoff successes."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000065 | AUDIT | The system must be configured to audit Logon/Logoff - Logoff successes. | Get Logff status"
+#         win_shell: AuditPol /get /subcategory:"Logoff" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000065_logoff_status
+
+#       - name: "MEDIUM | WN10-AU-000065 | PATCH | The system must be configured to audit Logon/Logoff - Logoff successes. | Set Sucess to Logff"
+#         win_shell: AuditPol /set /subcategory:"Logoff" /success:enable
+#         when: "'Success' not in wn10_au_000065_logoff_status.stdout"
+#   when:
+#       - wn10_AU_000065
+#   tags:
+#       - WN10-AU-000065
+#       - CAT2
+#       - CCI-000067
+#       - CCI-000172
+#       - SRG-OS-000032-GPOS-00013
+#       - SV-220757r569187_rule
+#       - V-220757
+
+- name: |
+    "MEDIUM | WN10-AU-000070 | PATCH | The system must be configured to audit Logon/Logoff - Logon failures."
+    "MEDIUM | WN10-AU-000075 | PATCH | The system must be configured to audit Logon/Logoff - Logon successes."
+  win_audit_policy_system:
+      subcategory: Logon
+      audit_type: "{{ (wn10_AU_000070 and not wn10_AU_000075) | ternary ('failure', '') }}{{ (wn10_AU_000075 and not wn10_AU_000070) | ternary ('success', '') }}{{ (wn10_AU_000070 and wn10_AU_000075) | ternary ('success, failure', '') }}"
+  when:
+      - wn10_AU_000070 or
+        wn10_AU_000075
+  tags:
+      - WN10-AU-000070
+      - WN10-AU-000075
+      - CAT2
+      - CCI-000067
+      - CCI-000172
+      - SRG-OS-000032-GPOS-00013
+      - SV-220758r569187_rule
+      - SV-220759r569187_rule
+      - V-220758
+      - V-220759
+
+
+# - name: "MEDIUM | WN10-AU-000070 | PATCH | The system must be configured to audit Logon/Logoff - Logon failures."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000070 | AUDIT | The system must be configured to audit Logon/Logoff - Logon failures. | Get Logon status"
+#         win_shell: AuditPol /get /subcategory:"Logon" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000070_logon_status
+
+#       - name: "MEDIUM | WN10-AU-000070 | PATCH | The system must be configured to audit Logon/Logoff - Logon failures. | Set failure to Logon"
+#         win_shell: AuditPol /set /subcategory:"Logon" /failure:enable
+#         when: "'Failure' not in wn10_au_000070_logon_status.stdout"
+#   when:
+#       - wn10_AU_000070
+#   tags:
+#       - WN10-AU-000070
+#       - CAT2
+#       - CCI-000067
+#       - CCI-000172
+#       - SRG-OS-000032-GPOS-00013
+#       - SV-220758r569187_rule
+#       - V-220758
+
+# - name: "MEDIUM | WN10-AU-000075 | PATCH | The system must be configured to audit Logon/Logoff - Logon successes."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000075 | AUDIT | The system must be configured to audit Logon/Logoff - Logon successes. | Get logon status"
+#         win_shell: AuditPol /get /subcategory:"Logon" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000075_logon_status
+
+#       - name: "MEDIUM | WN10-AU-000075 | PATCH | The system must be configured to audit Logon/Logoff - Logon successes. | Set success to logon"
+#         win_shell: AuditPol /set /subcategory:"Logon" /success:enable
+#         when: "'Success' not in wn10_au_000075_logon_status.stdout"
+#   when:
+#       - wn10_AU_000075
+#   tags:
+#       - WN10-AU-000075
+#       - CAT2
+#       - CCI-000067
+#       - CCI-000172
+#       - SRG-OS-000032-GPOS-00013
+#       - SV-220759r569187_rule
+#       - V-220759
+
+- name: "MEDIUM | WN10-AU-000080 | PATCH | The system must be configured to audit Logon/Logoff - Special Logon successes."
+  win_audit_policy_system:
+      subcategory: Special Logon
+      audit_type: "{{ win10stig_audit_settings.special_logon_include_failure | ternary ('success, failure', 'success' ) }}"
+  when:
+      - wn10_AU_000080
+  tags:
+      - WN10-AU-000080
+      - CAT2
+      - CCI-000172
+      - SRG-OS-000470-GPOS-00214
+      - SV-220760r569187_rule
+      - V-220760
+
+# - name: "MEDIUM | WN10-AU-000080 | PATCH | The system must be configured to audit Logon/Logoff - Special Logon successes."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000080 | AUDIT | The system must be configured to audit Logon/Logoff - Special Logon successes. | Get Special Logon status"
+#         win_shell: AuditPol /get /subcategory:"Special Logon" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000080_special_logon_status
+
+#       - name: "MEDIUM | WN10-AU-000080 | PATCH | The system must be configured to audit Logon/Logoff - Special Logon successes. | Set success to Special Logon"
+#         win_shell: AuditPol /set /subcategory:"Special Logon" /success:enable
+#         when: "'Success' not in wn10_au_000080_special_logon_status.stdout"
+#   when:
+#       - wn10_AU_000080
+#   tags:
+#       - WN10-AU-000080
+#       - CAT2
+#       - CCI-000172
+#       - SRG-OS-000470-GPOS-00214
+#       - SV-220760r569187_rule
+#       - V-220760
+
+- name: |
+    "MEDIUM | WN10-AU-000081 | PATCH | Windows 10 must be configured to audit Object Access - File Share failures."
+    "MEDIUM | WN10-AU-000082 | PATCH | Windows 10 must be configured to audit Object Access - File Share successes."
+  win_audit_policy_system:
+      subcategory: File Share
+      audit_type: "{{ (wn10_AU_000081 and not wn10_AU_000082) | ternary ('failure', '') }}{{ (wn10_AU_000082 and not wn10_AU_000081) | ternary ('success', '') }}{{ (wn10_AU_000081 and wn10_AU_000082) | ternary ('success, failure', '') }}"
+  when:
+      - wn10_AU_000081 or
+        wn10_AU_000082
+  tags:
+      - WN10-AU-000081
+      - WN10-AU-000082
+      - CAT2
+      - CCI-000172
+      - SRG-OS-000474-GPOS-00219
+      - SV-220761r569187_rule
+      - SV-220762r569187_rule
+      - V-220761
+      - V-220762
+
+# - name: "MEDIUM | WN10-AU-000081 | PATCH | Windows 10 must be configured to audit Object Access - File Share failures."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000081 | AUDIT | Windows 10 must be configured to audit Object Access - File Share failures. | Get File Share status"
+#         win_shell: AuditPol /get /subcategory:"File Share" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000081_file_share_status
+
+#       - name: "MEDIUM | WN10-AU-000081 | PATCH | Windows 10 must be configured to audit Object Access - File Share failures. | Set failure to File Share"
+#         win_shell: AuditPol /set /subcategory:"File Share" /failure:enable
+#         when: "'Failure' not in wn10_au_000081_file_share_status.stdout"
+#   when:
+#       - wn10_AU_000081
+#   tags:
+#       - WN10-AU-000081
+#       - CAT2
+#       - CCI-000172
+#       - SRG-OS-000474-GPOS-00219
+#       - SV-220761r569187_rule
+#       - V-220761
+
+# - name: "MEDIUM | WN10-AU-000082 | PATCH | Windows 10 must be configured to audit Object Access - File Share successes."
+#   block:
+#       - name: "MEDIUM | WN10-AU-000082 | AUDIT | Windows 10 must be configured to audit Object Access - File Share successes. | Get File Share status"
+#         win_shell: AuditPol /get /subcategory:"File Share" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+#         changed_when: false
+#         failed_when: false
+#         check_mode: no
+#         ignore_errors: yes
+#         register: wn10_au_000082_file_share_status
+
+#       - name: "MEDIUM | WN10-AU-000082 | PATCH | Windows 10 must be configured to audit Object Access - File Share successes. | Set success to File Share"
+#         win_shell: AuditPol /set /subcategory:"File Share" /success:enable
+#         when: "'Success' not in wn10_au_000082_file_share_status.stdout"
+#   when:
+#       - wn10_AU_000082
+#   tags:
+#       - WN10-AU-000082
+#       - CAT2
+#       - CCI-000172
+#       - SRG-OS-000474-GPOS-00219
+#       - SV-220762r569187_rule
+#       - V-220762
+
+- name: |
+    "MEDIUM | WN10-AU-000083 | PATCH | Windows 10 must be configured to audit Object Access - Other Object Access Events successes."
+    "MEDIUM | WN10-AU-000084 | PATCH | Windows 10 must be configured to audit Object Access - Other Object Access Events failures."
+  win_audit_policy_system:
+      subcategory: Other Object Access Events
+      audit_type: "{{ (wn10_AU_000083 and not wn10_AU_000084) | ternary ('success', '') }}{{ (wn10_AU_000084 and not wn10_AU_000083) | ternary ('failure', '') }}{{ (wn10_AU_000083 and wn10_AU_000084) | ternary ('success, failure', '') }}"
+  when:
+      - wn10_AU_000083 or
+        wn10_AU_000084
+  tags:
+      - WN10-AU-000083
+      - WN10-AU-000084
+      - CAT2
+      - CCI-000172
+      - SRG-OS-000474-GPOS-00219
+      - SV-220763r569187_rule
+      - SV-220764r569187_rule
+      - V-220763
+      - V-220764
+
+- name: |
+    "MEDIUM | WN10-AU-000085 | PATCH | The system must be configured to audit Object Access - Removable Storage failures."
+    "MEDIUM | WN10-AU-000090 | PATCH | The system must be configured to audit Object Access - Removable Storage successes."
+  win_audit_policy_system:
+      subcategory: Removable Storage
+      audit_type: "{{ (wn10_AU_000085 and not wn10_AU_000090) | ternary ('failure', '') }}{{ (wn10_AU_000090 and not wn10_AU_000085) | ternary ('success', '') }}{{ (wn10_AU_000085 and wn10_AU_000090) | ternary ('success, failure', '') }}"
+  when:
+      - wn10_AU_000085 or
+        wn10_AU_000090
+
+  tags:
+      - WN10-AU-000085
+      - WN10-AU-000090
+      - CAT2
+      - CCI-000172
+      - SRG-OS-000474-GPOS-00219
+      - SV-220765r569187_rule
+      - SV-220766r569187_rule
+      - V-220765
+      - V-220766
+
+- name: "MEDIUM | WN10-AU-000100 | PATCH | The system must be configured to audit Policy Change - Audit Policy Change successes."
+  win_audit_policy_system:
+      subcategory: Audit Policy Change
+      audit_type: "{{ win10stig_audit_settings.audit_policy_change_include_failure | ternary ('success, failure', 'success' ) }}"
+  when:
+      - wn10_AU_000100
+  tags:
+      - WN10-AU-000100
+      - CAT2
+      - CCI-000172
+      - SRG-OS-000471-GPOS-00215
+      - SV-220767r569187_rule
+      - V-220767
+
+- name: "MEDIUM | WN10-AU-000105 | PATCH | The system must be configured to audit Policy Change - Authentication Policy Change successes."
+  win_audit_policy_system:
+      subcategory: Authentication Policy Change
+      audit_type: "{{ win10stig_audit_settings.authentication_policy_change_include_failure | ternary ('success, failure', 'success' ) }}"
+  when:
+      - wn10_AU_000105
+  tags:
+      - WN10-AU-000105
+      - CAT2
+      - CCI-002234
+      - CCI-000172
+      - SRG-OS-000327-GPOS-00127
+      - SV-220768r569187_rule
+      - V-220768
+
+- name: "MEDIUM | WN10-AU-000107 | PATCH | The system must be configured to audit Policy Change - Authorization Policy Change successes."
+  win_audit_policy_system:
+      subcategory: Authorization Policy Change
+      audit_type: "{{ win10stig_audit_settings.authorization_policy_change_include_failure | ternary ('success, failure', 'success' ) }}"
+  when:
+      - wn10_AU_000107
+  tags:
+      - WN10-AU-000107
+      - CAT2
+      - CCI-000172
+      - SRG-OS-000471-GPOS-00215
+      - SV-220769r569187_rule
+      - V-220769
+
+- name: |
+    "MEDIUM | WN10-AU-000110 | PATCH | The system must be configured to audit Privilege Use - Sensitive Privilege Use failures."
+    "MEDIUM | WN10-AU-000115 | PATCH | The system must be configured to audit Privilege Use - Sensitive Privilege Use successes."
+  win_audit_policy_system:
+      subcategory: Sensitive Privilege Use
+      audit_type: "{{ (wn10_AU_000110 and not wn10_AU_000115) | ternary ('failure', '') }}{{ (wn10_AU_000115 and not wn10_AU_000110) | ternary ('success', '') }}{{ (wn10_AU_000110 and wn10_AU_000115) | ternary ('success, failure', '') }}"
+  when:
+      - wn10_AU_000110 or
+        wn10_AU_000115
+  tags:
+      - WN10-AU-000110
+      - WN10-AU-000115
+      - CAT2
+      - CCI-002234
+      - CCI-000172
+      - SRG-OS-000327-GPOS-00127
+      - SV-220770r569187_rule
+      - SV-220771r569187_rule
+      - V-220770
+      - V-220771
+
+- name: "MEDIUM | WN10-AU-000120 | PATCH | The system must be configured to audit System - IPSec Driver failures."
+  win_audit_policy_system:
+      subcategory: IPSec Driver
+      audit_type: "{{ win10stig_audit_settings.ipsec_drive_include_success | ternary ('success, failure', 'failure' ) }}"
+  when:
+      - wn10_AU_000120
+  tags:
+      - WN10-AU-000120
+      - CAT2
+      - CCI-000172
+      - SRG-OS-000477-GPOS-00222
+      - SV-220772r569187_rule
+      - V-220772
+
+- name: |
+    "MEDIUM | WN10-AU-000130 | PATCH | The system must be configured to audit System - Other System Events successes."
+    "MEDIUM | WN10-AU-000135 | PATCH | The system must be configured to audit System - Other System Events failures."
+  win_audit_policy_system:
+      subcategory: Other System Events
+      audit_type: "{{ (wn10_AU_000130 and not wn10_AU_000135) | ternary ('success', '') }}{{ (wn10_AU_000135 and not wn10_AU_000130) | ternary ('failure', '') }}{{ (wn10_AU_000130 and wn10_AU_000135) | ternary ('success, failure', '') }}"
+  when:
+      - wn10_AU_000130 or
+        wn10_AU_000135
+  tags:
+      - WN10-AU-000130
+      - WN10-AU-000135
+      - CAT2
+      - CCI-000172
+      - SRG-OS-000471-GPOS-00215
+      - SV-220773r569187_rule
+      - SV-220774r569187_rule
+      - V-220773
+      - V-220774
+
+- name: "MEDIUM | WN10-AU-000140 | PATCH | The system must be configured to audit System - Security State Change successes."
+  win_audit_policy_system:
+      subcategory: Security State Change
+      audit_type: "{{ win10stig_audit_settings.security_state_change_include_failure | ternary ('success, failure', 'success' ) }}"
+  when:
+      - wn10_AU_000140
+  tags:
+      - WN10-AU-000140
+      - CAT2
+      - CCI-002234
+      - CCI-000172
+      - SRG-OS-000327-GPOS-00127
+      - SV-220775r569187_rule
+      - V-220775
+
+- name: "MEDIUM | WN10-AU-000150 | PATCH | The system must be configured to audit System - Security System Extension successes."
+  win_audit_policy_system:
+      subcategory: Security System Extension
+      audit_type: "{{ win10stig_audit_settings.security_system_extension_include_failure | ternary ('success, failure', 'success' ) }}"
+  when:
+      - wn10_AU_000150
+  tags:
+      - WN10-AU-000150
+      - CAT2
+      - CCI-002234
+      - CCI-000172
+      - SRG-OS-000327-GPOS-00127
+      - SV-220776r569187_rule
+      - V-220776
+
+- name: |
+    "MEDIUM | WN10-AU-000155 | PATCH | The system must be configured to audit System - System Integrity failures."
+    "MEDIUM | WN10-AU-000160 | PATCH | The system must be configured to audit System - System Integrity successes."
+  win_audit_policy_system:
+      subcategory: System Integrity
+      audit_type: "{{ (wn10_AU_000155 and not wn10_AU_000160) | ternary ('failure', '') }}{{ (wn10_AU_000160 and not wn10_AU_000155) | ternary ('success', '') }}{{ (wn10_AU_000155 and wn10_AU_000160) | ternary ('success, failure', '') }}"
+  when:
+      - wn10_AU_000155 or
+        wn10_AU_000160
+  tags:
+      - WN10-AU-000155
+      - WN10-AU-000160
+      - CAT2
+      - CCI-002234
+      - CCI-000172
+      - SRG-OS-000327-GPOS-00127
+      - SV-220777r569187_rule
+      - SV-220778r569187_rule
+      - V-220777
+      - V-220778
