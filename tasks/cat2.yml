@@ -1175,3 +1175,77 @@
       - SV-220778r569187_rule
       - V-220777
       - V-220778
+
+- name: "MEDIUM | WN10-AU-000500 | PATCH | The Application event log size must be configured to 32768 KB or greater."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\Application
+      value: MaxSize
+      state: present
+      data: "{{ win10stig_app_log_max_size }}"
+      datatype: dword
+  when:
+      - wn10_AU_000500
+  tags:
+      - WN10-AU-000500
+      - CAT2
+      - CCI-001849
+      - SRG-OS-000341-GPOS-00132
+      - SV-220779r569187_rule
+      - V-220779
+
+- name: "MEDIUM | WN10-AU-000505 | PATCH | The Security event log size must be configured to 1024000 KB or greater."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\Security
+      value: MaxSize
+      state: present
+      data: "{{ win10stig_sec_log_max_size }}"
+      datatype: dword
+  when:
+      - wn10_AU_000505
+  tags:
+      - WN10-AU-000505
+      - CAT2
+      - CCI-001849
+      - SRG-OS-000341-GPOS-00132
+      - SV-220780r569187_rule
+      - V-220780
+
+- name: "MEDIUM | WN10-AU-000510 | PATCH | The System event log size must be configured to 32768 KB or greater."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\System
+      value: MaxSize
+      state: present
+      data: "{{ win10stig_sys_log_max_size }}"
+      datatype: dword
+  when:
+      - wn10_AU_000510
+  tags:
+      - WN10-AU-000510
+      - CAT2
+      - CCI-001849
+      - SRG-OS-000341-GPOS-00132
+      - SV-220781r569187_rul
+      - V-220781
+
+# - name: "MEDIUM | WN10-AU-000515 | PATCH | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts."
+#   win_acl:
+#       user: "{{ item }}"
+#       path: "{{ win10stig_app_log_path }}"
+#       type: allow
+#       state: present
+#       rights: FullControl
+#   with_items:
+#       - Eventlog
+#       - SYSTEM
+#       - Administrators
+#   when:
+#       - WN10-AU-000515
+#   tags:
+#       - WN10-AU-000515
+#       - CAT2
+#       - CCI-000162
+#       - CCI-000163
+#       - CCI-000164
+#       - SRG-OS-000057-GPOS-00027
+#       - SV-220782r569187_rule
+#       - V-220782

@@ -137,6 +137,9 @@ wn10_AU_000140: true
 wn10_AU_000150: true
 wn10_AU_000155: true
 wn10_AU_000160: true
+wn10_AU_000500: true
+wn10_AU_000505: true
+wn10_AU_000510: true
 
 # CAT 3 Rules
 wn10_00_000020: true
@@ -239,7 +242,7 @@ win10stig_account_settings:
     min_pass_length: 14
 
 # win10stig_audit_settings is the group of variables used to enable success/failure loging for various audit logging categories. 
-# There will only be values here for controls that don't have a corresponding success and failure STIG control
+# There will only be variables here for controls that don't have a corresponding success and failure STIG control
 # This gives control to the end user to set the required STIG value but also give flexabilty to add the other setting if needed
 # WN10-AU-000030
 # security_group_mngmnt_include_failure set to false will set Secuirty Group Management to log only successful changes to Security Group Management settings
@@ -294,6 +297,20 @@ win10stig_audit_settings:
     ipsec_drive_include_success: false
     security_state_change_include_failure: false
     security_system_extension_include_failure: false
+
+# wn10_AU_000500
+# win10stig_app_log_max_size is the max size in KB for Event Viewer Application Logs
+# To conform to STIG standards this value needs to be 32768 KB or greater
+win10stig_app_log_max_size: 32768
+
+# wn10_AU_000505
+# win10stig_sec_log_max_size is the max size in KB for Event Viewer Security Logs
+# To conform to STIG standards this value needs to be 1024000 or greater
+win10stig_sec_log_max_size: 1024000
+
+# win10stig_sys_log_max_size is the max size in KB for the Event Viewer System Logs
+# 32768
+win10stig_sys_log_max_size: 32768
 
 # CAT3
 
