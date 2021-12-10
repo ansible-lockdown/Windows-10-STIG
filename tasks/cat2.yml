@@ -19,7 +19,7 @@
 - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use."
   debug:
       msg:
-          - "Aert! Please confirm TPM status is Ready for use"
+          - "Alert! Please confirm TPM status is Ready for use"
   when:
       - wn10_00_000010
       - ansible_windows_domain_member
@@ -50,7 +50,7 @@
   debug:
       msg:
           - "Alert! Please install DoD-approved ESS software and ensure it is operating continuously"
-          - "Ask site ISSM for documenation fo the ESS software installation and configuration"
+          - "Ask site ISSM for documentation fo the ESS software installation and configuration"
   when:
       - wn10_00_000025
   tags:
@@ -156,7 +156,7 @@
 
 - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system."
   debug:
-      msg: "Alert! Please confirm that no other atlernative operating systems exist on this system"
+      msg: "Alert! Please confirm that no other alternative operating systems exist on this system"
   when:
       - wn10_00_000055
   tags:
@@ -418,7 +418,7 @@
           - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Alert! on Defender Firewall disabled"
             debug:
                 msg:
-                    - "ALERT! You are using Windows Defender as your filewall and it is fully disabled"
+                    - "ALERT! You are using Windows Defender as your firewall and it is fully disabled"
                     - "Please enable the firewall using a Firewall profile provided by STIG"
                     - "If you are not using Windows Defender as your firewall please adjust the win10stig_firewall_type variable to reflect that"
             when:
@@ -429,7 +429,7 @@
         debug:
             msg:
                 - "Warning! You are not using Windows Defender as your firewall."
-                - "Please review the required profiles/settings for that firewall to confirm it alligns with STIG standards."
+                - "Please review the required profiles/settings for that firewall to confirm it aligns with STIG standards."
         when: win10stig_firewall_type != "defender"
   when:
       - wn10_00_000135
@@ -1227,25 +1227,95 @@
       - SV-220781r569187_rul
       - V-220781
 
-# - name: "MEDIUM | WN10-AU-000515 | PATCH | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts."
-#   win_acl:
-#       user: "{{ item }}"
-#       path: "{{ win10stig_app_log_path }}"
-#       type: allow
-#       state: present
-#       rights: FullControl
-#   with_items:
-#       - Eventlog
-#       - SYSTEM
-#       - Administrators
-#   when:
-#       - WN10-AU-000515
-#   tags:
-#       - WN10-AU-000515
-#       - CAT2
-#       - CCI-000162
-#       - CCI-000163
-#       - CCI-000164
-#       - SRG-OS-000057-GPOS-00027
-#       - SV-220782r569187_rule
-#       - V-220782
+- name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  check_mode: no
+  when: 
+      - wn10_AU_000515
+  tags:
+      - WN10-AU-000515
+      - CAT2
+      - CCI-000162
+      - CCI-000163
+      - CCI-000164
+      - SRG-OS-000057-GPOS-00027
+      - SV-220782r569187_rule
+      - V-220782
+      - notimplemented
+
+- name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  check_mode: no
+  when:
+      - wn10_AU_000520
+  tags:
+      - WN10-AU-000520
+      - CAT2
+      - CCI-000162
+      - CCI-000163
+      - CCI-000164
+      - SRG-OS-000057-GPOS-00027
+      - SV-220783r569187_rule
+      - V-220783
+      - notimplemented
+
+- name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  check_mode: no
+  when:
+      - wn10_AU_000525
+  tags:
+      - WN10-AU-000525
+      - CAT2
+      - CCI-000162
+      - CCI-000163
+      - CCI-000164
+      - SRG-OS-000057-GPOS-00027
+      - SV-220784r569187_rule
+      - V-220784
+
+- name: |
+    "MEDIUM | WN10-AU-000550 | PATCH | Windows 10 must be configured to audit Other Policy Change Events Successes."
+    "MEDIUM | WN10-AU-000555 | PATCH | Windows 10 must be configured to audit Other Policy Change Events Failures."
+  win_audit_policy_system:
+      subcategory: Other Policy Change Events
+      audit_type: "{{ (wn10_AU_000550 and not wn10_AU_000555) | ternary ('success', '') }}{{ (wn10_AU_000555 and not wn10_AU_000550) | ternary ('failure', '') }}{{ (wn10_AU_000550 and wn10_AU_000555) | ternary ('success, failure', '') }}"
+  when:
+      - wn10_AU_000550 or
+        wn10_AU_000555
+  tags:
+      - WN10-AU-000550
+      - WN10-AU-000555
+      - CAT2
+      - CCI-000130
+      - SRG-OS-000037-GPOS-00015
+      - SV-220785r569187_rule
+      - SV-220786r569187_rule
+      - V-220785
+      - V-220786
+
+- name: |
+    "MEDIUM | WN10-AU-000560 | PATCH | Windows 10 must be configured to audit other Logon/Logoff Events Successes."
+    "MEIDUM | WN10-AU-000565 | PATCH | Windows 10 must be configured to audit other Logon/Logoff Events Failures."
+  win_audit_policy_system:
+      subcategory: Other Logon/Logoff Events
+      audit_type: "{{ (wn10_AU_000560 and not wn10_AU_000565) | ternary ('success', '') }}{{ (wn10_AU_000565 and not wn10_AU_000560) | ternary ('failure', '') }}{{ (wn10_AU_000560 and wn10_AU_000565) | ternary ('success, failure', '') }}"
+  when:
+      - wn10_AU_000560 or
+        wn10_AU_000565
+  tags:
+      - WN10-AU-000560
+      - WN10-AU-000565
+      - CAT2
+      - CCI-000130
+      - SRG-OS-000037-GPOS-00015
+      - SV-220787r569187_rule
+      - SV-220788r569187_rule
+      - V-220787
+      - V-220788
