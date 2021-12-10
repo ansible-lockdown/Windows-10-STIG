@@ -147,6 +147,24 @@ wn10_AU_000550: true
 wn10_AU_000555: true
 wn10_AU_000560: true
 wn10_AU_000565: true
+wn10_AU_000570: true
+wn10_AU_000575: true
+wn10_AU_000580: true
+wn10_CC_000005: true
+wn10_CC_000007: true
+wn10_CC_000010: true
+wn10_CC_000020: true
+wn10_CC_000025: true
+wn10_CC_000037: true
+wn10_CC_000038: true
+wn10_CC_000039: true
+wn10_CC_000040: true
+wn10_CC_000044: true
+wn10_CC_000050: true
+wn10_CC_000052: true
+wn10_CC_000055: true
+wn10_CC_000065: true
+wn10_CC_000066: true
 
 # CAT 3 Rules
 wn10_00_000020: true
@@ -290,6 +308,9 @@ win10stig_account_settings:
 # WN10-AU-000150
 # security_system_extension_include_failure set to false will set Security System Extension to log only successful events related to extension codes being loaded by the security subsystem
 # security_system_extension_include_failure set to true will set Security System Extension to log both successful and failed events related to extension codes being loaded by the security subsystem
+# WN10-AU-000570
+# detailed_file_share_include_success set to false will set Detailed File Share to log only failed events related to accessing files and folders on a shared folder 
+# detailed_file_share_include_success set to true will set Detailed File Share to log both failed and successful events related to accessing files and folders on a shared folder
 win10stig_audit_settings:
     security_group_mngmnt_include_failure: false
     pnp_activity_include_failure: false
@@ -304,6 +325,7 @@ win10stig_audit_settings:
     ipsec_drive_include_success: false
     security_state_change_include_failure: false
     security_system_extension_include_failure: false
+    detailed_file_share_include_success: false
 
 # wn10_AU_000500
 # win10stig_app_log_max_size is the max size in KB for Event Viewer Application Logs

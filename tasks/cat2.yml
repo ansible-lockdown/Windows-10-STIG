@@ -95,7 +95,7 @@
             value: UseAdvancedStartup
             state: present
             data: 1
-            datatype: dword
+            type: dword
 
       - name: "MEDIUM | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication. | Set BitLocker Pin settings"
         win_regedit:
@@ -103,7 +103,7 @@
             value: "{{ win10stig_bitlocker_pin_type }}"
             state: present
             data: "{{ win10stig_bitlocker_tpmpin_registry_value }}"
-            datatype: dword
+            type: dword
   when:
       - wn10_00_000031
       - wn10_00_000030
@@ -124,7 +124,7 @@
       value: MinimumPIN
       state: present
       data: "{{ win10stig_bitlocker_min_pin_length }}"
-      datatype: dword
+      type: dword
   when:
       - wn10_00_000032
   tags:
@@ -525,7 +525,7 @@
       value: SMB1
       state: present
       data: 0
-      datatype: dword
+      type: dword
   when:
       - wn10_00_000165
   tags:
@@ -542,7 +542,7 @@
       value: Start
       state: present
       data: 4
-      datatype: dword
+      type: dword
   notify: reboot windows
   when:
       - wn10_00_000170
@@ -592,7 +592,7 @@
             value: Type
             state: present
             data: 1
-            datatype: dword
+            type: dword
         notify: reboot windows
 
       - name: "MEDIUM | WN10-00-000210 | PATCH | Bluetooth must be turned off unless approved by the organization. | Disable BT service"
@@ -618,7 +618,7 @@
             value: Type
             state: present
             data: 1
-            datatype: dword
+            type: dword
         notify: reboot windows
 
       - name: "MEDIUM | WN10-00-000220 | PATCH | Bluetooth must be turned off when not in use. | Disable BT service"
@@ -642,7 +642,7 @@
       value: AcceptIncomingRequests
       state: present
       data: 1
-      datatype: dword
+      type: dword
   when:
       - wn10_00_000230
   tags:
@@ -1182,7 +1182,7 @@
       value: MaxSize
       state: present
       data: "{{ win10stig_app_log_max_size }}"
-      datatype: dword
+      type: dword
   when:
       - wn10_AU_000500
   tags:
@@ -1199,7 +1199,7 @@
       value: MaxSize
       state: present
       data: "{{ win10stig_sec_log_max_size }}"
-      datatype: dword
+      type: dword
   when:
       - wn10_AU_000505
   tags:
@@ -1216,7 +1216,7 @@
       value: MaxSize
       state: present
       data: "{{ win10stig_sys_log_max_size }}"
-      datatype: dword
+      type: dword
   when:
       - wn10_AU_000510
   tags:
@@ -1319,3 +1319,324 @@
       - SV-220788r569187_rule
       - V-220787
       - V-220788
+
+- name: "MEDIUM | WN10-AU-000570 | PATCH | Windows 10 must be configured to audit Detailed File Share Failures."
+  win_audit_policy_system:
+      subcategory: Detailed File Share
+      audit_type: "{{ win10stig_audit_settings.detailed_file_share_include_success | ternary ('success, failure', 'failure' ) }}"
+  when:
+      - wn10_AU_000570
+  tags:
+      - WN10-AU-000570
+      - CAT2
+      - CCI-000130
+      - SRG-OS-000037-GPOS-00015
+      - SV-220789r569187_rule
+      - V-220789
+
+- name: |
+    "MEDIUM | WN10-AU-000575 | PATCH | Windows 10 must be configured to audit MPSSVC Rule-Level Policy Change Successes."
+    "MEDIUM | WN10-AU-000580 | PATCH | Windows 10 must be configured to audit MPSSVC Rule-Level Policy Change Failures."
+  win_audit_policy_system:
+      subcategory: MPSSVC Rule-Level Policy Change
+      audit_type: "{{ (wn10_AU_000575 and not wn10_AU_000580) | ternary ('success', '') }}{{ (wn10_AU_000580 and not wn10_AU_000575) | ternary ('failure', '') }}{{ (wn10_AU_000575 and wn10_AU_000580) | ternary ('success, failure', '') }}"
+  when:
+      - wn10_AU_000575 or
+        wn10_AU_000580
+  tags:
+       - WN10-AU-000575
+       - WN10-AU-000580
+       - CAT2
+       - CCI-000130
+       - SRG-OS-000037-GPOS-00015
+       - SV-220790r569187_rule
+       - SV-220791r569187_rule
+       - V-220790
+       - V-220791
+
+- name: "MEDIUM | WN10-CC-000005 | PATCH | Camera access from the lock screen must be disabled."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization
+      value: NoLockScreenCamera
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000005
+  tags:
+      - WN10-CC-000005
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220792r569187_rule
+      - V-220792
+
+- name: "MEDIUM | WN10-CC-000007 | PATCH | Windows 10 must cover or disable the built-in or attached camera when not in use."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\webcam
+      value: Value
+      data: deny
+      type: string
+  when:
+      - wn10_CC_000007
+  tags:
+      - WN10-CC-000007
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220793r569187_rule
+      - V-220793
+
+- name: "MEDIUM | WN10-CC-000010 | PATCH | The display of slide shows on the lock screen must be disabled."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization
+      value: NoLockScreenSlideshow
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000010
+  tags:
+      - WN10-CC-000010
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-0004
+      - SV-220794r569187_rule
+      - V-220794
+
+- name: "MEDIUM | WN10-CC-000020 | PATCH | IPv6 source routing must be configured to highest protection."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters
+      value: DisableIpSourceRouting
+      data: 2
+      type: dword
+  when:
+      - wn10_CC_000020
+  tags:
+      - WN10-CC-000020
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220795r569187_rule
+      - V-220795
+
+- name: "MEDIUM | WN10-CC-000025 | PATCH | The system must be configured to prevent IP source routing."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters
+      value: DisableIPSourceRouting
+      data: 2
+      type: dword
+  when:
+      - wn10_CC_000025
+  tags:
+      - WN10-CC-000025
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220796r569187_rule
+      - V-220796
+
+- name: "MEDIUM | WN10-CC-000037 | PATCH | Local administrator accounts must have their privileged token filtered to prevent elevated privileges from being used over the network on domain systems."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+      value: LocalAccountTokenFilterPolicy
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000037
+      - ansible_windows_domain_member
+  tags:
+      - WN10-CC-000037
+      - CAT2
+      - CCI-001084
+      - SRG-OS-000134-GPOS-00068
+      - SV-220799r569187_rule
+      - V-220799
+
+- name: "MEDIUM | WN10-CC-000038 | PATCH | WDigest Authentication must be disabled."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\Wdigest
+      value: UseLogonCredential
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000038
+  tags:
+      - WN10-CC-000038
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220800r569187_rule
+      - V-220800
+
+- name: "MEDIUM | WN10-CC-000039 | PATCH | Run as different user must be removed from context menus."
+  win_regedit:
+      path: HKLM:{{ item }}
+      value: SuppressionPolicy
+      data: 4096
+      type: dword
+  with_items:
+      - \SOFTWARE\Classes\batfile\shell\runasuser
+      - \SOFTWARE\Classes\cmdfile\shell\runasuser
+      - \SOFTWARE\Classes\exefile\shell\runasuser
+      - \SOFTWARE\Classes\mscfile\shell\runasuser
+  when:
+      - wn10_CC_000039
+  tags:
+      - WN10-CC-000039
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220801r569187_rule
+      - V-220801
+
+- name: "MEDIUM | WN10-CC-000040 | PATCH | Insecure logons to an SMB server must be disabled."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\LanmanWorkstation
+      value: AllowInsecureGuestAuth
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000040
+  tags:
+      - WN10-CC-000040
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220802r569187_rule
+      - V-220802
+
+- name: "MEDIUM | WN10-CC-000044 | PATCH | Internet connection sharing must be disabled."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Network Connection
+      value: NC_ShowSharedAccessUI
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000044
+  tags:
+      - WN10-CC-000044
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220803r569187_rule
+      - V-220803
+
+- name: "MEDIUM | WN10-CC-000050 | PATCH | Hardened UNC Paths must be defined to require mutual authentication and integrity for at least the SYSVOL and NETLOGON shares."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\NetworkProvider\HardenedPaths
+      value: "{{ item }}"
+      data: RequireMutualAuthentication=1, RequireIntegrity=1
+      type: string
+  with_items:
+      - \\*\SYSVOL
+      - \\*\NETLOGON
+  when:
+      - wn10_CC_000050
+      - ansible_windows_domain_member
+  tags:
+      - WN10-CC-000050
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220804r569187_rule
+      - V-220804
+
+- name: "MEDIUM | WN10-CC-000052 | PATCH | Windows 10 must be configured to prioritize ECC Curves with longer key lengths first."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Cryptography\Configuration\SSL\00010002
+      value: EccCurves
+      data: NistP384 NistP256
+      type: string
+  when:
+      - wn10_CC_000052
+  tags:
+      - WN10-CC-000052
+      - CAT2
+      - CCI-000803
+      - SRG-OS-000120-GPOS-00061
+      - SV-220805r569187_rule
+      - V-220805
+
+- name: "MEDIUM | WN10-CC-000055 | PATCH | Simultaneous connections to the Internet or a Windows domain must be limited."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WcmSvc\GroupPolicy
+      value: fMinimizeConnections
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000055
+  tags:
+      - WN10-CC-000055
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220806r569187_rule
+      - V-220806
+
+- name: "MEDIUM | WN10-CC-000060 | PATCH | Connections to non-domain networks when connected to a domain authenticated network must be blocked."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WcmSvc\GroupPolicy
+      value: fBlockNonDomain
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000060
+      - ansible_windows_domain_member
+  tags:
+      - WN10-CC-000060
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220807r569187_rule
+      - V-220807
+
+# This functionality has been removed in Windows 10 v1803 and newer and is not applicable to those newer versions
+- name: "MEDIUM | WN10-CC-000065 | PATCH | Wi-Fi Sense must be disabled."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\WcmSvc\wifinetworkmanager\config
+      value: AutoConnectAllowedOEM
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000065
+      - ansible_distribution_version <= "10.0.1803.0"
+  tags:
+      - WN10-CC-000065
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220808r569187_rule
+      - V-220808
+
+- name: "MEDIUM | WN10-CC-000066 | PATCH | Command line data must be included in process creation events."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit
+      value: ProcessCreationIncludeCmdLine_Enabled
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000066
+  tags:
+      - WN10-CC-000066
+      - CAT2
+      - CCI-000135
+      - SRG-OS-000042-GPOS-00020
+      - SV-220809r569187_rule
+      - V-220809
+
+# This control is not applicable to Windows 10 version 1507 and 1607
+- name: "MEDIUM | WN10-CC-000068 | PATCH | Windows 10 must be configured to enable Remote host allows delegation of non-exportable credentials."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation
+      value: AllowProtectedCreds
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000068
+      - ansible_distribution_version != "10.0.1507.0" or
+        ansible_distribution_version != "10.0.1607.0"
+  tags:
+      - WN10-CC-000068
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220810r569187_rule
+      - V-220810
