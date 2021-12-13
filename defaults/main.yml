@@ -167,6 +167,16 @@ wn10_CC_000060: true
 wn10_CC_000065: true
 wn10_CC_000066: true
 wn10_CC_000068: true
+wn10_CC_000085: true
+wn10_CC_000090: true
+wn10_CC_000100: true
+wn10_CC_000105: true
+wn10_CC_000110: true
+wn10_CC_000115: true
+wn10_CC_000120: true
+wn10_CC_000130: true
+wn10_CC_000145: true
+wn10_CC_000150: true
 
 # CAT 3 Rules
 wn10_00_000020: true
@@ -342,6 +352,13 @@ win10stig_sec_log_max_size: 1024000
 # win10stig_sys_log_max_size is the max size in KB for the Event Viewer System Logs
 # 32768
 win10stig_sys_log_max_size: 32768
+
+# win10stig_boot_driver_init_policy is the default behavior for Early Launch Antimalware - Boot-Start Driver Initialization plicy
+# Options are list below, a value of 7 (All) does not conform to STIG standards
+# 1 - Good and unknown
+# 3 - Good, uknown and bad but critical (Windows default)
+# 8 - Good only
+win10stig_boot_driver_init_policy: 3
 
 # CAT3
 

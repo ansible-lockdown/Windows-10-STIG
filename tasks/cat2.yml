@@ -1640,3 +1640,165 @@
       - SRG-OS-000480-GPOS-00227
       - SV-220810r569187_rule
       - V-220810
+
+- name: "MEDIUM | WN10-CC-000085 | PATCH | Early Launch Antimalware, Boot-Start Driver Initialization Policy must prevent boot drivers."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Policies\EarlyLaunch
+      value: DriverLoadPolicy
+      data: "{{ win10stig_boot_driver_init_policy }}"
+      type: dword
+  when:
+      - wn10_CC_000085
+  tags:
+      - WN10-CC-000085
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220813r569187_rule
+      - V-220813
+
+- name: "MEDIUM | WN10-CC-000090 | PATCH | Group Policy objects must be reprocessed even if they have not changed."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Group Policy\{35378EAC-683F-11D2-A89A-00C04FBBCFA2}
+      value: NoGPOListChanges
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000090
+  tags:
+      - WN10-CC-000090
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220814r569187_rule
+      - V-220814
+
+- name: "MEDIUM | WN10-CC-000100 | PATCH | Downloading print driver packages over HTTP must be prevented."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers
+      value: DisableWebPnPDownload
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000100
+  tags:
+      - WN10-CC-000100
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220815r569187_rule
+      - V-220815
+
+- name: "MEDIUM | WN10-CC-000105 | PATCH | Web publishing and online ordering wizards must be prevented from downloading a list of providers."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
+      value: NoWebServices
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000105
+  tags:
+      - WN10-CC-000105
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220816r569187_rule
+      - V-220816
+
+- name: "MEDIUM | WN10-CC-000110 | PATCH | Printing over HTTP must be prevented."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers
+      value: DisableHTTPPrinting
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000110
+  tags:
+      - WN10-CC-000110
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220817r569187_rule
+      - V-220817
+
+- name: "MEDIUM | WN10-CC-000115 | PATCH | Systems must at least attempt device authentication using certificates."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters
+      value: DevicePKInitEnabled
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000115
+      - ansible_windows_domain_member
+  tags:
+      - WN10-CC-000115
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220818r569187_rule
+      - V-220818
+
+- name: "MEDIUM | WN10-CC-000120 | PATCH | The network selection user interface (UI) must not be displayed on the logon screen."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
+      value: DontDisplayNetworkSelectionUI
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000120
+  tags:
+      - WN10-CC-000120
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220819r569187_rule
+      - V-220819
+
+- name: "MEDIUM | WN10-CC-000130 | PATCH | Local users on domain-joined computers must not be enumerated."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
+      value: EnumerateLocalUsers
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000130
+      - ansible_windows_domain_member
+  tags:
+      - WN10-CC-000130
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220820r569187_rule
+      - V-220820
+
+- name: "MEDIUM | WN10-CC-000145 | PATCH | Users must be prompted for a password on resume from sleep (on battery)."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Power\PowerSettings\0e796bdb-100d-47d6-a2d5-f7d2daa51f51
+      value: DCSettingIndex
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000145
+  tags:
+      - WN10-CC-000145
+      - CAT2
+      - CCI-002038
+      - SRG-OS-000373-GPOS-00156
+      - SV-220821r569187_rule
+      - V-220821
+
+- name: "MEDIUM | WN10-CC-000150 | PATCH | The user must be prompted for a password on resume from sleep (plugged in)."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Power\PowerSettings\0e796bdb-100d-47d6-a2d5-f7d2daa51f51
+      value: ACSettingIndex
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000150
+  tags:
+      - WN10-CC-000150
+      - CAT2
+      - CCI-002038
+      - SRG-OS-000373-GPOS-00156
+      - SV-220822r569187_rule
+      - V-220822
