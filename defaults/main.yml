@@ -177,6 +177,42 @@ wn10_CC_000120: true
 wn10_CC_000130: true
 wn10_CC_000145: true
 wn10_CC_000150: true
+wn10_CC_000165: true
+wn10_CC_000195: true
+wn10_CC_000200: true
+wn10_CC_000204: true
+wn10_CC_000205: true
+wn10_CC_000210: true
+wn10_CC_000215: true
+wn10_CC_000225: true
+wn10_CC_000230: true
+wn10_CC_000235: true
+wn10_CC_000238: true
+wn10_CC_000245: true
+wn10_CC_000250: true
+wn10_CC_000252: true
+wn10_CC_000255: true
+wn10_CC_000260: true
+wn10_CC_000270: true
+wn10_CC_000275: true
+wn10_CC_000280: true
+wn10_CC_000285: true
+wn10_CC_000290: true
+wn10_CC_000295: true
+wn10_CC_000300: true
+wn10_CC_000305: true
+wn10_CC_000310: true
+wn10_CC_000320: true
+wn10_CC_000325: true
+wn10_CC_000326: true
+wn10_CC_000328: true
+wn10_CC_000335: true
+wn10_CC_000350: true
+wn10_CC_000355: true
+wn10_CC_000360: true
+wn10_CC_000365: true
+wn10_CC_000370: true
+wn10_CC_000385: true
 
 # CAT 3 Rules
 wn10_00_000020: true
@@ -359,6 +395,18 @@ win10stig_sys_log_max_size: 32768
 # 3 - Good, uknown and bad but critical (Windows default)
 # 8 - Good only
 win10stig_boot_driver_init_policy: 3
+
+# WN10-CC-000205
+# win10stig_allow_telemetry_value is the value set to Allow Telemetry registry setting
+# To comply with STIG requirements please use only the settings below
+# 0 - Security
+# 1 - Basic
+# 2 - Enhanced - This should only be used on Windows 10 v1709 or later
+win10stig_allow_telemetry_value: 1
+
+# win10stig_min_pin_length is the minimum PIN length for setting authentication PIN's
+# This value needs to be 6 or greater to conform to STIG standards
+win10stig_min_pin_length: 6
 
 # CAT3
 

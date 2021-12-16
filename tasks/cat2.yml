@@ -1802,3 +1802,613 @@
       - SRG-OS-000373-GPOS-00156
       - SV-220822r569187_rule
       - V-220822
+
+- name: "MEDIUM | WN10-CC-000165 | PATCH | Unauthenticated RPC clients must be restricted from connecting to the RPC server."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Rpc
+      value: RestrictRemoteClients
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000165
+  tags:
+      - WN10-CC-000165
+      - CAT2
+      - CCI-001967
+      - SRG-OS-000379-GPOS-00164
+      - SV-220824r569187_rule
+      - V-220824
+
+# Windows 10 v1507 LTSB version does not include this setting and this control is NA to those systems
+- name: "MEDIUM | WN10-CC-000195 | PATCH | Enhanced anti-spoofing for facial recognition must be enabled on Window 10."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Biometrics\FacialFeatures
+      value: EnhancedAntiSpoofing
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000195
+      - ansible_distribution_version != "10.0.1507.0"
+  tags:
+      - WN10-CC-000195
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220830r569187_rule
+      - V-220830
+
+- name: "MEDIUM | WN10-CC-000200 | PATCH  | Administrator accounts must not be enumerated during elevation."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\CredUI
+      value: EnumerateAdministrators
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000200
+  tags:
+      - WN10-CC-000200
+      - CAT2
+      - CCI-001084
+      - SRG-OS-000134-GPOS-00068
+      - SV-220832r569187_rule
+      - V-220832
+
+- name: "MEDIUM | WN10-CC-000204 | PATCH | If Enhanced diagnostic data is enabled it must be limited to the minimum required to support Windows Analytics."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection
+      value: LimitEnhancedDiagnosticDataWindowsAnalytics
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000204
+      - ansible_distribution_version >= "10.0.1709.0"
+      - win10stig_allow_telemetry_value == 2
+  tags:
+      - WN10-CC-000204
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220833r569187_rule
+      - V-220833
+
+- name: "MEDIUM | WN10-CC-000205 | PATCH | Windows Telemetry must not be configured to Full."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection
+      value: AllowTelemetry
+      data: "{{ win10stig_allow_telemetry_value }}"
+      type: dword
+  when:
+      - wn10_CC_000205
+  tags:
+      - WN10-CC-000205
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220834r569187_rule
+      - V-220834
+
+- name: "MEDIUM | WN10-CC-000210 | PATCH | The Windows Defender SmartScreen for Explorer must be enabled."
+  block:
+      - name: "MEDIUM | WN10-CC-000210 | PATCH | The Windows Defender SmartScreen for Explorer must be enabled. | SmartScreen enable"
+        win_regedit:
+            path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
+            value: EnableSmartScreen
+            data: 1
+            type: dword
+      
+      - name: "MEDIUM | WN10-CC-000210 | PATCH | The Windows Defender SmartScreen for Explorer must be enabled. | Block ShellSmartScreen"
+        win_regedit:
+            path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
+            value: ShellSmartScreenLevel
+            data: Block
+            type: string
+  when:
+      - wn10_CC_000210
+  tags:
+      - WN10-CC-000210
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220836r569187_rule
+      - V-220836
+
+- name: "MEDIUM | WN10-CC-000215 | PATCH | Explorer Data Execution Prevention must be enabled."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer
+      value: NoDataExecutionPrevention
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000215
+  tags:
+      - WN10-CC-000215
+      - CAT2
+      - CCI-002824
+      - SRG-OS-000433-GPOS-00192
+      - SV-220837r569187_rule
+      - V-220837
+      
+- name: "MEDIUM | WN10-CC-000225 | PATCH | File Explorer shell protocol must run in protected mode."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
+      value: PreXPSP2ShellProtocolBehavior
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000225
+  tags:
+      - WN10-CC-000225
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220839r569187_rule
+      - V-220839
+
+- name: "MEDIUM | WN10-CC-000230 | PATCH | Users must not be allowed to ignore Windows Defender SmartScreen filter warnings for malicious websites in Microsoft Edge."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\PhishingFilter
+      value: PreventOverride
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000230
+  tags:
+      - WN10-CC-000230
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220840r569187_rule
+      - V-220840
+
+- name: "MEDIUM | WN10-CC-000235 | PATCH | Users must not be allowed to ignore Windows Defender SmartScreen filter warnings for unverified files in Microsoft Edge."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\PhishingFilter
+      value: PreventOverrideAppRepUnknown
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000235
+  tags:
+      - WN10-CC-000235
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220841r569187_rule
+      - V-220841
+
+- name: "MEDIUM | WN10-CC-000238 | PATCH | Windows 10 must be configured to prevent certificate error overrides in Microsoft Edge."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Internet Settings
+      value: PreventCertErrorOverrides
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000238
+  tags:
+      - WN10-CC-000238
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220842r569187_rule
+      - V-220842
+
+- name: "MEDIUM | WN10-CC-000245 | PATCH | Passwords save locally for re-use when browsing may be subject to compromise. Disabling the Edge password manager will prevent this for the browser."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main
+      value: FormSuggest
+      data: no
+      type: string
+  when:
+      - wn10_CC_000245
+  tags:
+      - WN10-CC-000245
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220843r569187_rule
+      - V-220843
+
+- name: "MEDIUM | WN10-CC-000250 | PATCH | The Windows Defender SmartScreen filter for Microsoft Edge must be enabled."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\PhishingFilter
+      value: EnabledV9
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000250
+  tags:
+      - WN10-CC-000250
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220844r569187_rule
+      - V-220844
+
+- name: "MEDIUM | WN10-CC-000252 | PATCH | Windows 10 must be configured to disable Windows Game Recording and Broadcasting."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR
+      value: AllowGameDVR
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000252
+  tags:
+      - WN10-CC-000252
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220845r569187_rule
+      - V-220845
+
+- name: "MEDIUM | WN10-CC-000255 | PATCH | The use of a hardware security device with Windows Hello for Business must be enabled."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\PassportForWork
+      value: RequireSecurityDevice
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000255
+  tags:
+      - WN10-CC-000255
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220846r569187_rule
+      - V-220846
+
+- name: "MEDIUM | WN10-CC-000260 | PATCH | Windows 10 must be configured to require a minimum pin length of six characters or greater."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\PassportForWork\PINComplexity
+      value: MinimumPINLength
+      data: "{{ win10stig_min_pin_length }}"
+      type: dword
+  when:
+      - wn10_CC_000260
+  tags:
+      - WN10-CC-000260
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220847r569187_rule
+      - V-220847
+
+- name: "MEDIUM | WN10-CC-000270 | PATCH | Passwords must not be saved in the Remote Desktop Client."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+      value: DisablePasswordSaving
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000270
+  tags:
+      - WN10-CC-000270
+      - CAT2
+      - CCI-002038
+      - SRG-OS-000373-GPOS-00156
+      - SV-220848r569187_rule
+      - V-220848
+
+- name: "MEDIUM | WN10-CC-000275 | PATCH | Local drives must be prevented from sharing with Remote Desktop Session Hosts."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+      value: fDisableCdm
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000275
+  tags:
+      - WN10-CC-000275
+      - CAT2
+      - CCI-001090
+      - SRG-OS-000138-GPOS-00069
+      - SV-220849r569187_rule
+      - V-220849
+
+- name: "MEDIUM | WN10-CC-000280 | PATCH | Remote Desktop Services must always prompt a client for passwords upon connection."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+      value: fPromptForPassword
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000280
+  tags:
+      - WN10-CC-000280
+      - CAT2
+      - CCI-002038
+      - SRG-OS-000373-GPOS-00156
+      - SV-220850r569187_rule
+      - V-220850
+
+- name: "MEDIUM | WN10-CC-000285 | PATCH | The Remote Desktop Session Host must require secure RPC communications."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+      value: fEncryptRPCTraffic
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000285
+  tags:
+      - WN10-CC-000285
+      - CAT2
+      - CCI-001453
+      - SRG-OS-000250-GPOS-00093
+      - SV-220851r569187_rule
+      - V-220851
+
+- name: "MEDIUM | WN10-CC-000290 | PATCH | Remote Desktop Services must be configured with the client connection encryption set to the required level."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+      value: MinEncryptionLevel
+      data: 3
+      type: dword
+  when:
+      - wn10_CC_000290
+  tags:
+      - WN10-CC-000290
+      - CAT2
+      - CCI-000068
+      - CCI-002890
+      - SRG-OS-000033-GPOS-00014
+      - SV-220852r569187_rule
+      - V-220852
+
+- name: "MEDIUM | WN10-CC-000295 | PATCH | Attachments must be prevented from being downloaded from RSS feeds."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Feeds
+      value: DisableEnclosureDownload
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000295
+  tags:
+      - WN10-CC-000295
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220853r569187_rule
+      - V-220853
+
+- name: "MEDIUM | WN10-CC-000300 | PATCH | Basic authentication for RSS feeds over HTTP must not be used."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Feeds
+      value: AllowBasicAuthInClear
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000300
+  tags:
+      - WN10-CC-000300
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220854r569187_rule
+      - V-220854
+
+- name: "MEDIUM | WN10-CC-000305 | PATCH | Indexing of encrypted files must be turned off."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search
+      value: AllowIndexingEncryptedStoresOrItems
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000305
+  tags:
+      - WN10-CC-000305
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220855r569187_rule
+      - V-220855
+
+- name: "MEDIUM | WN10-CC-000310 | PATCH | Users must be prevented from changing installation options."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer
+      value: EnableUserControl
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000310
+  tags:
+      - WN10-CC-000310
+      - CAT2
+      - CCI-001812
+      - SRG-OS-000362-GPOS-00149
+      - SV-220856r569187_rule
+      - V-220856
+
+- name: "MEDIUM | WN10-CC-000320 | PATCH | Users must be notified if a web-based program attempts to install software."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer
+      value: SafeForScripting
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000320
+  tags:
+      - WN10-CC-000320
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220858r569187_rule
+      - V-220858
+
+- name: "MEDIUM | WN10-CC-000325 | PATCH | Automatically signing in the last interactive user after a system-initiated restart must be disabled."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+      value: DisableAutomaticRestartSignOn
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000325
+  tags:
+      - WN10-CC-000325
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00229
+      - SV-220859r569187_rule
+      - V-220859
+
+- name: "MEDIUM | WN10-CC-000326 | PATCH | PowerShell script block logging must be enabled on Windows 10."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging
+      value: EnableScriptBlockLogging
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000326
+  tags:
+      - WN10-CC-000326
+      - CAT2
+      - CCI-000135
+      - SRG-OS-000042-GPOS-00020
+      - SV-220860r569187_rule
+      - V-220860
+
+- name: "MEDIUM | WN10-CC-000328 | PATCH | The Windows Explorer Preview pane must be disabled for Windows 10."
+  win_regedit:
+      path: HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
+      value: "{{ item }}"
+      data: 1
+      type: dword
+  with_items:
+      - NoPreviewPane
+      - NoReadingPane
+  when:
+      - wn10_CC_000328
+  tags:
+      - WN10-CC-000328
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00229
+      - SV-220861r569305_rule
+      - V-220861
+
+- name: "MEDIUM | WN10-CC-000335 | PATCH | The Windows Remote Management (WinRM) client must not allow unencrypted traffic."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client
+      value: AllowUnencryptedTraffic
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000335
+  tags:
+      - WN10-CC-000335
+      - CAT2
+      - CCI-002890
+      - CCI-003123
+      - SRG-OS-000393-GPOS-00173
+      - SV-220863r569187_rule
+      - V-220863
+
+- name: "MEDIUM | WN10-CC-000350 | PATCH | The Windows Remote Management (WinRM) service must not allow unencrypted traffic."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service
+      value: AllowUnencryptedTraffic
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000350
+  tags:
+      - WN10-CC-000350
+      - CAT2
+      - CCI-002890
+      - CCI-003123
+      - SRG-OS-000393-GPOS-00173
+      - SV-220866r569187_rule
+      - V-220866
+
+- name: "MEDIUM | WN10-CC-000355 | PATCH | The Windows Remote Management (WinRM) service must not store RunAs credentials."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service
+      value: DisableRunAs
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000355
+  tags:
+      - WN10-CC-000355
+      - CAT2
+      - CCI-002038
+      - SRG-OS-000373-GPOS-00156
+      - SV-220867r569187_rule
+      - V-220867
+
+- name: "MEDIUM | WN10-CC-000360 | PATCH | The Windows Remote Management (WinRM) client must not use Digest authentication."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client
+      value: AllowDigest
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000360
+  tags:
+      - WN10-CC-000360
+      - CAT2
+      - CCI-000877
+      - SRG-OS-000125-GPOS-00065
+      - SV-220868r569187_rule
+      - V-220868
+
+# If "Allow voice activation” policy is configured to disallow applications to be activated with voice for all users this control is NA
+- name: "MEDIUM | WN10-CC-000365 | PATCH | Windows 10 must be configured to prevent Windows apps from being activated by voice while the system is locked."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy
+      value: LetAppsActivateWithVoiceAboveLock
+      data: 2
+      type: dword
+  when:
+      - wn10_CC_000365
+      - ansible_distribution_version >= "10.0.1903.0"
+  tags:
+      - WN10-CC-000365
+      - CAT2
+      - CCI-000056
+      - SRG-OS-000028-GPOS-00009
+      - SV-220869r569187_rule
+      - V-220869
+
+- name: "MEDIUM | WN10-CC-000370 | PATCH | The convenience PIN for Windows 10 must be disabled."
+  win_regedit:
+      path: HKLM:\Software\Policies\Microsoft\Windows\System
+      value: AllowDomainPINLogon
+      data: 0
+      type: dword
+  when:
+      - wn10_CC_000370
+  tags:
+      - WN10-CC-000370
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220870r569187_rule
+      - V-220870
+
+- name: "MEDIUM | WN10-CC-000385 | PATCH | Windows Ink Workspace must be configured to disallow access above the lock."
+  win_regedit:
+      path: HKLM:\Software\Policies\Microsoft\WindowsInkWorkspace
+      value: AllowWindowsInkWorkspace
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000385
+  tags:
+      - WN10-CC-000385
+      - CAT2
+      - CCI-000381
+      - SRG-OS-000095-GPOS-00049
+      - SV-220871r642141_rule
+      - V-220871
+
+# - name: "MEDIUM | WN10-EP-000020 | PATCH | Windows 10 Exploit Protection system-level mitigation, Data Execution Prevention (DEP), must be on."
+
+#   when:
+#       - wn10_EP_000020
+#       - ansible_distribution_version >= "10.0.1709.0"
+#   tags:
+#       - WN10-EP-000020
+#       - CAT2
+#       - CCI-000366
+#       - SRG-OS-000480-GPOS-00227
+#       - SV-220873r569187_rule
+#       - V-220873
