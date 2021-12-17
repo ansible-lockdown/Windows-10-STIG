@@ -2400,15 +2400,508 @@
       - SV-220871r642141_rule
       - V-220871
 
-# - name: "MEDIUM | WN10-EP-000020 | PATCH | Windows 10 Exploit Protection system-level mitigation, Data Execution Prevention (DEP), must be on."
+- name: "MEDIUM | WN10-EP-000020 | PATCH | Windows 10 Exploit Protection system-level mitigation, Data Execution Prevention (DEP), must be on."
+  block:
+      - name: "MEDIUM | WN10-EP-000020 | AUDIT | Windows 10 Exploit Protection system-level mitigation, Data Execution Prevention (DEP), must be on. | Get DEP Enabled value"
+        win_shell: Get-ProcessMitigation -System | Select-Object -ExpandProperty DEP | Select Enable | Format-List
+        changed_when: false
+        failed_when: false
+        check_mode: no
+        ignore_errors: yes
+        register: wn10_EP_000020_dep_enable_status
 
-#   when:
-#       - wn10_EP_000020
-#       - ansible_distribution_version >= "10.0.1709.0"
-#   tags:
-#       - WN10-EP-000020
-#       - CAT2
-#       - CCI-000366
-#       - SRG-OS-000480-GPOS-00227
-#       - SV-220873r569187_rule
-#       - V-220873
+
+      - name: "MEDIUM | WN10-EP-000020 | PATCH | Windows 10 Exploit Protection system-level mitigation, Data Execution Prevention (DEP), must be on. | Set DEP Enabled if needed"
+        win_shell: Set-ProcessMitigation -System -Enable DEP
+        when: "'OFF' in wn10_EP_000020_dep_enable_status.stdout"
+  when:
+      - wn10_EP_000020
+      - ansible_distribution_version >= "10.0.1709.0"
+  tags:
+      - WN10-EP-000020
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220873r569187_rule
+      - V-220873
+
+- name: "MEDIUM | WN10-EP-000030 | PATCH | Windows 10 Exploit Protection system-level mitigation, Randomize memory allocations (Bottom-Up ASLR), must be on."
+  block:
+      - name: "MEDIUM | WN10-EP-000030 | AUDIT | Windows 10 Exploit Protection system-level mitigation, Randomize memory allocations (Bottom-Up ASLR), must be on. | Get ASLR BottomUp status"
+        win_shell: Get-ProcessMitigation -System | Select-Object -ExpandProperty ASLR | Select BottomUp | Format-List
+        changed_when: false
+        failed_when: false
+        check_mode: no
+        ignore_errors: yes
+        register: wn10_ep_000030_aslr_bottomup_status
+
+      - name: "MEDIUM | WN10-EP-000030 | PATCH | Windows 10 Exploit Protection system-level mitigation, Randomize memory allocations (Bottom-Up ASLR), must be on. | Set ASLR BottomUp Enabled if needed"
+        win_shell: Set-ProcessMitigation -System -Enable BottomUp
+        when: "'OFF' in wn10_ep_000030_aslr_bottomup_status.stdout"
+  when:
+      - wn10_EP_000030
+      - - ansible_distribution_version >= "10.0.1709.0"
+  tags:
+      - WN10-EP-000030
+      - CAT2
+      - CCI-002824
+      - SRG-OS-000433-GPOS-00192
+      - SV-220874r569187_rule
+      - V-220874
+
+- name: "MEDIUM | WN10-EP-000040 | PATCH | Windows 10 Exploit Protection system-level mitigation, Control flow guard (CFG), must be on."
+  block:
+      - name: "MEDIUM | WN10-EP-000040 | AUDIT | Windows 10 Exploit Protection system-level mitigation, Control flow guard (CFG), must be on. | Get CFG Enable status"
+        win_shell: Get-ProcessMitigation -System | Select-Object -ExpandProperty CFG | Select Enable | Format-List
+        changed_when: false
+        failed_when: false
+        check_mode: no
+        ignore_errors: yes
+        register: wn10_ep_000040_cfg_enable_status
+
+      - name: "MEDIUM | WN10-EP-000040 | PATCH | Windows 10 Exploit Protection system-level mitigation, Control flow guard (CFG), must be on. | Set CFG Enabled if needed"
+        win_shell: Set-ProcessMitigation -System -Enable CFG
+        when: "'OFF' in wn10_ep_000040_cfg_enable_status.stdout"
+  when:
+      - wn10_EP_000040
+      - ansible_distribution_version >= "10.0.1709.0"
+  tags:
+      - WN10-EP-000040
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220875r569187_rule
+      - V-220875
+
+- name: "MEDIUM | WN10-EP-000050 | PATCH | Windows 10 Exploit Protection system-level mitigation, Validate exception chains (SEHOP), must be on."
+  block:
+      - name: "MEDIUM | WN10-EP-000050 | AUDIT | Windows 10 Exploit Protection system-level mitigation, Validate exception chains (SEHOP), must be on. | Get SEHOP Enable status"
+        win_shell: Get-ProcessMitigation -System | Select-Object -ExpandProperty SEHOP | Select Enable | Format-List
+        changed_when: false
+        failed_when: false
+        check_mode: no
+        ignore_errors: yes
+        register: wn10_ep_000050_sehop_enable_status
+
+      - name: "MEDIUM | WN10-EP-000050 | PATCH | Windows 10 Exploit Protection system-level mitigation, Validate exception chains (SEHOP), must be on. | Set SEHOP Enabled if needed"
+        win_shell: Set-ProcessMitigation -System -Enable SEHOP
+        when: "'OFF' in wn10_ep_000050_sehop_enable_status.stdout"
+  when:
+      - wn10_EP_000050
+      - ansible_distribution_version >= "10.0.1709.0"
+  tags:
+      - WN10-EP-000050
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220876r569187_rule
+      - V-220876
+
+- name: "MEDIUM | WN10-EP-000060 | PATCH | Windows 10 Exploit Protection system-level mitigation, Validate heap integrity, must be on."
+  block:
+      - name: "MEDIUM | WN10-EP-000060 | AUDIT | Windows 10 Exploit Protection system-level mitigation, Validate heap integrity, must be on. | Get Heap TerminateOnError status"
+        win_shell: Get-ProcessMitigation -System | Select-Object -ExpandProperty HEAP | Select TerminateOnError | Format-List
+        changed_when: false
+        failed_when: false
+        check_mode: no
+        ignore_errors: yes
+        register: wn10_ep_000060_heap_terminateonerror_status
+
+      - name: "MEDIUM | WN10-EP-000060 | PATCH | Windows 10 Exploit Protection system-level mitigation, Validate heap integrity, must be on. | Set Heap TerminateOnError if needed"
+        win_shell: Set-ProcessMitigation -System -Enable TerminateOnError
+        when: "'OFF' in wn10_ep_000060_heap_terminateonerror_status.stdout"
+  when:
+      - wn10_EP_000060
+      - ansible_distribution_version >= "10.0.1709.0"
+  tags:
+      - WN10-EP-000060
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220877r569187_rule
+      - V-220877
+
+- name: "MEDIUM | WN10-EP-000070 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for Acrobat.exe."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000070
+      - ansible_distribution_version >= "10.0.1709.0"
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000070
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220878r569187_rule
+      - V-220878
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000080 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for AcroRd32.exe."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000080
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000080
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220879r569187_rule
+      - V-220879
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000090 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for chrome.exe."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000090
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000090
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220880r569187_rule
+      - V-220880
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000100 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for EXCEL.EXE."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000100
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000100
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220881r569187_rule
+      - V-220881
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000110 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for firefox.exe."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000110
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000110
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220882r569187_rule
+      - V-220882
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000120 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for FLTLDR.EXE."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000120
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000120
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220883r569187_rule
+      - V-220883
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000130 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for GROOVE.EXE."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000130
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000130
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220884r569187_rule
+      - V-220884
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000140 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for iexplore.exe."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000140
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000140
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220885r569187_rule
+      - V-220885
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000150 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for INFOPATH.EXE."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000150
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000150
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220886r569187_rule
+      - V-220886
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000160 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for java.exe, javaw.exe, and javaws.exe."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000160
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000160
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220887r569187_rule
+      - V-220887
+      - notimplemented
+
+- name: "MEDIM | WN10-EP-000170 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for lync.exe."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000170
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000170
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220888r569187_rule
+      - V-220888
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000180 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for MSACCESS.EXE."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000180
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000180
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220889r569187_rule
+      - V-220889
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000190 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for MSPUB.EXE."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000190
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000190
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220890r569187_rule
+      - V-220890
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000200 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for OIS.EXE."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000200
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000200
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220891r569308_rule
+      - V-220891
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000220 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for OUTLOOK.EXE."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000220
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000220
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220893r569187_rule
+      - V-220893
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000230 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for plugin-container.exe."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000230
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000230
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220894r569187_rule
+      - V-220894
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000240 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for POWERPNT.EXE."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000240
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000240
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220895r569187_rule
+      - V-220895
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000250 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for PPTVIEW.EXE."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000250
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000250
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220896r569187_rule
+      - V-220896
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000260 | PATCH | Protection mitigations in Windows 10 must be configured for VISIO.EXE."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000260
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000260
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220897r569187_rule
+      - V-220897
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000270 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for VPREVIEW.EXE."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000270
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000270
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220898r569187_rule
+      - V-220898
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000280 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for WINWORD.EXE."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000280
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000280
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220899r569187_rule
+      - V-220899
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000290 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for wmplayer.exe."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000290
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000290
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220900r569187_rule
+      - V-220900
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000300 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for wordpad.exe."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_EP_000300
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-EP-000300
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220901r569187_rule
+      - V-220901
+      - notimplemented
+
+- name: "MEDIUM | WN10-EP-000310 | PATCH | Windows 10 Kernel (Direct Memory Access) DMA Protection must be enabled."
+  win_regedit:
+      path: HKLM:\Software\Policies\Microsoft\Windows\Kernel DMA Protection
+      value: DeviceEnumerationPolicy
+      data: 0
+      type: dword
+  when:
+      - wn10_EP_000310
+  tags:
+      - WN10-EP-000310
+      - CAT2
+      - CCI-001090
+      - SRG-OS-000138-GPOS-00069
+      - SV-220902r569187_rule
+      - V-220902

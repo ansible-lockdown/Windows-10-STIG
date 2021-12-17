@@ -35,6 +35,9 @@ win10stig_system_is_container: false
 # tweak role to run skip tasks irrelevant for virtualized computers
 win10stig_system_is_vm: true
 
+# This will skip the echo true tasks related to not implimented controls
+win10stig_run_notimplemented: false
+
 # These variables correspond with the STIG IDs defined in the STIG and allows you to enable/disable specific rules.
 # PLEASE NOTE: These work in coordination with the cat1, cat2, cat3 group variables. You must enable an entire group
 # in order for the variables below to take effect.
@@ -213,6 +216,35 @@ wn10_CC_000360: true
 wn10_CC_000365: true
 wn10_CC_000370: true
 wn10_CC_000385: true
+wn10_EP_000020: true
+wn10_EP_000030: true
+wn10_EP_000040: true
+wn10_EP_000050: true
+wn10_EP_000060: true
+wn10_EP_000070: true
+wn10_EP_000080: true
+wn10_EP_000090: true
+wn10_EP_000100: true
+wn10_EP_000110: true
+wn10_EP_000120: true
+wn10_EP_000130: true
+wn10_EP_000140: true
+wn10_EP_000150: true
+wn10_EP_000160: true
+wn10_EP_000170: true
+wn10_EP_000180: true
+wn10_EP_000190: true
+wn10_EP_000200: true
+wn10_EP_000220: true
+wn10_EP_000230: true
+wn10_EP_000240: true
+wn10_EP_000250: true
+wn10_EP_000260: true
+wn10_EP_000270: true
+wn10_EP_000280: true
+wn10_EP_000290: true
+wn10_EP_000300: true
+wn10_EP_000310: true
 
 # CAT 3 Rules
 wn10_00_000020: true
