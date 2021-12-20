@@ -362,9 +362,9 @@
 
       - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Search for files"
         win_find:
-          paths: '{{ item }}:\'
-          recurse: yes
-          patterns: ['*.p12','*.pfx']
+            paths: '{{ item }}:\'
+            recurse: yes
+            patterns: ['*.p12','*.pfx']
         register: wn10_00_000130_files
         with_items:
             - "{{ wn10_00_000130_drive_letters.stdout_lines | select() | list }}"

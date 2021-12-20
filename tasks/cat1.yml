@@ -437,10 +437,9 @@
       - V-220958
 
 - name: "HIGH | WN10-UR-000045 | PATCH | The Create a token object user right must not be assigned to any groups or accounts."
-  win_security_policy:
-      section: Privilege Rights
-      key: SeCreateTokenPrivilege
-      value: ""
+  win_user_right:
+      name: SeCreateTokenPrivilege
+      users: []
   when:
       - wn10_UR_000045
   tags:
