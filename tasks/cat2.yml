@@ -2905,3 +2905,1121 @@
       - SRG-OS-000138-GPOS-00069
       - SV-220902r569187_rule
       - V-220902
+
+- name: "MEDIUM | WN10-PK-000005 | PATCH | The DoD Root CA certificates must be installed in the Trusted Root Store."
+  debug:
+      msg:
+          - "Warning! Please install the DoD Root CA certificates"
+          - "DoD Root CA 2"
+          - "DoD Root CA 3"
+          - "DoD Root CA 4"
+          - "DoD Root CA 5"
+  when:
+      - wn10_PK_000005
+  tags:
+      - WN10-PK-000005
+      - CAT2
+      - CCI-002470
+      - CCI-000185
+      - SRG-OS-000066-GPOS-00034
+      - SV-220903r569310_rule
+      - V-220903
+
+- name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems."
+  debug:
+      msg:
+          - "Warning! Please install the ECA Root CA certificates"
+          - "ECA Root CA 2"
+          - "ECA Root CA 4"
+  when:
+      - wn10_PK_000010
+  tags:
+      - WN10-PK-000010
+      - CAT2
+      - CCI-000185
+      - SRG-OS-000066-GPOS-00034
+      - SV-220904r569312_rule
+      - V-220904
+
+- name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems."
+  debug:
+      msg:
+          - "Warning! Install the DoD Interoperability Root CA cross-certificates on unclassified systems."
+          - "Issued To - Issued By - Thumbprint"
+          - "DoD Root CA 2 - DoD Interoperability Root CA 1 - A8C27332CCB4CA49554CE55D34062A7DD2850C02"
+          - "DoD Root CA 3 - DoD Interoperability Root CA 2 - AC06108CA348CC03B53795C64BF84403C1DBD341"
+  when:
+      - wn10_PK_000015
+  tags:
+      - WN10-PK-000015
+      - CAT2
+      - CCI-000185
+      - CCI-002470
+      - SRG-OS-000066-GPOS-00034
+      - SV-220905r569314_rule
+      - V-220905
+
+- name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems."
+  debug:
+      msg:
+          - "Warning! Install the US DoD CCEB Interoperability Root CA cross-certificate on unclassified systems."
+          - "Issued To - Issued By - Thumbprint"
+          - "DoD Root CA 3 - US DoD CCEB Interoperability Root CA 2 - AF132AC65DE86FC4FB3FE51FD637EBA0FF0B12A9"
+  when:
+      - wn10_PK_000020
+  tags:
+      - WN10-PK-000020
+      - CAT2
+      - CCI-002470
+      - CCI-000185
+      - SRG-OS-000066-GPOS-00034
+      - SV-220906r569316_rule
+      - V-220906
+
+- name: "MEDIUM | WN10-RG-000005 | PATCH | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained."
+  win_shell: echo true
+  changed_when: false
+  failed_when: false
+  when:
+      - wn10_RG_000005
+      - win10stig_run_notimplemented
+  tags:
+      - WN10-RG-000005
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220907r569187_rule
+      - V-220907
+      - notimplemented
+
+- name: "MEDIUM | WN10-SO-000005 | PATCH | The built-in administrator account must be disabled."
+  win_security_policy:
+      section: System Access
+      key: EnableAdminAccount
+      value: 0
+  when:
+      - wn10_SO_000005
+  tags:
+      - WN10-SO-000005
+      - CAT2
+      - CCI-000764
+      - SRG-OS-000104-GPOS-00051
+      - SV-220908r569187_rule
+      - V-220908
+
+- name: "MEDIUM | WN10-SO-000010 | PATCH | The built-in guest account must be disabled."
+  win_security_policy:
+      section: System Access
+      key: EnableGuestAccount
+      value: 0
+  when:
+      - wn10_SO_000010
+  tags:
+      - WN10-SO-000010
+      - CAT2
+      - CCI-000804
+      - SRG-OS-000121-GPOS-00062
+      - SV-220909r569187_rule
+      - V-220909
+
+- name: "MEDIUM | WN10-SO-000015 | PATCH | Local accounts with blank passwords must be restricted to prevent access from the network."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+      value: LimitBlankPasswordUse
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000015
+  tags:
+      - WN10-SO-000015
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220910r569187_rule
+      - V-220910
+
+- name: "MEDIUM | WN10-SO-000020 | PATCH | The built-in administrator account must be renamed."
+  win_security_policy:
+      section: System Access
+      key: NewAdministratorName
+      value: "{{ win10stig_new_administrator_name }}"
+  when:
+      - wn10_SO_000020
+  tags:
+      - WN10-SO-000020
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220911r569187_rule
+      - V-220911
+
+- name: "MEDIUM | WN10-SO-000025 | PATCH | The built-in guest account must be renamed."
+  win_security_policy:
+      section: System Access
+      key: NewGuestName
+      value: "{{ win10stig_new_guest_name }}"
+  when:
+      - wn10_SO_000025
+  tags:
+      - WN10-SO-000025
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220912r569187_rule
+      - V-220912
+
+- name: "MEDIUM | WN10-SO-000030 | PATCH | Audit policy using subcategories must be enabled"
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+      value: SCENoApplyLegacyAuditPolicy
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000030
+  tags:
+      - WN10-SO-000030
+      - CAT2
+      - CCI-000169
+      - SRG-OS-000062-GPOS-00031
+      - SV-220913r569187_rule
+      - V-220913
+
+- name: "MEDIUM | WN10-SO-000035 | PATCH | Outgoing secure channel traffic must be encrypted or signed."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
+      value: RequireSignOrSeal
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000035
+  tags:
+      - WN10-SO-000035
+      - CAT2
+      - CCI-002418
+      - CCI-002421
+      - SRG-OS-000423-GPOS-00187
+      - SV-220914r569187_rule
+      - V-220914
+
+- name: "MEDIUM | WN10-SO-000040 | PATCH | Outgoing secure channel traffic must be encrypted when possible."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
+      value: SealSecureChannel
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000040
+  tags:
+      - WN10-SO-000040
+      - CAT2
+      - CCI-002418
+      - CCI-002421
+      - SRG-OS-000423-GPOS-00187
+      - SV-220915r569187_rule
+      - V-220915
+
+- name: "MEDIUM | WN10-SO-000045 | PATCH | Outgoing secure channel traffic must be signed when possible."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
+      value: SignSecureChannel
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000045
+  tags:
+      - WN10-SO-000045
+      - CAT2
+      - CCI-002418
+      - CCI-002421
+      - SRG-OS-000423-GPOS-00187
+      - SV-220916r569187_rule
+      - V-220916
+
+- name: "MEDIUM | WN10-SO-000060 | PATCH | The system must be configured to require a strong session key."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
+      value: RequireStrongKey
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000060
+  tags:
+      - WN10-SO-000060
+      - CAT2
+      - CCI-002418
+      - CCI-002421
+      - SRG-OS-000423-GPOS-00187
+      - SV-220919r569187_rule
+      - V-220919
+
+- name: "MEDIUM | WN10-SO-000070 | PATCH | The machine inactivity limit must be set to 15 minutes, locking the system with the screensaver."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+      value: InactivityTimeoutSecs
+      data: "{{ win10stig_inactivity_timeout }}"
+      type: dword
+  when:
+      - wn10_SO_000070
+  tags:
+      - WN10-SO-000070
+      - CAT2
+      - CCI-000057
+      - SRG-OS-000029-GPOS-00010
+      - SV-220920r569187_rule
+      - V-220920
+
+- name: "MEDIUM | WN10-SO-000075 | PATCH | The required legal notice must be configured to display before console logon."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+      value: LegalNoticeText
+      data: "{{ win10stig_legalnotice }}"
+      type: string
+  when:
+      - wn10_SO_000075
+  tags:
+      - WN10-SO-000075
+      - CAT2
+      - CCI-000048
+      - CCI-000050
+      - CCI-001384
+      - CCI-001385
+      - CCI-001386
+      - CCI-001387
+      - CCI-001388
+      - SRG-OS-000023-GPOS-00006
+      - SV-220921r569187_rule
+      - V-220921
+
+- name: "MEDIUM | WN10-SO-000095 | PATCH | The Smart Card removal option must be configured to Force Logoff or Lock Workstation."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon
+      value: SCRemoveOption
+      data: "{{ win10stig_smartcard_remove_action }}"
+      type: string
+  when:
+      - wn10_SO_000095
+  tags:
+      - WN10-SO-000095
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220924r569187_rule
+      - V-220924
+
+- name: "MEDIUM | WN10-SO-000100 | PATCH | The Windows SMB client must be configured to always perform SMB packet signing."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters
+      value: RequireSecuritySignature
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000100
+  tags:
+      - WN10-SO-000100
+      - CAT2
+      - CCI-002418
+      - CCI-002421
+      - SRG-OS-000423-GPOS-00187
+      - SV-220925r569187_rule
+      - V-220925
+
+- name: "MEDIUM | WN10-SO-000110 | PATCH | Unencrypted passwords must not be sent to third-party SMB Servers."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters
+      value: EnablePlainTextPassword
+      data: 0
+      type: dword
+  when:
+      - wn10_SO_000110
+  tags:
+      - WN10-SO-000110
+      - CAT2
+      - CCI-000197
+      - SRG-OS-000074-GPOS-00042
+      - SV-220926r569187_rule
+      - V-220926
+
+- name: "MEDIUM | WN10-SO-000120 | PATCH | The Windows SMB server must be configured to always perform SMB packet signing."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\LanManServer\Parameters
+      value: RequireSecuritySignature
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000120
+  tags:
+      - WN10-SO-000120
+      - CAT2
+      - CCI-002418
+      - CCI-002421
+      - SRG-OS-000423-GPOS-00187
+      - SV-220927r569187_rule
+      - V-220927
+
+- name: "MEDIUM | WN10-SO-000160 | PATCH | The system must be configured to prevent anonymous users from having the same rights as the Everyone group."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+      value: EveryoneIncludesAnonymous
+      data: 0
+      type: dword
+  when:
+      - wn10_SO_000160
+  tags:
+      - WN10-SO-000160
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220931r569187_rule
+      - V-220931
+
+- name: "MEDIUM | WN10-SO-000167 | PATCH | Remote calls to the Security Account Manager (SAM) must be restricted to Administrators."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+      value: RestrictRemoteSAM
+      data: O:BAG:BAD:(A;;RC;;;BA)
+      type: string
+  when:
+      - wn10_SO_000167
+  tags:
+      - WN10-SO-000167
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220933r569187_rule
+      - V-220933
+
+- name: "MEDIUM | WN10-SO-000180 | PATCH | NTLM must be prevented from falling back to a Null session."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\LSA\MSV1_0
+      value: allownullsessionfallback
+      data: 0
+      type: dword
+  when:
+      - wn10_SO_000180
+  tags:
+      - WN10-SO-000180
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220934r569187_rule
+      - V-220934
+
+- name: "MEDIUM | WN10-SO-000185 | PATCH | PKU2U authentication using online identities must be prevented."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\LSA\pku2u
+      value: AllowOnlineID
+      data: 0
+      type: dword
+  when:
+      - wn10_SO_000185
+  tags:
+      - WN10-SO-000185
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220935r569187_rule
+      - V-220935
+
+- name: "MEDIUM | WN10-SO-000190 | PATCH | Kerberos encryption types must be configured to prevent the use of DES and RC4 encryption suites."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameter
+      value: SupportedEncryptionTypes
+      data: 2147483640
+      type: dword
+  when:
+      - wn10_SO_000190
+  tags:
+      - WN10-SO-000190
+      - CAT2
+      - CCI-000803
+      - SRG-OS-000120-GPOS-00061
+      - SV-220936r569187_rule
+      - V-220936
+
+- name: "MEDIUM | WN10-SO-000210 | PATCH | The system must be configured to the required LDAP client signing level."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\LDAP
+      value: LDAPClientIntegrity
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000210
+  tags:
+      - WN10-SO-000210
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220939r569187_rule
+      - V-220939
+
+- name: "MEDIUM | WN10-SO-000215 | PATCH | The system must be configured to meet the minimum session security requirement for NTLM SSP based clients."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0
+      value: NTLMMinClientSec
+      data: 537395200
+      type: dword
+  when:
+      - wn10_SO_000215
+  tags:
+      - WN10-SO-000215
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220940r569187_rule
+      - V-220940
+
+- name: "MEDIUM | WN10-SO-000220 | PATCH | The system must be configured to meet the minimum session security requirement for NTLM SSP based servers."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0
+      value: NTLMMinServerSec
+      data: 537395200
+      type: dword
+  when:
+      - wn10_SO_000220
+  tags:
+      - WN10-SO-000220
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220941r569187_rule
+      - V-220941
+
+- name: "MEDIUM | WN10-SO-000230 | PATCH | The system must be configured to use FIPS-compliant algorithms for encryption, hashing, and signing."
+  win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\FIPSAlgorithmPolicy
+      value: Enabled
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000230
+  tags:
+      - WN10-SO-000230
+      - CAT2
+      - CCI-002450
+      - SRG-OS-000478-GPOS-00223
+      - SV-220942r569187_rule
+      - V-220942
+
+- name: "MEDIUM | WN10-SO-000245 | PATCH | User Account Control approval mode for the built-in Administrator must be enabled."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+      value: FilterAdministratorToken
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000245
+  tags:
+      - WN10-SO-000245
+      - CAT2
+      - CCI-002038
+      - SRG-OS-000373-GPOS-00157
+      - SV-220944r569187_rule
+      - V-220944
+
+- name: "MEDIUM | WN10-SO-000250 | PATCH | User Account Control must, at minimum, prompt administrators for consent on the secure desktop."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+      value: ConsentPromptBehaviorAdmin
+      data: 2 
+      type: dword
+  when:
+      - wn10_SO_000250
+  tags:
+      - WN10-SO-000250
+      - CAT2
+      - CCI-001084
+      - SRG-OS-000134-GPOS-00068
+      - SV-220945r569187_rule
+      - V-220945
+
+- name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and non-privileged accounts."
+  debug:
+      msg: "Warning! You are not on a domain which means you should configure Windows Hello for sign on options would be suggested based on the organizations needs and capabilities."
+  when:
+      - wn10_SO_000251
+      - not ansible_windows_domain_member
+  tags:
+      - WN10-SO-000251
+      - CAT2
+      - CCI-000765
+      - SRG-OS-000105-GPOS-00052
+      - SV-220946r569187_rule
+      - V-220946
+
+- name: "MEDIUM | WN10-SO-000255 | PATCH | User Account Control must automatically deny elevation requests for standard users."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+      value: ConsentPromptBehaviorUser
+      data: 0
+      type: dword
+  when:
+      - wn10_SO_000255
+  tags:
+      - WN10-SO-000255
+      - CAT2
+      - CCI-002038
+      - SRG-OS-000373-GPOS-00157
+      - SV-220947r569187_rule
+      - V-220947
+
+- name: "MEDIUM | WN10-SO-000260 | PATCH | User Account Control must be configured to detect application installations and prompt for elevation."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+      value: EnableInstallerDetection
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000260
+  tags:
+      - WN10-SO-000260
+      - CAT2
+      - CCI-001084
+      - SRG-OS-000134-GPOS-00068
+      - SV-220948r569187_rule
+      - V-220948
+
+- name: "MEDIUM | WN10-SO-000265 | PATCH | User Account Control must only elevate UIAccess applications that are installed in secure locations."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+      value: EnableSecureUIAPaths
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000265
+  tags:
+      - WN10-SO-000265
+      - CAT2
+      - CCI-001084
+      - SRG-OS-000134-GPOS-00068
+      - SV-220949r569187_rule
+      - V-220949
+
+- name: "MEDIUM | WN10-SO-000270 | PATCH | User Account Control must run all administrators in Admin Approval Mode, enabling UAC."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+      value: EnableLUA
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000270
+  tags:
+      - WN10-SO-000270
+      - CAT2
+      - CCI-002038
+      - SRG-OS-000373-GPOS-00157
+      - SV-220950r569187_rule
+      - V-220950
+
+- name: "MEDIUM | WN10-SO-000275 | PATCH | User Account Control must virtualize file and registry write failures to per-user locations."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+      value: EnableVirtualization
+      data: 1
+      type: dword
+  when:
+      - wn10_SO_000275
+  tags:
+      - WN10-SO-000275
+      - CAT2
+      - CCI-001084
+      - SRG-OS-000134-GPOS-00068
+      - SV-220951r569187_rule
+      - V-220951
+
+- name: "MEDIUM | WN10-SO-000280 | PATCH | Passwords for enabled local Administrator accounts must be changed at least every 60 days."
+  win_security_policy:
+      section: System Access
+      key: MaximumPasswordAge
+      value: "{{ win10stig_max_pass_age }}"
+  when:
+      - wn10_SO_000280
+  tags:
+      - WN10-SO-000280
+      - CAT2
+      - CCI-000199
+      - SRG-OS-000076-GPOS-00044
+      - SV-220952r569187_rule
+      - V-220952
+
+- name: "MEDIUM | WN10-UC-000020 | PATCH | Zone information must be preserved when saving attachments."
+  win_regedit:
+      path: HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Attachments
+      value: SaveZoneInformation
+      data: 2
+      type: dword
+  when:
+      - wn10_UC_000020
+  tags:
+      - WN10-UC-000020
+      - CAT2
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-220955r569187_rule
+      - V-220955
+
+- name: "MEDIUM | WN10-UR-000005 | PATCH | The Access Credential Manager as a trusted caller user right must not be assigned to any groups or accounts."
+  win_user_right:
+      name: SeTrustedCredManAccessPrivilege
+      users: []
+  when:
+      - wn10_UR_000005
+  tags:
+      - WN10-UR-000005
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220956r569187_rule
+      - V-220956
+
+- name: "MEDIUM | WN10-UR-000010 | PATCH | The Access this computer from the network user right must only be assigned to the Administrators and Remote Desktop Users groups."
+  win_user_right:
+      name: SeNetworkLogonRight
+      action: set
+      users:
+          - Administrators
+          - Remote Desktop Users
+  when:
+      - wn10_UR_000010
+  tags:
+      - WN10-UR-000010
+      - CAT2
+      - CCI-000213
+      - SRG-OS-000080-GPOS-00048
+      - SV-220957r569187_rule
+      - V-220957
+
+- name: "MEDIUM | WN10-UR-000025 | PATCH | The Allow log on locally user right must only be assigned to the Administrators and Users groups."
+  win_user_right:
+      name: SeInteractiveLogonRight
+      action: set
+      users:
+          - Administrators
+          - Users
+  when:
+      - wn10_UR_000025
+  tags:
+      - WN10-UR-000025
+      - CAT2
+      - CCI-000213
+      - SRG-OS-000080-GPOS-00048
+      - SV-220959r569187_rule
+      - V-220959
+
+- name: "MEDIUM | WN10-UR-000030 | PATCH | The Back up files and directories user right must only be assigned to the Administrators group."
+  win_user_right:
+      name: SeBackupPrivilege
+      users: Administrators
+      action: set
+  when:
+      - wn10_UR_000030
+  tags:
+      - WN10-UR-000030
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220960r569187_rule
+      - V-220960
+
+- name: "MEDIUM | WN10-UR-000035 | PATCH | The Change the system time user right must only be assigned to Administrators and Local Service and NT SERVICE\autotimesvc."
+  block:
+      - name: "MEDIUM | WN10-UR-000035 | PATCH | The Change the system time user right must only be assigned to Administrators and Local Service and NT SERVICE\autotimesvc. | Set for Win 10 v1909 and newer"
+        win_user_right:
+            name: SeSystemtimePrivilege
+            action: set
+            users:
+                - Administrators
+                - LOCAL SERVICE
+                - NT SERVICE\autotimesvc
+        when: ansible_distribution_version >= "10.0.1909.0"
+
+      - name: "MEDIUM | WN10-UR-000035 | PATCH | The Change the system time user right must only be assigned to Administrators and Local Service and NT SERVICE\autotimesvc."
+        win_user_right:
+            name: SeSystemtimePrivilege
+            action: set
+            users:
+                - Administrators
+                - LOCAL SERVICE
+        when: ansible_distribution_version < "10.0.1909.0"
+  when:
+      - wn10_UR_000035
+  tags:
+      - WN10-UR-000035
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220961r569187_rule
+      - V-220961
+
+- name: "MEDIUM | WN10-UR-000040 | PATCH | The Create a pagefile user right must only be assigned to the Administrators group."
+  win_user_right:
+      name: SeCreatePagefilePrivilege 
+      users: Administrators
+      action: set
+  when:
+      - wn10_UR_000040
+  tags:
+      - WN10-UR-000040
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220962r569187_rule
+      - V-220962
+
+- name: "MEDIUM | WN10-UR-000050 | PATCH | The Create global objects user right must only be assigned to Administrators, Service, Local Service, and Network Service."
+  win_user_right:
+      name: SeCreateGlobalPrivilege 
+      action: set
+      users:
+          - Administrators
+          - LOCAL SERVICE
+          - NETWORK SERVICE
+          - SERVICE
+  when:
+      - wn10_UR_000050
+  tags:
+      - WN10-UR-000050
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220964r569187_rule
+      - V-220964
+
+- name: "MEDIUM | WN10-UR-000055 | PATCH | The Create permanent shared objects user right must not be assigned to any groups or accounts."
+  win_user_right:
+      name: SeCreatePermanentPrivilege
+      users: []
+  when:
+      - wn10_UR_000055
+  tags:
+      - WN10-UR-000055
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220965r569187_rule
+      - V-220965
+
+- name: "MEDIUM | WN10-UR-000060 | PATCH | The Create symbolic links user right must only be assigned to the Administrators group."
+  win_user_right:
+      name: SeCreateSymbolicLinkPrivilege 
+      users: Administrators
+      action: set
+  when:
+      - wn10_UR_000060
+  tags:
+      - WN10-UR-000060
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220966r569187_rule
+      - V-220966
+
+- name: "MEDIUM | WN10-UR-000070 | PATCH | The Deny access to this computer from the network user right on workstations must be configured to prevent access from highly privileged domain accounts and local accounts on domain systems and unauthenticated access on all systems."
+  block:
+      - name: "MEDIUM | WN10-UR-000070 | PATCH | The Deny access to this computer from the network user right on workstations must be configured to prevent access from highly privileged domain accounts and local accounts on domain systems and unauthenticated access on all systems. | Domain member systems"
+        win_user_right:
+            name: SeDenyNetworkLogonRight
+            action: set
+            users:
+                - Guests
+                - Enterprise Admins
+                - Domain Admins
+                - Local account
+        when: ansible_windows_domain_member
+
+      - name: "MEDIUM | WN10-UR-000070 | PATCH | The Deny access to this computer from the network user right on workstations must be configured to prevent access from highly privileged domain accounts and local accounts on domain systems and unauthenticated access on all systems. | Non-Domain systems"
+        win_user_right:
+            name: SeDenyNetworkLogonRight
+            users: Guests
+            action: set
+        when: not ansible_windows_domain_member
+  when:
+      - wn10_UR_000070
+  tags:
+      - WN10-UR-000070
+      - CAT2
+      - CCI-000213
+      - SRG-OS-000080-GPOS-00048
+      - SV-220968r569187_rule
+      - V-220968
+
+- name: "MEDIUM | WN10-UR-000075 | PATCH | The Deny log on as a batch job user right on domain-joined workstations must be configured to prevent access from highly privileged domain accounts."
+  win_user_right:
+      name: SeDenyBatchLogonRight
+      action: set
+      users:
+          - Enterprise Admin
+          - Domain Admin
+  when:
+      - wn10_UR_000075
+      - ansible_windows_domain_member
+  tags:
+      - WN10-UR-000075
+      - CAT2
+      - CCI-000213
+      - SRG-OS-000080-GPOS-00048
+      - SV-220969r569187_rule
+      - V-220969
+
+- name: "MEDIUM | WN10-UR-000080 | PATCH | The Deny log on as a service user right on Windows 10 domain-joined workstations must be configured to prevent access from highly privileged domain accounts."
+  win_user_right:
+      name: SeDenyServiceLogonRight
+      users:
+          - Enterprise Admin
+          - Domain Admin
+      action: set
+  when:
+      - wn10_UR_000080
+      - ansible_windows_domain_member
+  tags:
+      - WN10-UR-000080
+      - CAT2
+      - CCI-000213
+      - SRG-OS-000080-GPOS-00048
+      - SV-220970r569187_rule
+      - V-220970
+
+- name: "MEDIM | WN10-UR-000085 | PATCH | The Deny log on locally user right on workstations must be configured to prevent access from highly privileged domain accounts on domain systems and unauthenticated access on all systems."
+  block:
+      - name: "MEDIM | WN10-UR-000085 | PATCH | The Deny log on locally user right on workstations must be configured to prevent access from highly privileged domain accounts on domain systems and unauthenticated access on all systems. | Domain member systems"
+        win_user_right:
+            name: SeDenyInteractiveLogonRight
+            action: set
+            users:
+                - Guests
+                - Enterprise Admins
+                - Domain Admins
+        when: ansible_windows_domain_member
+
+      - name: "MEDIM | WN10-UR-000085 | PATCH | The Deny log on locally user right on workstations must be configured to prevent access from highly privileged domain accounts on domain systems and unauthenticated access on all systems. | Non-Domain systems"
+        win_user_right:
+            name: SeDenyInteractiveLogonRight
+            users: Guests
+            action: set
+        when: not ansible_windows_domain_member
+  when:
+      - wn10_UR_000085
+  tags:
+      - WN10-UR-000085
+      - CAT2
+      - CCI-000213
+      - SRG-OS-000080-GPOS-00048
+      - SV-220971r569187_rule
+      - V-220971
+
+- name: "MEDIUM | WN10-UR-000090 | PATCH | The Deny log on through Remote Desktop Services user right on Windows 10 workstations must at a minimum be configured to prevent access from highly privileged domain accounts and local accounts on domain systems and unauthenticated access on all systems."
+  block:
+      - name: "MEDIUM | WN10-UR-000090 | PATCH | The Deny log on through Remote Desktop Services user right on Windows 10 workstations must at a minimum be configured to prevent access from highly privileged domain accounts and local accounts on domain systems and unauthenticated access on all systems. | Domain memeber systems"
+        win_user_right:
+            name: SeDenyRemoteInteractiveLogonRight
+            action: set
+            users:
+                - Guests
+                - Enterprise Admins
+                - Domain Admins
+                - Local account
+        when: ansible_windows_domain_member
+
+      - name: "MEDIUM | WN10-UR-000090 | PATCH | The Deny log on through Remote Desktop Services user right on Windows 10 workstations must at a minimum be configured to prevent access from highly privileged domain accounts and local accounts on domain systems and unauthenticated access on all systems. | Non-Domain systems"
+        win_user_right:
+            name: SeDenyRemoteInteractiveLogonRight
+            users: Guests
+            action: set
+        when: not ansible_windows_domain_member
+  when:
+      - wn10_UR_000090
+  tags:
+      - WN10-UR-000090
+      - CAT2
+      - CCI-000213
+      - CCI-002314
+      - SRG-OS-000080-GPOS-00048
+      - SV-220972r569187_rule
+      - V-220972
+
+- name: "MEDIUM | WN10-UR-000095 | PATCH | The Enable computer and user accounts to be trusted for delegation user right must not be assigned to any groups or accounts."
+  win_user_right:
+      name: SeEnableDelegationPrivilege
+      users: []
+  when:
+      - wn10_UR_000095
+  tags:
+      - WN10-UR-000095
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220973r569187_rule
+      - V-220973
+
+- name: "MEDIUM | WN10-UR-000100 | PATCH | The Force shutdown from a remote system user right must only be assigned to the Administrators group."
+  win_user_right:
+      name: SeRemoteShutdownPrivilege
+      users: Administrators
+      action: set
+  when:
+      - wn10_UR_000100
+  tags:
+      - WN10-UR-000100
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220974r569187_rule
+      - V-220974
+
+- name: "MEDIUM | WN10-UR-000110 | PATCH | The Impersonate a client after authentication user right must only be assigned to Administrators, Service, Local Service, and Network Service."
+  win_user_right:
+      name: SeImpersonatePrivilege
+      action: set
+      users:
+          - Administrators
+          - LOCAL SERVICE
+          - NETWORK SERVICE
+          - SERVICE
+  when:
+      - wn10_UR_000110
+  tags:
+      - WN10-UR-000110
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220975r569187_rule
+      - V-220975
+
+- name: "MEDIUM | WN10-UR-000120 | PATCH | The Load and unload device drivers user right must only be assigned to the Administrators group."
+  win_user_right:
+      name: SeLoadDriverPrivilege
+      users: Administrators
+      action: set
+  when:
+      - wn10_UR_000120
+  tags:
+      - WN10-UR-000120
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220976r569187_rule
+      - V-220976
+
+- name: "MEDIUM | WN10-UR-000125 | PATCH | The Lock pages in memory user right must not be assigned to any groups or accounts."
+  win_user_right:
+      name: SeLockMemoryPrivilege
+      action: set
+      users: []
+  when:
+      - wn10_UR_000125
+  tags:
+      - WN10-UR-000125
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220977r569187_rule
+      - V-220977
+
+- name: "MEDIUM | WN10-UR-000130 | PATCH | The Manage auditing and security log user right must only be assigned to the Administrators group."
+  win_user_right:
+      name: SeSecurityPrivilege
+      users: Administrators
+      action: set
+  when:
+      - wn10_UR_000130
+  tags:
+      - WN10-UR-000130
+      - CAT2
+      - CCI-000162
+      - CCI-000163
+      - CCI-000164
+      - CCI-000171
+      - CCI-001914
+      - SRG-OS-000057-GPOS-00027
+      - SV-220978r569187_rule
+      - V-220978
+
+- name: "MEDIUM | WN10-UR-000140 | PATCH | The Modify firmware environment values user right must only be assigned to the Administrators group."
+  win_user_right:
+      name: SeSystemEnvironmentPrivilege
+      users: Administrators
+      action: set
+  when:
+      - wn10_UR_000140
+  tags:
+      - WN10-UR-000140
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220979r569187_rule
+      - V-220979
+
+- name: "MEDIUM | WN10-UR-000145 | PATCH | The Perform volume maintenance tasks user right must only be assigned to the Administrators group."
+  win_user_right:
+      name: SeManageVolumePrivilege
+      users: Administrators
+      action: set
+  when:
+      - wn10_UR_000145
+  tags:
+      - WN10-UR-000145
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220980r569187_rule
+      - V-220980
+- name: "MEDIUM | WN10-UR-000150 | PATCH | The Profile single process user right must only be assigned to the Administrators group."
+  win_user_right:
+      name: SeProfileSingleProcessPrivilege
+      users: Administrators
+      action: set
+  when:
+      - wn10_UR_000150
+  tags:
+      - WN10-UR-000150
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220981r569187_rule
+      - V-220981
+
+- name: "MEDIUM | WN10-UR-000160 | PATCH | The Restore files and directories user right must only be assigned to the Administrators group."
+  win_user_right:
+      name: SeRestorePrivilege
+      users: Administrators
+      action: set
+  when:
+      - wn10_UR_000160
+  tags:
+      - WN10-UR-000160
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220982r569187_rule
+      - V-220982
+
+- name: "MEDIUM | WN10-UR-000165 | PATCH | The Take ownership of files or other objects user right must only be assigned to the Administrators group."
+  win_user_right:
+      name: SeTakeOwnershipPrivilege
+      users: Administrators
+      action: set
+  when:
+      - wn10_UR_000165
+  tags:
+      - WN10-UR-000165
+      - CAT2
+      - CCI-002235
+      - SRG-OS-000324-GPOS-00125
+      - SV-220983r569187_rule
+      - V-220983
+
+- name: "MEDIUM | WN10-CC-000327 | PATCH | PowerShell Transcription must be enabled on Windows 10."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription
+      value: EnableTranscripting
+      data: 1
+      type: dword
+  when:
+      - wn10_CC_000327
+  tags:
+      - WN10-CC-000327
+      - CAT2
+      - CCI-000132
+      - CCI-000134
+      - SRG-OS-000041
+      - SV-230220r569300_rule
+      - V-230220

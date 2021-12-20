@@ -245,6 +245,72 @@ wn10_EP_000280: true
 wn10_EP_000290: true
 wn10_EP_000300: true
 wn10_EP_000310: true
+wn10_PK_000005: true
+wn10_PK_000010: true
+wn10_PK_000015: true
+wn10_PK_000020: true
+wn10_RG_000005: true
+wn10_SO_000005: true
+wn10_SO_000010: true
+wn10_SO_000015: true
+wn10_SO_000020: true
+wn10_SO_000025: true
+wn10_SO_000030: true
+wn10_SO_000035: true
+wn10_SO_000040: true
+wn10_SO_000045: true
+wn10_SO_000060: true
+wn10_SO_000070: true
+wn10_SO_000075: true
+wn10_SO_000095: true
+wn10_SO_000100: true
+wn10_SO_000110: true
+wn10_SO_000120: true
+wn10_SO_000160: true
+wn10_SO_000167: true
+wn10_SO_000180: true
+wn10_SO_000185: true
+wn10_SO_000190: true
+wn10_SO_000210: true
+wn10_SO_000215: true
+wn10_SO_000220: true
+wn10_SO_000230: true
+wn10_SO_000245: true
+wn10_SO_000250: true
+wn10_SO_000251: true
+wn10_SO_000255: true
+wn10_SO_000260: true
+wn10_SO_000265: true
+wn10_SO_000270: true
+wn10_SO_000275: true
+wn10_SO_000280: true
+wn10_UC_000020: true
+wn10_UR_000005: true
+wn10_UR_000010: true
+wn10_UR_000025: true
+wn10_UR_000030: true
+wn10_UR_000035: true
+wn10_UR_000040: true
+wn10_UR_000050: true
+wn10_UR_000055: true
+wn10_UR_000060: true
+wn10_UR_000070: true
+wn10_UR_000075: true
+wn10_UR_000080: true
+wn10_UR_000085: true
+wn10_UR_000090: true
+wn10_UR_000095: true
+wn10_UR_000100: true
+wn10_UR_000110: true
+wn10_UR_000120: true
+wn10_UR_000125: true
+wn10_UR_000130: true
+wn10_UR_000140: true
+wn10_UR_000145: true
+wn10_UR_000150: true
+wn10_UR_000160: true
+wn10_UR_000165: true
+wn10_CC_000327: true
 
 # CAT 3 Rules
 wn10_00_000020: true
@@ -440,6 +506,28 @@ win10stig_allow_telemetry_value: 1
 # This value needs to be 6 or greater to conform to STIG standards
 win10stig_min_pin_length: 6
 
+# WN10-SO-000020
+# win10stig_new_administrator_name is the name the built-in Administrator account will be renamed to
+win10stig_new_administrator_name: newadmin
+
+# WN10-SO-000025
+# win10stig_new_guest_name is the name the built-in Guest account will be renamed to
+win10stig_new_guest_name: newguest
+
+# win10stig_inactivity_timeout is the machine inactivity limit in seconds.
+# To conform to STIG this value needs to be 900 seconds or less, excluding 0 which disables the inactivity limit
+win10stig_inactivity_timeout: 900
+
+# win10stig_smartcard_remove_action is the value set to SmartCard removal actions
+# To conform to STIG standards please only use the two options below
+# 1, this will lock the workstation when a SmartCeard is removed
+# 2, this will force logoff when a SmartCard is removed
+win10stig_smartcard_remove_action: 1
+
+# win10stig_max_pass_age is the maximum age in days for the local administrator
+# To conform to STIG this needs to be 60 days or less
+win10stig_max_pass_age: 60
+
 # CAT3
 
 # WN10-CC-000206
@@ -458,7 +546,8 @@ win10stig_dodownloadmod_standalone: 0
 # To conform to STIG standards this needs to be set to 30 or less, excluding 0
 win10stig_max_pw_age: 30
 
-# WN10-SO-000080
+# WN10-SO-000075 - CAT2
+# WN10-SO-000080 - CAT3
 # win10stig_legalnotice is the legal banner/notice displayed prior to a logon attempt
 win10stig_legalnotice: |
     You are accessing a U.S. Government (USG) Information System (IS) that is provided for USG-authorized use only.
