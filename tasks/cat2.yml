@@ -14,7 +14,7 @@
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
       - SV-220697r569187_rule
-      - -220697
+      - V-220697
 
 - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use."
   debug:
