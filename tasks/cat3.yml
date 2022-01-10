@@ -166,7 +166,7 @@
 
       - name: "LOW | WN10-CC-000206 | PATCH | Windows Update must not obtain updates from other PCs on the Internet. | Stand-alone"
         win_regedit:
-            path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization\Config
+            path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization
             value: DODownloadMode
             state: present
             data: "{{ win10stig_dodownloadmod_standalone }}"

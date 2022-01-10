@@ -1992,10 +1992,10 @@
       - SV-220842r569187_rule
       - V-220842
 
-- name: "MEDIUM | WN10-CC-000245 | PATCH | Passwords save locally for re-use when browsing may be subject to compromise. Disabling the Edge password manager will prevent this for the browser."
+- name: "MEDIUM | WN10-CC-000245 | PATCH | The password manager function in the Edge browser must be disabled."
   win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main
-      value: FormSuggest
+      value: FormSuggest Passwords
       data: no
       type: string
   when:
