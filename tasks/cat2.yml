@@ -836,7 +836,7 @@
     "MEDIUM | WN10-AU-000035 | PATCH | The system must be configured to audit Account Management - User Account Management failures."
     "MEDIUM | WN10-AU-000040 | PATCH | The system must be configured to audit Account Management - User Account Management successes."
   win_audit_policy_system:
-      subcategory: Credential Validation
+      subcategory: User Account Management
       audit_type: "{{ (wn10_AU_000035 and not wn10_AU_000040) | ternary ('failure', '') }}{{ (wn10_AU_000040 and not wn10_AU_000035) | ternary ('success', '') }}{{ (wn10_AU_000035 and wn10_AU_000040) | ternary ('success, failure', '') }}"
   when:
       - wn10_AU_000035 or
