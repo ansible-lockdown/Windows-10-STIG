@@ -356,7 +356,7 @@
 - name: "MEDIUM | WN10-00-000130 | PATCH | Software certificate installation files must be removed from Windows 10."
   block:
       - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Get Drive Letters"
-        win_shell: Get-PSDrive | Select-Object -ExpandProperty 'Name' | Select-String -Pattern '^[a-z]$'
+        win_shell: Get-Volume | ?{ $_.DriveType -eq 'Fixed' } | Select-Object -ExpandProperty 'DriveLetter'
         changed_when: false
         register: wn10_00_000130_drive_letters
 
@@ -367,7 +367,7 @@
             patterns: ['*.p12','*.pfx']
         register: wn10_00_000130_files
         with_items:
-            - "{{ wn10_00_000130_drive_letters.stdout_lines | select() | list }}"
+            - "{{ wn10_00_000130_drive_letters.stdout_lines }}"
 
       - name: "MEDIUM | WN10-00-000130 | PATCH  | Software certificate installation files must be removed from Windows 10. | Remove Files"
         win_file:
@@ -2440,7 +2440,7 @@
         when: "'OFF' in wn10_ep_000030_aslr_bottomup_status.stdout"
   when:
       - wn10_EP_000030
-      - - ansible_distribution_version >= "10.0.1709.0"
+      - ansible_distribution_version >= "10.0.1709.0"
   tags:
       - WN10-EP-000030
       - CAT2
