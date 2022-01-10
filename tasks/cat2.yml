@@ -228,7 +228,7 @@
             msg:
                 - "Alert! Below are the users in the Hyper-V Administrators group, please remove any unnecessary accounts"
                 - "{{ wn10_00_000080_hyperv_members.stdout_lines | select() | list }}"
-        when: wn10_00_000080_hyperv_members | select() | list | length > 0
+        when: wn10_00_000080_hyperv_members.stdout_lines | select() | list | length > 0
   when:
       - wn10_00_000080
   tags:
