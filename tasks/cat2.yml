@@ -415,7 +415,7 @@
             when:
                 - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
           
-          - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Alert! on Defender Firewall disabled"
+          - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Alert on Defender Firewall disabled"
             debug:
                 msg:
                     - "ALERT! You are using Windows Defender as your firewall and it is fully disabled"
