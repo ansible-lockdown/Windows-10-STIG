@@ -3322,7 +3322,7 @@
 
 - name: "MEDIUM | WN10-SO-000190 | PATCH | Kerberos encryption types must be configured to prevent the use of DES and RC4 encryption suites."
   win_regedit:
-      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameter
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters
       value: SupportedEncryptionTypes
       data: 2147483640
       type: dword
