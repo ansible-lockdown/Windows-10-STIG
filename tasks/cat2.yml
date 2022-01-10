@@ -1505,7 +1505,7 @@
 
 - name: "MEDIUM | WN10-CC-000044 | PATCH | Internet connection sharing must be disabled."
   win_regedit:
-      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Network Connection
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Network Connections
       value: NC_ShowSharedAccessUI
       data: 0
       type: dword
