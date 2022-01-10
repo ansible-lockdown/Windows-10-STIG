@@ -46,6 +46,7 @@
                 - "{{ wn10_00_000085_local_users.stdout_lines }}"
   when:
       - wn10_00_000085
+      - ansible_windows_domain_member
   tags:
       - WN10-00-000085
       - CAT3
