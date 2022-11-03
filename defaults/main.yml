@@ -344,14 +344,14 @@ win10stig_always_reboot: true
 # Variables related to individual tasks
 # CAT1
 
-# WN10-00-000045 
+# WN10-00-000045
 # win10stig_av_sftw is the service name of the AV software you are using. This is Service Name, not Display Name
 # Windows Defender = WinDefend
 # To be STIG compliant you need to have either Windows Defender AV enabled/running or a 3rd party AV running (McAfee or Symantec for example)
 win10stig_av_sftw: WinDefend
 
 # WN10-00-000145
-# wn10stig_dep_value is the value to set DEP to. To comply with STIG standards at least OptOut level needs to be set. 
+# wn10stig_dep_value is the value to set DEP to. To comply with STIG standards at least OptOut level needs to be set.
 # Value options are AlwaysOn or OptOut. If OptOut is used you will need to manually select what applications to opt out of DEP
 wn10stig_dep_value: AlwaysOn
 
@@ -389,7 +389,7 @@ win10stig_firewall_type: defender
 # resetlockoutcount is the duration in minutes between failed login attempts for the counter to zero
 # To conform to STIG standards this value needs to be 15 minutes or greater
 # !!!!! Important !!!!!!!
-# The lockoutduration value has to be equal to or greater than resetlockoutcount value. 
+# The lockoutduration value has to be equal to or greater than resetlockoutcount value.
 # Failure to follow that standard will result in tasks failing since that is out of bounds for those settings in the OS
 # WN10-AC-000020
 # passwordhistory is the number of passwords to cycle through
@@ -412,7 +412,7 @@ win10stig_account_settings:
     min_pass_age: 1
     min_pass_length: 14
 
-# win10stig_audit_settings is the group of variables used to enable success/failure loging for various audit logging categories. 
+# win10stig_audit_settings is the group of variables used to enable success/failure loging for various audit logging categories.
 # There will only be variables here for controls that don't have a corresponding success and failure STIG control
 # This gives control to the end user to set the required STIG value but also give flexabilty to add the other setting if needed
 # WN10-AU-000030
@@ -455,7 +455,7 @@ win10stig_account_settings:
 # security_system_extension_include_failure set to false will set Security System Extension to log only successful events related to extension codes being loaded by the security subsystem
 # security_system_extension_include_failure set to true will set Security System Extension to log both successful and failed events related to extension codes being loaded by the security subsystem
 # WN10-AU-000570
-# detailed_file_share_include_success set to false will set Detailed File Share to log only failed events related to accessing files and folders on a shared folder 
+# detailed_file_share_include_success set to false will set Detailed File Share to log only failed events related to accessing files and folders on a shared folder
 # detailed_file_share_include_success set to true will set Detailed File Share to log both failed and successful events related to accessing files and folders on a shared folder
 win10stig_audit_settings:
     security_group_mngmnt_include_failure: false
@@ -531,7 +531,7 @@ win10stig_max_pass_age: 60
 # CAT3
 
 # WN10-CC-000206
-# win10stig_dodownloadmod_domain: is the DODownloadMode variable for systems that are a member of a domain. 
+# win10stig_dodownloadmod_domain: is the DODownloadMode variable for systems that are a member of a domain.
 # This can be any of the below values, the only available option that is not within STIG standards is Internet value of 3
 # HTTP Only = 0, LAN(1) = 1, Group (2) = 2, Simple (99) = 99
 # Documenation on values: https://admx.help/?Category=Windows_11_2022&Policy=Microsoft.Policies.DeliveryOptimization::DownloadMode

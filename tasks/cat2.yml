@@ -228,7 +228,7 @@
             msg:
                 - "Alert! Below are the users in the Hyper-V Administrators group, please remove any unnecessary accounts"
                 - "{{ wn10_00_000080_hyperv_members.stdout_lines | select() | list }}"
-        when: wn10_00_000080_hyperv_members | select() | list | length > 0
+        when: wn10_00_000080_hyperv_members.stdout_lines | select() | list | length > 0
   when:
       - wn10_00_000080
   tags:
@@ -356,7 +356,7 @@
 - name: "MEDIUM | WN10-00-000130 | PATCH | Software certificate installation files must be removed from Windows 10."
   block:
       - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Get Drive Letters"
-        win_shell: Get-PSDrive | Select-Object -ExpandProperty 'Name' | Select-String -Pattern '^[a-z]$'
+        win_shell: Get-Volume | ?{ $_.DriveType -eq 'Fixed' } | Select-Object -ExpandProperty 'DriveLetter'
         changed_when: false
         register: wn10_00_000130_drive_letters
 
@@ -367,7 +367,7 @@
             patterns: ['*.p12','*.pfx']
         register: wn10_00_000130_files
         with_items:
-            - "{{ wn10_00_000130_drive_letters.stdout_lines | select() | list }}"
+            - "{{ wn10_00_000130_drive_letters.stdout_lines }}"
 
       - name: "MEDIUM | WN10-00-000130 | PATCH  | Software certificate installation files must be removed from Windows 10. | Remove Files"
         win_file:
@@ -415,7 +415,7 @@
             when:
                 - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
           
-          - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Alert! on Defender Firewall disabled"
+          - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Alert on Defender Firewall disabled"
             debug:
                 msg:
                     - "ALERT! You are using Windows Defender as your firewall and it is fully disabled"
@@ -836,7 +836,7 @@
     "MEDIUM | WN10-AU-000035 | PATCH | The system must be configured to audit Account Management - User Account Management failures."
     "MEDIUM | WN10-AU-000040 | PATCH | The system must be configured to audit Account Management - User Account Management successes."
   win_audit_policy_system:
-      subcategory: Credential Validation
+      subcategory: User Account Management
       audit_type: "{{ (wn10_AU_000035 and not wn10_AU_000040) | ternary ('failure', '') }}{{ (wn10_AU_000040 and not wn10_AU_000035) | ternary ('success', '') }}{{ (wn10_AU_000035 and wn10_AU_000040) | ternary ('success, failure', '') }}"
   when:
       - wn10_AU_000035 or
@@ -1505,7 +1505,7 @@
 
 - name: "MEDIUM | WN10-CC-000044 | PATCH | Internet connection sharing must be disabled."
   win_regedit:
-      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Network Connection
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Network Connections
       value: NC_ShowSharedAccessUI
       data: 0
       type: dword
@@ -1992,10 +1992,10 @@
       - SV-220842r569187_rule
       - V-220842
 
-- name: "MEDIUM | WN10-CC-000245 | PATCH | Passwords save locally for re-use when browsing may be subject to compromise. Disabling the Edge password manager will prevent this for the browser."
+- name: "MEDIUM | WN10-CC-000245 | PATCH | The password manager function in the Edge browser must be disabled."
   win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main
-      value: FormSuggest
+      value: FormSuggest Passwords
       data: no
       type: string
   when:
@@ -2440,7 +2440,7 @@
         when: "'OFF' in wn10_ep_000030_aslr_bottomup_status.stdout"
   when:
       - wn10_EP_000030
-      - - ansible_distribution_version >= "10.0.1709.0"
+      - ansible_distribution_version >= "10.0.1709.0"
   tags:
       - WN10-EP-000030
       - CAT2
@@ -3322,7 +3322,7 @@
 
 - name: "MEDIUM | WN10-SO-000190 | PATCH | Kerberos encryption types must be configured to prevent the use of DES and RC4 encryption suites."
   win_regedit:
-      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameter
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters
       value: SupportedEncryptionTypes
       data: 2147483640
       type: dword
