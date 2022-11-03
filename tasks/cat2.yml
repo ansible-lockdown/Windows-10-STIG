@@ -111,11 +111,11 @@
   tags:
       - WN10-00-000031
       - CAT2
-      - CCI-002476
-      - CCI-002475
       - CCI-001199
+      - CCI-002445
+      - CCI-002446
       - SRG-OS-000185-GPOS-00079
-      - SV-220703r569288_rule
+      - SV-220703r819653_rule
       - V-220703
 
 - name: "MEDIUM | WN10-00-000032 | PATCH | Windows 10 systems must use a BitLocker PIN with a minimum length of 6 digits for pre-boot authentication."
