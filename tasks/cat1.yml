@@ -26,6 +26,12 @@
               win10_00_000040_audit_currentbuild.value is version('10240', '==') or
               win10_00_000040_audit_currentbuild.value is version('14393', '==') or
               win10_00_000040_audit_currentbuild.value is version('17763', '==')
+
+      - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level | OS Warning."
+        debug:
+            msg:
+                - "Warning!! Your version of Windows will be no longer supported as of June 11th 2024, It is recommended systems be upgraded to the most recently released version."
+        when: win10_00_000040_audit_releaseid.value is version('21H2', '==') or win10_00_000040_audit_currentbuild.value is version('19044', '==')
   when:
       - wn10_00_000040
   tags:
@@ -33,7 +39,7 @@
       - CAT1
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220706r646212_rule
+      - SV-220706r823104_rule
       - V-220706
 
 # Using ansible.windows.win_service_info because there is a bug in win_service with permissions
