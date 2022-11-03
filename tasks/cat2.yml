@@ -81,10 +81,10 @@
       - WN10-00-000030
       - CAT2
       - CCI-001199
-      - CCI-002475
-      - CCI-002476
+      - CCI-002445
+      - CCI-002446
       - SRG-OS-000185-GPOS-00079
-      - SV-220702r569228_rule
+      - SV-220702r819651_rule
       - V-220702
 
 - name: "MEDIUM | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication."
