@@ -2939,17 +2939,17 @@
       msg:
           - "Warning! Install the DoD Interoperability Root CA cross-certificates on unclassified systems."
           - "Issued To - Issued By - Thumbprint"
-          - "DoD Root CA 2 - DoD Interoperability Root CA 1 - A8C27332CCB4CA49554CE55D34062A7DD2850C02"
           - "DoD Root CA 3 - DoD Interoperability Root CA 2 - AC06108CA348CC03B53795C64BF84403C1DBD341"
+          - "DoD Root CA 3 - DoD Interoperability Root CA 2 - 49CBE933151872E17C8EAE7F0ABA97FB610F6477"
   when:
       - wn10_PK_000015
   tags:
       - WN10-PK-000015
       - CAT2
       - CCI-000185
-      - CCI-002470
+      - CCI-002440
       - SRG-OS-000066-GPOS-00034
-      - SV-220905r569314_rule
+      - SV-220905r819673_rule
       - V-220905
 
 - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems."
