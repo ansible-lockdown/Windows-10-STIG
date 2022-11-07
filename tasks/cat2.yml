@@ -3437,7 +3437,7 @@
       - CAT2
       - CCI-000765
       - SRG-OS-000105-GPOS-00052
-      - SV-220946r569187_rule
+      - SV-220946r819676_rule
       - V-220946
 
 - name: "MEDIUM | WN10-SO-000255 | PATCH | User Account Control must automatically deny elevation requests for standard users."
