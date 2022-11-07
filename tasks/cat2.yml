@@ -1530,8 +1530,8 @@
       - CAT2
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220804r569187_rule
-      - V-220804
+      - SV-250319r793300_rule
+      - V-250319
 
 - name: "MEDIUM | WN10-CC-000052 | PATCH | Windows 10 must be configured to prioritize ECC Curves with longer key lengths first."
   win_regedit:
@@ -3956,6 +3956,7 @@
       - SRG-OS-000324-GPOS-00125
       - SV-220980r569187_rule
       - V-220980
+
 - name: "MEDIUM | WN10-UR-000150 | PATCH | The Profile single process user right must only be assigned to the Administrators group."
   win_user_right:
       name: SeProfileSingleProcessPrivilege
