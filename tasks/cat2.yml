@@ -2904,7 +2904,6 @@
   debug:
       msg:
           - "Warning! Please install the DoD Root CA certificates"
-          - "DoD Root CA 2"
           - "DoD Root CA 3"
           - "DoD Root CA 4"
           - "DoD Root CA 5"
@@ -2913,9 +2912,9 @@
   tags:
       - WN10-PK-000005
       - CAT2
-      - CCI-002470
+      - CCI-002440
       - CCI-000185
-      - SRG-OS-000066-GPOS-00034
+      - SRG-OS-000066-GPOS-000034
       - SV-220903r569310_rule
       - V-220903
 
