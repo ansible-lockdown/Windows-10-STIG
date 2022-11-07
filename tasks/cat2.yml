@@ -3532,7 +3532,7 @@
       - CAT2
       - CCI-000199
       - SRG-OS-000076-GPOS-00044
-      - SV-220952r569187_rule
+      - SV-220952r793301_rule
       - V-220952
 
 - name: "MEDIUM | WN10-UC-000020 | PATCH | Zone information must be preserved when saving attachments."
