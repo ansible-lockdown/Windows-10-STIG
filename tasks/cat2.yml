@@ -1280,24 +1280,18 @@
       - SV-220784r569187_rule
       - V-220784
 
-- name: |
-    "MEDIUM | WN10-AU-000550 | PATCH | Windows 10 must be configured to audit Other Policy Change Events Successes."
-    "MEDIUM | WN10-AU-000555 | PATCH | Windows 10 must be configured to audit Other Policy Change Events Failures."
+- name: "MEDIUM | WN10-AU-000555 | PATCH | Windows 10 must be configured to audit Other Policy Change Events Failures."
   win_audit_policy_system:
       subcategory: Other Policy Change Events
-      audit_type: "{{ (wn10_AU_000550 and not wn10_AU_000555) | ternary ('success', '') }}{{ (wn10_AU_000555 and not wn10_AU_000550) | ternary ('failure', '') }}{{ (wn10_AU_000550 and wn10_AU_000555) | ternary ('success, failure', '') }}"
+      audit_type: failure
   when:
-      - wn10_AU_000550 or
-        wn10_AU_000555
+      - wn10_AU_000555
   tags:
-      - WN10-AU-000550
       - WN10-AU-000555
       - CAT2
       - CCI-000130
       - SRG-OS-000037-GPOS-00015
-      - SV-220785r569187_rule
       - SV-220786r569187_rule
-      - V-220785
       - V-220786
 
 - name: |
