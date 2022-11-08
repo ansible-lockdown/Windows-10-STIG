@@ -530,6 +530,17 @@ win10stig_max_pass_age: 60
 
 # CAT3
 
+# WN10-CC-000080
+# win10stig_hypervisor_enforce_code_integrity is the variable setting for the registry to select which
+# style of Turn On Virtualization Based Security you would like to choose.
+# The policy settings referenced in the Fix section will configure the following registry value. However due to hardware requirements,
+# the registry value alone does not ensure proper function.
+# "Enabled with UEFI lock" is preferred as more secure; however, it cannot be turned off remotely through a group policy change if there is an issue.
+# These are the only two options to use to be STIG compliant.
+# 1 - Enabled with UEFI lock
+# 2 - Enabled without lock
+win10stig_hypervisor_enforce_code_integrity: 2
+
 # WN10-CC-000206
 # win10stig_dodownloadmod_domain: is the DODownloadMode variable for systems that are a member of a domain.
 # This can be any of the below values, the only available option that is not within STIG standards is Internet value of 3
