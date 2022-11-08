@@ -539,7 +539,7 @@ win10stig_max_pass_age: 60
 # These are the only two options to use to be STIG compliant.
 # 1 - Enabled with UEFI lock
 # 2 - Enabled without lock
-win10stig_hypervisor_enforce_code_integrity: 2
+win10stig_hypervisor_enforce_code_integrity: 1
 
 # WN10-CC-000206
 # win10stig_dodownloadmod_domain: is the DODownloadMode variable for systems that are a member of a domain.
