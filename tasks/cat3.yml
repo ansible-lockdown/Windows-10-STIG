@@ -321,3 +321,20 @@
       - SRG-OS-000095-GPOS-00049
       - SV-220954r569187_rule
       - V-220954
+
+- name: "LOW | WN10-CC-000080 | PATCH | Virtualization-based protection of code integrity must be enabled.."
+  win_regedit:
+      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard\
+      value: HypervisorEnforcedCodeIntegrity
+      state: present
+      data: "{{ win10stig_hypervisor_enforce_code_integrity }}"
+      datatype: dword
+  when:
+      - wn10_CC_000080
+  tags:
+      - WN10-CC-000080
+      - CAT3
+      - CCI-000366
+      - SRG-OS-000480-GPOS-00227
+      - SV-252903r822503_rule
+      - V-252903
