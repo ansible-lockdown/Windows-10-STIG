@@ -58,7 +58,7 @@
       - CAT2
       - CCI-001233
       - SRG-OS-000191-GPOS-00080
-      - SV-220701r569187_rule
+      - SV-220701r793197_rule
       - V-220701
 
 - name: "MEDIUM | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest."
@@ -306,6 +306,7 @@
       - wn10_00_000105
   tags:
       - WN10-00-000105
+      - CAT2
       - CCI-000382
       - SRG-OS-000096-GPOS-00050
       - SV-220719r569187_rule
@@ -437,6 +438,7 @@
       - WN10-00-000135
       - CAT2
       - CCI-000366
+      - SRG-OS-000480-GPOS-00227
       - SV-220724r569187_rule
       - V-220724
 
@@ -516,7 +518,7 @@
       - CAT2
       - CCI-000381
       - SRG-OS-000095-GPOS-00049
-      - SV-220729r569187_rule
+      - SV-220729r793187_rule
       - V-220729
 
 - name: "MEDIUM | WN10-00-000165 | PATCH | The Server Message Block (SMB) v1 protocol must be disabled on the SMB server."
@@ -533,7 +535,7 @@
       - CAT2
       - CCI-000381
       - SRG-OS-000095-GPOS-00049
-      - SV-220730r569187_rule
+      - SV-220730r793189_rule
       - V-220730
 
 - name: "MEDIUM | WN10-00-000170 | PATCH | The Server Message Block (SMB) v1 protocol must be disabled on the SMB client."
@@ -551,7 +553,7 @@
       - CAT2
       - CCI-000381
       - SRG-OS-000095-GPOS-00049
-      - SV-220731r569187_rule
+      - SV-220731r793191_rule
       - V-220731
 
 # This service can't be stopped manually (through automation or manually through Services)
@@ -713,6 +715,7 @@
       - CCI-002238
       - SRG-OS-000329-GPOS-00128
       - SV-220739r569187_rule
+      - V-220739
 
 - name: "MEDIUM | WN10-AC-000020 | PATCH | The password history must be configured to 24 passwords remembered."
   win_security_policy:
@@ -1224,7 +1227,7 @@
       - CAT2
       - CCI-001849
       - SRG-OS-000341-GPOS-00132
-      - SV-220781r569187_rul
+      - SV-220781r569187_rule
       - V-220781
 
 - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts."
@@ -1232,7 +1235,7 @@
   changed_when: false
   failed_when: false
   check_mode: no
-  when: 
+  when:
       - wn10_AU_000515
   tags:
       - WN10-AU-000515
@@ -1338,15 +1341,15 @@
       - wn10_AU_000575 or
         wn10_AU_000580
   tags:
-       - WN10-AU-000575
-       - WN10-AU-000580
-       - CAT2
-       - CCI-000130
-       - SRG-OS-000037-GPOS-00015
-       - SV-220790r569187_rule
-       - SV-220791r569187_rule
-       - V-220790
-       - V-220791
+      - WN10-AU-000575
+      - WN10-AU-000580
+      - CAT2
+      - CCI-000130
+      - SRG-OS-000037-GPOS-00015
+      - SV-220790r569187_rule
+      - SV-220791r569187_rule
+      - V-220790
+      - V-220791
 
 - name: "MEDIUM | WN10-CC-000005 | PATCH | Camera access from the lock screen must be disabled."
   win_regedit:
@@ -1455,6 +1458,7 @@
       - wn10_CC_000038
   tags:
       - WN10-CC-000038
+      - CAT2
       - CCI-000381
       - SRG-OS-000095-GPOS-00049
       - SV-220800r569187_rule
