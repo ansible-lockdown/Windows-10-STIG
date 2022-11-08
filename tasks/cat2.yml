@@ -1377,7 +1377,7 @@
       - CAT2
       - CCI-000381
       - SRG-OS-000095-GPOS-00049
-      - SV-220793r569187_rule
+      - SV-220793r819667_rule
       - V-220793
 
 - name: "MEDIUM | WN10-CC-000010 | PATCH | The display of slide shows on the lock screen must be disabled."
