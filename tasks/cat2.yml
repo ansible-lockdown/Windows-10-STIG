@@ -1866,7 +1866,7 @@
       - CAT2
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220833r569187_rule
+      - SV-220833r793250_rule
       - V-220833
 
 - name: "MEDIUM | WN10-CC-000205 | PATCH | Windows Telemetry must not be configured to Full."
@@ -2918,8 +2918,8 @@
       - CAT2
       - CCI-002440
       - CCI-000185
-      - SRG-OS-000066-GPOS-000034
-      - SV-220903r569310_rule
+      - SRG-OS-000066-GPOS-00034
+      - SV-220903r819670_rule
       - V-220903
 
 - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems."
