@@ -255,7 +255,7 @@
         when:
             - wn10_00_000090_neverexpire_passwords.stdout_lines | select() | list | length > 0
             - not win10stig_disruption_high
-    
+
       - name: "MEDIUM | WN10-00-000090 | PATCH | Accounts must be configured to require password expiration. | Set PW to Expire for PW Never Expire users"
         win_user:
             name: "{{ item }}"
@@ -415,7 +415,7 @@
                     - "{{ wn10_00_000135_defender_fw_status.stdout_lines | select() | list }}"
             when:
                 - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
-          
+
           - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Alert on Defender Firewall disabled"
             debug:
                 msg:
@@ -1893,7 +1893,7 @@
             value: EnableSmartScreen
             data: 1
             type: dword
-      
+
       - name: "MEDIUM | WN10-CC-000210 | PATCH | The Windows Defender SmartScreen for Explorer must be enabled. | Block ShellSmartScreen"
         win_regedit:
             path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
@@ -1925,7 +1925,7 @@
       - SRG-OS-000433-GPOS-00192
       - SV-220837r569187_rule
       - V-220837
-      
+
 - name: "MEDIUM | WN10-CC-000225 | PATCH | File Explorer shell protocol must run in protected mode."
   win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
@@ -3417,7 +3417,7 @@
   win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: ConsentPromptBehaviorAdmin
-      data: 2 
+      data: 2
       type: dword
   when:
       - wn10_SO_000250
@@ -3959,7 +3959,7 @@
       - SRG-OS-000324-GPOS-00125
       - SV-220980r569187_rule
       - V-220980
-
+      
 - name: "MEDIUM | WN10-UR-000150 | PATCH | The Profile single process user right must only be assigned to the Administrators group."
   win_user_right:
       name: SeProfileSingleProcessPrivilege
