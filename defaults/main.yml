@@ -341,7 +341,7 @@ win10stig_web_server: false
 win10stig_always_reboot: true
 
 
-# Variables related to individual tasks
+
 # CAT1
 
 # WN10-00-000045
@@ -354,6 +354,7 @@ win10stig_av_sftw: WinDefend
 # wn10stig_dep_value is the value to set DEP to. To comply with STIG standards at least OptOut level needs to be set.
 # Value options are AlwaysOn or OptOut. If OptOut is used you will need to manually select what applications to opt out of DEP
 wn10stig_dep_value: AlwaysOn
+
 
 # CAT2
 
