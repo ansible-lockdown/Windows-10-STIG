@@ -58,7 +58,7 @@
         debug:
             msg:
                 - "Warning!! You do not have any anti-virus software running"
-                - "Please enable defender or a 3rd party anti-virus software like McAfee or Symantec to meet the STIG compliance."
+                - "Please enable defender or a 3rd party anti-virus t software like McAfee or Symantec to meet the STIG compliance."
         when:
             - win10_00_000045_av_sftw_status.services[0].state != "started"
   when:
