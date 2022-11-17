@@ -80,7 +80,7 @@
       - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS | Alert on non-NTFS File System"
         debug:
             msg:
-                - "AERT! You do not have an NTFS file system. Please format the C:\ to NTFS"
+                - "Warning!! You do not have an NTFS file system. Please format the C:\ to NTFS"
         when: win10_00_000050_c_volume_info != "NTFS"
   when:
       - wn10_00_000050
