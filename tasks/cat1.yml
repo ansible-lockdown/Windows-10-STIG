@@ -127,7 +127,19 @@
       - V-220718
 
 - name: "HIGH | WN10-00-000145 | PATCH | Data Execution Prevention (DEP) must be configured to at least OptOut."
-  win_command: bcdedit.exe /set {current} nx {{ wn10stig_dep_value }}
+  block:
+      - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Create Check For Idempotency."
+        win_shell: BCDEdit /enum "{current}"
+        register: win10_00_000145_dep_setting_search
+        changed_when: false
+
+      - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Create Set Fact For Idempotency."
+        set_fact:
+            win10_00_000145_dep_setting_current: "{{ win10_00_000145_dep_setting_search.stdout | regex_search('nx\\s.*') | trim | regex_replace('nx','') | trim }}"
+
+      - name: "HIGH | WN10-00-000145 | PATCH | Data Execution Prevention (DEP) must be configured to at least OptOut. | Make change to match {{ wnstig_dep_value }}."
+        win_shell: BCDEdit /set "{current}" nx {{ wn10stig_dep_value }}
+        when: win10_00_000145_dep_setting_current | string != wn10stig_dep_value
   when:
       - wn10_00_000145
   tags:
