@@ -95,8 +95,9 @@
 - name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system."
   debug:
       msg:
-          - The following users or groups have Administrator rights on this system
-          - "{{ wn10stig_admin_users_groups.stdout.split('\n') }}"
+          - "The following users or groups have Administrator rights on this system."
+          - "Please make sure that these users or groups meet the sites policies to be STIG compliant."
+          - "{{ wn10stig_admin_users_groups.stdout_lines }}"
   when:
       - wn10_00_000070
   tags:
