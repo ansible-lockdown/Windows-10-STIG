@@ -172,7 +172,7 @@
       msg:
           - "The following users or groups have Administrator rights on this system"
           - "You will need to confirm that none of these accounts have access to the internet, such as web browsers, or with potential Internet soruces, such as email"
-          - "{{ wn10stig_admin_users_groups.stdout.split('\n') }}"
+          - "{{ wn10stig_admin_users_groups.stdout_lines }}"
   when:
       - wn10_00_000240
   tags:
