@@ -133,13 +133,9 @@
         register: win10_00_000145_dep_setting_search
         changed_when: false
 
-      - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Create Set Fact For Idempotency."
-        set_fact:
-            win10_00_000145_dep_setting_current: "{{ win10_00_000145_dep_setting_search.stdout | regex_search('nx\\s.*') | trim | regex_replace('nx','') | trim }}"
-
       - name: "HIGH | WN10-00-000145 | PATCH | Data Execution Prevention (DEP) must be configured to at least OptOut. | Make change to match {{ wnstig_dep_value }}."
         win_shell: BCDEdit /set "{current}" nx {{ wn10stig_dep_value }}
-        when: win10_00_000145_dep_setting_current | string != wn10stig_dep_value
+        when: "wn10stig_dep_value not in win10_00_000145_dep_setting_search.stdout | regex_search('nx\\s.*') | trim | regex_replace('nx','') | trim"
   when:
       - wn10_00_000145
   tags:
@@ -184,6 +180,7 @@
       - V-220737
 
 # Use of this flag is not recommended per Microsofts documentation. https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-gpsb/0b40db09-d95d-40a6-8467-32aedec8140c
+
 - name: "HIGH | WN10-AC-000045 | PATCH | Reversible password encryption must be disabled."
   win_security_policy:
       section: System Access
