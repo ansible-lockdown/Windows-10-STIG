@@ -183,6 +183,7 @@
       - SV-220737r569187_rule
       - V-220737
 
+# Use of this flag is not recommended per Microsofts documentation. https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-gpsb/0b40db09-d95d-40a6-8467-32aedec8140c
 - name: "HIGH | WN10-AC-000045 | PATCH | Reversible password encryption must be disabled."
   win_security_policy:
       section: System Access
