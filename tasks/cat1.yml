@@ -439,9 +439,9 @@
 
 - name: "HIGH | WN10-UR-000015 | PATCH | The Act as part of the operating system user right must not be assigned to any groups or accounts."
   win_user_right:
-    name: SeTcbPrivilege
-    users: []
-    action: set
+      name: SeTcbPrivilege
+      users: []
+      action: set
   when:
       - wn10_UR_000015
   tags:
