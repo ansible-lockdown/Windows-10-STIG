@@ -57,8 +57,8 @@
       - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program | Alert on service not running"
         debug:
             msg:
-                - "Warning!! You do not have any anti-virus software running"
-                - "Please enable defender or a 3rd party anti-virus software like McAfee or Symantec to meet the STIG compliance."
+                - "Warning!! You do not have any AV software running"
+                - "Please enable defender or a 3rd party AV software like McAfee or Symantec"
         when:
             - win10_00_000045_av_sftw_status.services[0].state != "started"
   when:
@@ -480,4 +480,3 @@
       - SRG-OS-000324-GPOS-00125
       - SV-220967r569187_rule
       - V-220967
-      
