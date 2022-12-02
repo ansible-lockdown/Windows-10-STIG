@@ -12,8 +12,6 @@
         debug:
             msg:
                 - "Warning!! Your running a virtual system that does not support Secure Boot."
-                - "Secure Boot is required to support additional security features in Windows 10, including Virtualization"
-                - "Based Security and Credential Guard.."
                 - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
         when: "'undefined' in wn10_00_000020_secure_boot_audit.stderr | string"
 
@@ -21,8 +19,6 @@
         debug:
             msg:
                 - "Warning!! Your computers hardware does not support Secure Boot."
-                - "Secure Boot is required to support additional security features in Windows 10, including Virtualization"
-                - "Based Security and Credential Guard.."
                 - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
         when: "'CMdlet' in wn10_00_000020_secure_boot_audit.stderr | string"
 
@@ -30,8 +26,6 @@
         debug:
             msg:
                 - "Warning!! Secure Boot is set to DISABLED."
-                - "Secure Boot is required to support additional security features in Windows 10, including Virtualization"
-                - "Based Security and Credential Guard.."
                 - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
         when: "'False' in wn10_00_000020_secure_boot_audit.stdout | string"
   when:
