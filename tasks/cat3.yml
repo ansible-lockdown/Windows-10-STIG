@@ -65,7 +65,6 @@
       - SV-220711r569187_rule
       - V-220711
 
-
 - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain."
   block:
       - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Get Local Users list"
@@ -77,7 +76,7 @@
       - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Show Local Users list"
         debug:
             msg:
-                - "ALERT! Below are the local users that are not built in accounts and enabled."
+                - "Warning!! Below are the local users that are not built in accounts and enabled."
                 - "Please review and remove these local accounts, only AD logins should be occuring."
                 - "{{ wn10_00_000085_local_users.stdout_lines }}"
   when:
