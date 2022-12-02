@@ -17,9 +17,30 @@
       - V-220697
 
 - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use."
-  debug:
-      msg:
-          - "Alert! Please confirm TPM status is Ready for use"
+  block:
+      - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Get TPM status."
+        win_command: wmic /namespace:\\root\cimv2\security\microsofttpm path win32_tpm get * /format:textvaluelist.xsl
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000010_tpm_status
+
+      - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Running Instances Check."
+        debug:
+            msg:
+                - "Warning!! Please confirm TPM status is Ready for use, there are no instances currently running."
+        when:
+            - "'No Instance' in wn10_00_000010_tpm_status.stderr_lines | string"
+
+      - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Full TPM Check." 
+        debug:
+            msg:
+                - "Warning!! Please confirm TPM status is Ready for use. Current settings do not meet STIG requirements."
+        when:
+            - "'No Instance' not in wn10_00_000010_tpm_status.stderr_lines | string and
+              'IsActivated_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string and
+              'IsEnabled_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string and
+              'IsOwned_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string and
+              'SpecVersion=2.0' or 'SpecVersion=1.2' in wn10_00_000010_tpm_status.stderr_lines | string"
   when:
       - wn10_00_000010
       - ansible_windows_domain_member
