@@ -1,10 +1,39 @@
 ---
 
-- name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems"
-  debug:
-      msg:
-          - "Alert! Manually confirm if Secure Boot is disabled."
-          - "This control is NA if you are on a virtual system"
+- name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems."
+  block:
+      - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Check secure boot."
+        win_shell: Confirm-SecureBootUEFI
+        failed_when: false
+        changed_when: false
+        register: wn10_00_000020_secure_boot_audit
+
+      - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Virtual System Check."
+        debug:
+            msg:
+                - "Warning!! Your running a virtual system that does not support Secure Boot."
+                - "Secure Boot is required to support additional security features in Windows 10, including Virtualization"
+                - "Based Security and Credential Guard.."
+                - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
+        when: "'undefined' in wn10_00_000020_secure_boot_audit.stderr | string"
+
+      - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Hardware Not supported Check."
+        debug:
+            msg:
+                - "Warning!! Your computers hardware does not support Secure Boot."
+                - "Secure Boot is required to support additional security features in Windows 10, including Virtualization"
+                - "Based Security and Credential Guard.."
+                - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
+        when: "'CMdlet' in wn10_00_000020_secure_boot_audit.stderr | string"
+
+      - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Secure Boot Set To Disabled."
+        debug:
+            msg:
+                - "Warning!! Secure Boot is set to DISABLED."
+                - "Secure Boot is required to support additional security features in Windows 10, including Virtualization"
+                - "Based Security and Credential Guard.."
+                - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
+        when: "'False' in wn10_00_000020_secure_boot_audit.stdout | string"
   when:
       - wn10_00_000020
   tags:
@@ -21,7 +50,7 @@
   failed_when: false
   when:
       - wn10_00_000065
-  tags: 
+  tags:
       - WN10-00-000065
       - CAT3
       - CCI-000795
