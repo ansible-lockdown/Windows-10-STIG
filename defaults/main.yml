@@ -545,7 +545,7 @@ win10stig_hypervisor_enforce_code_integrity: 1
 # WN10-CC-000206
 # win10stig_dodownloadmod_domain: is the DODownloadMode variable for systems that are a member of a domain.
 # This can be any of the below values, the only available option that is not within STIG standards is Internet value of 3
-# HTTP Only = 0, LAN(1) = 1, Group (2) = 2, Simple (99) = 99
+# HTTP Only = 0, LAN(1) = 1, Group (2) = 2, Simple (99) = 99, Bypass (100) = 100
 # Documenation on values: https://admx.help/?Category=Windows_11_2022&Policy=Microsoft.Policies.DeliveryOptimization::DownloadMode
 win10stig_dodownloadmod_domain: 0
 # win10stig_dodownloadmod_standalone is the DODownloadMode variable for systems that are in a stand-alone mode, not on a domain.
