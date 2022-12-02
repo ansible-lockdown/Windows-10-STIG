@@ -45,9 +45,22 @@
       - V-220700
 
 - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
+  block:
+      - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Powershell To Get Accounts."
+        win_shell: |
+                Get-LocalUser | Where-Object {$_.Lastlogon -le (Get-Date).AddDays(-35)} | Select-Object Name, Enabled, Lastlogon | Format-Table -AutoSize
+        register: wn10_00_000065_user_local_accounts
+        changed_when: false
+        failed_when: false
+
+      - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Print Results."
+        debug:
+            msg:
+                - "Warning!! Review the list below and make sure it meets site policies."
+                - "The list below includes all accounts that have not been logged into for the last 35 days, those unused accounts"
+                - "must be disabled or removed from the system after 35 days of inactivity per STIG."
+                - "Inactive accounts that have been reviewed and deemed to be required must be documented with the ISSO.."
+                - "{{ wn10_00_000065_user_local_accounts.stdout_lines }}"
   when:
       - wn10_00_000065
   tags:
