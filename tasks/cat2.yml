@@ -81,7 +81,7 @@
 - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: continuously, where HBSS is used; 30 days, for any additional internal network scans not covered by HBSS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP)"
   debug:
       msg:
-          - "Alert! Please install DoD-approved ESS software and ensure it is operating continuously"
+          - "Warning!! Please install DoD-approved ESS software and ensure it is operating continuously"
           - "Ask site ISSM for documentation fo the ESS software installation and configuration"
   when:
       - wn10_00_000025
