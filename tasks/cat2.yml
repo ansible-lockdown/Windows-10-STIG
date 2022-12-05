@@ -104,7 +104,7 @@
       - name: "MEDIUM | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest."
         debug:
             msg:
-                - "ALERT! BitLocker is not enabled for the C:\ drive"
+                - "Warning!! BitLocker is not enabled for the C:\ drive"
                 - "Please enable BitLocker for at least the OS drive to conform to STIG Standards"
         when: "'On' not in wn10_00_000030_bitlocker_status.stdout"
   when:
