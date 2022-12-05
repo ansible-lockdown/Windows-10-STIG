@@ -65,7 +65,8 @@
             msg:
                 - "Warning!! Your system firmware is configured to run in Legacy BIOS."
                 - "UEFI is the requirement for STIG to be in compliance."
-        when: "'UEFI' not in wn10_00_000015_system_firmware_check.stdout_lines | string"
+        when:
+            - "'UEFI' not in wn10_00_000015_system_firmware_check.stdout_lines | string"
   when:
       - wn10_00_000015
       - not win10stig_system_is_container
@@ -170,12 +171,54 @@
       - V-220704
 
 - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs."
-  debug:
-      msg:
-          - "Alert! Please confirm you have a deny-all policy in place that utilizes a whitelist for applications."
-          - "This can be done through a utility like AppLocker to limit applications only to authorized applications"
-          - "There is an AppLocker white paper from NASA that can be used as a guide"
-          - "https://www.iad.gov/iad/library/ia-guidance/tech-briefs/application-whitelisting-using-microsoft-applocker.cfm"
+  block:
+      - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Applocker XML Out."
+        changed_when: false
+        failed_when: false
+        win_shell: Get-AppLockerPolicy -Effective -XML > {{ win10stig_applocker_xml_output }}
+        when:
+            - win10stig_applocker
+            - win10stig_applocker_output == 1
+
+      - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Check XML File Warning."
+        debug:
+            msg:
+                - "Warning!! Please review the configuration of Applocker using the XML file located in directory"
+                - "{{ win10stig_applocker_xml_output }} to confirm you have a deny-all policy in place that utilizes"
+                - "a whitelist for applications. There is an AppLocker white paper from NSA that can be used as a guide"
+                - "https://www.iad.gov/iad/library/ia-guidance/tech-briefs/application-whitelisting-using-microsoft-applocker.cfm"
+        when:
+            - win10stig_applocker
+            - win10stig_applocker_output == 1
+
+      - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Check For Applocker To Stdout."
+        win_shell: Get-AppLockerPolicy -Effective -XML
+        changed_when: false
+        failed_when: false
+        register: win10stig_applocker_output
+        when:
+            - win10stig_applocker
+            - win10stig_applocker_output != 1
+
+      - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Check Stdout Print Out."
+        debug:
+            msg:
+                - "Warning!! Please review the configuration of Applocker to confirm you have a deny-all policy in place that utilizes"
+                - "a whitelist for applications. There is an AppLocker white paper from NSA that can be used as a guide"
+                - "https://www.iad.gov/iad/library/ia-guidance/tech-briefs/application-whitelisting-using-microsoft-applocker.cfm"
+                - "{{ win10stig_applocker_output.stdout_lines }}"
+        when:
+            - win10stig_applocker
+            - win10stig_applocker_output != 1
+
+      - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Warning Message When No Applocker."
+        debug:
+            msg:
+                - "Warning!! Applocker is not in use. Please confirm you have a deny-all policy in place that utilizes a whitelist for applications."
+                - "This can be done through a utility like AppLocker to limit applications only to authorized applications"
+                - "There is an AppLocker white paper from NSA that can be used as a guide"
+                - "https://www.iad.gov/iad/library/ia-guidance/tech-briefs/application-whitelisting-using-microsoft-applocker.cfm"
+        when: not win10stig_applocker
   when:
       - wn10_00_000035
   tags:
