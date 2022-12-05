@@ -53,8 +53,19 @@
       - V-220698
 
 - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS."
-  debug:
-      msg: "Alert! Please make sure to configure UEFI Mode, not Legacy BIOS"
+  block:
+      - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS | Check For UEFI Status."
+        win_shell: $env:firmware_type
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000015_system_firmware_check
+
+      - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS | Legacy BIOS Error."
+        debug:
+            msg:
+                - "Warning!! Your system firmware is configured to run in Legacy BIOS."
+                - "UEFI is the requirement for STIG to be in compliance."
+        when: "'UEFI' not in wn10_00_000015_system_firmware_check.stdout_lines | string"
   when:
       - wn10_00_000015
       - not win10stig_system_is_container
