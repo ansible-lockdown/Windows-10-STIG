@@ -430,10 +430,10 @@
         with_items:
             - "{{ wn10_00_000130_drive_letters.stdout_lines }}"
 
-      - name: "MEDIUM | WN10-00-000130 | PATCH  | Software certificate installation files must be removed from Windows 10. | Remove Files"
+      - name: "MEDIUM | WN10-00-000130 | PATCH | Software certificate installation files must be removed from Windows 10. | Remove Files"
         win_file:
-          path: "{{ item.path }}"
-          state: absent
+            path: "{{ item.path }}"
+            state: absent
         with_items:
             - "{{ wn10_00_000130_files.results[0].files }}"
         loop_control:
