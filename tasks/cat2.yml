@@ -1290,10 +1290,28 @@
       - V-220781
 
 - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  check_mode: no
+  block:
+      - name: "MEDIUM | WN10-AU-000515 | PATCH | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Set Default Log Locations."
+        win_regedit:
+            path: HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\Application
+            value: File
+            state: present
+            data: '%SystemRoot%\system32\winevt\Logs\Application.evtx'
+            type: expandstring
+        when: win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Warning message for default location change."
+        debug:
+            msg:
+                - "ALERT! The location of the logs is not set to default location."
+                # - "When adding Eventlog to the permissions, it must be entered as NT Service\Eventlog."
+        when: not win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Permissions warning for accounts."
+        debug:
+            msg:
+                - "ALERT! Ensure the permissions on the Application event log (Application.evtx) are configured"
+                - "to prevent standard user accounts or groups from having access."
   when:
       - wn10_AU_000515
   tags:
