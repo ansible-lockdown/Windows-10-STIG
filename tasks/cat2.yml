@@ -231,7 +231,7 @@
 
 - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system."
   debug:
-      msg: "Alert! Please confirm that no other alternative operating systems exist on this system"
+      msg: "Warning!! Please confirm that no other alternative operating systems exist on this system"
   when:
       - wn10_00_000055
   tags:
@@ -253,7 +253,7 @@
       - name: "MEDIUM | WN10-00-000060 | AUDIT | Non system-created file shares on a system must limit access to groups that require it. | Alert Share Names"
         debug:
             msg:
-                - "Alert! You have shares that non-system created. Please manually review those shares listed below to make sure appropriate permissions are applied"
+                - "Warning!! You have shares that non-system created. Please manually review those shares listed below to make sure appropriate permissions are applied"
                 - "{{ wn10_00_000060_share_names.stdout_lines | select() | list }}"
         when: wn10_00_000060_share_names.stdout_lines | select() | length > 0
   when:
@@ -277,7 +277,7 @@
       - name: "MEDIUM | WN10-00-000075 | AUDIT | Only accounts responsible for the backup operations must be members of the Backup Operators group. | Display Backup Operator users"
         debug:
             msg:
-                - "Alert! Below are the users in the Backup Operators group. Please review accounts are appropriate"
+                - "Warning!! Below are the users in the Backup Operators group. Please review accounts are appropriate."
                 - "{{ wn10_00_000075_bo_members.stdout_lines | select() | list }}"
         when: wn10_00_000075_bo_members.stdout_lines | select() | list | length > 0
   when:
@@ -301,7 +301,7 @@
       - name: "MEDIUM | WN10-00-000080 | AUDIT | Only authorized user accounts must be allowed to create or run virtual machines on Windows 10 systems. | Display Hyper-V group users"
         debug:
             msg:
-                - "Alert! Below are the users in the Hyper-V Administrators group, please remove any unnecessary accounts"
+                - "Warning!! Below are the users in the Hyper-V Administrators group, please remove any unnecessary accounts"
                 - "{{ wn10_00_000080_hyperv_members.stdout_lines | select() | list }}"
         when: wn10_00_000080_hyperv_members.stdout_lines | select() | list | length > 0
   when:
@@ -325,7 +325,7 @@
       - name: "MEDIUM | WN10-00-000090 | AUDIT | Accounts must be configured to require password expiration. | Display list of PW Never Expire users"
         debug:
             msg:
-                - "Alert! You have some accounts that are set to never expire. Please review the below accounts and set an expiration"
+                - "Warning!! You have some accounts that are set to never expire. Please review the below accounts and set an expiration"
                 - "{{ wn10_00_000090_neverexpire_passwords.stdout_lines | select() | list }}"
         when:
             - wn10_00_000090_neverexpire_passwords.stdout_lines | select() | list | length > 0
@@ -349,21 +349,6 @@
       - SRG-OS-000076-GPOS-00044
       - SV-220716r569187_rule
       - V-220716
-
-- name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_00_000095
-  tags:
-      - WN10-00-000095
-      - CAT2
-      - CCI-002165
-      - SRG-OS-000312-GPOS-00122
-      - SV-220717r569187_rule
-      - V-220717
-      - notimplemented
 
 - name: "MEDIUM | WN10-00-000105 | PATCH | Simple Network Management Protocol (SNMP) must not be installed on the system."
   block:
@@ -3327,21 +3312,28 @@
       - SV-220927r569187_rule
       - V-220927
 
-- name: "MEDIUM | WN10-SO-000160 | PATCH | The system must be configured to prevent anonymous users from having the same rights as the Everyone group."
+- name: |
+    "MEDIUM | WN10-SO-000160 | PATCH | The system must be configured to prevent anonymous users from having the same rights as the Everyone group."
+    "MEDIUM | WN10-00-000095 | PATCH | Permissions for system files and directories must conform to minimum requirements."
   win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
       value: EveryoneIncludesAnonymous
       data: 0
       type: dword
   when:
-      - wn10_SO_000160
+      - wn10_SO_000160 or wn10_00_000095
   tags:
       - WN10-SO-000160
+      - WN10-00-000095
       - CAT2
       - CCI-000366
+      - CCI-002165
       - SRG-OS-000480-GPOS-00227
+      - SRG-OS-000312-GPOS-00122
       - SV-220931r569187_rule
+      - SV-220717r569187_rule
       - V-220931
+      - V-220717
 
 - name: "MEDIUM | WN10-SO-000167 | PATCH | Remote calls to the Security Account Manager (SAM) must be restricted to Administrators."
   win_regedit:
