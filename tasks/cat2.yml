@@ -424,8 +424,8 @@
       - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Search for files"
         win_find:
             paths: '{{ item }}:\'
-            recurse: yes
-            patterns: ['*.p12','*.pfx']
+            recurse: true
+            patterns: ['*.p12', '*.pfx']
         register: wn10_00_000130_files
         with_items:
             - "{{ wn10_00_000130_drive_letters.stdout_lines }}"
@@ -443,7 +443,7 @@
       - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Alert on files if not Disruptive High"
         debug:
             msg:
-                - "Alert! You have .p12 and/or .pfx files on your system"
+                - "Warning!! You have .p12 and/or .pfx files on your system"
                 - "Please review and remove the following files"
                 - "{{ wn10_00_000130_files.results[0].files | map(attribute='path') | list }}"
         when: not win10stig_disruption_high
@@ -464,13 +464,13 @@
         win_shell: get-netfirewallprofile -all | Where-Object -Property Enabled -eq True | Select-Object -Property Name | Format-Table -hidetableheaders
         changed_when: false
         register: wn10_00_000135_defender_fw_status
-        when:  win10stig_firewall_type == "defender"
+        when: win10stig_firewall_type == "defender"
 
       - block:
           - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on Defender Firewall enabled"
             debug:
                 msg:
-                    - "Warning! You are using defender and 1 or more profiles are enabled"
+                    - "Warning!! You are using defender and 1 or more profiles are enabled"
                     - "Please confirm the firewall profiles match the Firewall STIG"
                     - "{{ wn10_00_000135_defender_fw_status.stdout_lines | select() | list }}"
             when:
@@ -489,7 +489,7 @@
       - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on 3rd party firewall"
         debug:
             msg:
-                - "Warning! You are not using Windows Defender as your firewall."
+                - "Warning!! You are not using Windows Defender as your firewall."
                 - "Please review the required profiles/settings for that firewall to confirm it aligns with STIG standards."
         when: win10stig_firewall_type != "defender"
   when:
@@ -502,9 +502,9 @@
       - SV-220724r569187_rule
       - V-220724
 
-- name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts." 
+- name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts."
   block:
-      - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Alert if automation managed not enabled" 
+      - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Alert if automation managed not enabled"
         debug:
             msg:
                 - "Alert! You are using Windows Defender as your firewall on this host. Please confirm Inbound Rules only allow authorized inbound traffic"
