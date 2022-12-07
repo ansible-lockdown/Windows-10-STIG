@@ -745,7 +745,7 @@
 
 - name: "MEDIUM | WN10-00-000250 | AUDIT | Windows 10 non-persistent VM sessions should not exceed 24 hours."
   debug:
-      msg: "Alert! Please investigate VDI settings to make sure they are non-persistent and do not exceed 24 hours"
+      msg: "Warning!! Please investigate VDI settings to make sure they are non-persistent and do not exceed 24 hours."
   when:
       - wn10_00_000250
   tags:
@@ -1331,14 +1331,14 @@
       - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Warning message for default location change."
         debug:
             msg:
-                - "ALERT! The location of the logs is not set to default location."
+                - "Warning!! The location of the logs is not set to default location."
                 # - "When adding Eventlog to the permissions, it must be entered as NT Service\Eventlog."
         when: not win10stig_default_log_location
 
       - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Permissions warning for accounts."
         debug:
             msg:
-                - "ALERT! Ensure the permissions on the Application event log (Application.evtx) are configured"
+                - "Warning!! Ensure the permissions on the Application event log (Application.evtx) are configured"
                 - "to prevent standard user accounts or groups from having access."
   when:
       - wn10_AU_000515
