@@ -507,7 +507,7 @@
       - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Alert if automation managed not enabled"
         debug:
             msg:
-                - "Alert! You are using Windows Defender as your firewall on this host. Please confirm Inbound Rules only allow authorized inbound traffic"
+                - "Warning!! You are using Windows Defender as your firewall on this host. Please confirm Inbound Rules only allow authorized inbound traffic"
         when:
             - win10stig_firewall_type == "defender"
             - ansible_windows_domain_member
