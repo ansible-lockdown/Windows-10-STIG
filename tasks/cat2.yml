@@ -634,8 +634,36 @@
       - V-220732
 
 - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10."
-  debug:
-      msg: "Warning! Please review the User Right listed for each of any unresolved SID to determine whether they are valid"
+  block:
+    - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned User Accounts."
+      win_shell: Get-WmiObject -Class win32_useraccount | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
+      changed_when: false
+      register: wn10_00_000190_orphaned_user_accounts
+
+    - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned Group Accounts."
+      win_shell: Get-WmiObject -Class win32_group | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
+      changed_when: false
+      register: wn10_00_000190_orphaned_group_accounts
+
+    - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Audit For User Accounts Found."
+      debug:
+          msg:
+              - "Warning!! Please review the User Rights listed for each of any unresolved SID to determine whether they are valid."
+              - "User Accounts"
+              - "----------------------------------------------------------------------"
+              - "{{ wn10_00_000190_orphaned_user_accounts.stdout_lines }}"
+      when:
+          - wn10_00_000190_orphaned_user_accounts.stdout_lines | select() | length > 0
+
+    - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Audit For Group Accounts Found."
+      debug:
+          msg:
+              - "Warning!! Please review the User Rights listed for each of any unresolved SID to determine whether they are valid."
+              - "Group Accounts"
+              - "----------------------------------------------------------------------"
+              - "{{ wn10_00_000190_orphaned_user_accounts.stdout_lines }}"
+      when:
+          - wn10_00_000190_orphaned_group_accounts.stdout_lines | select() | length > 0
   when:
       - wn10_00_000190
   tags:
