@@ -1339,7 +1339,7 @@
             msg:
                 - "Warning!! Ensure the permissions on the Application event log (Application.evtx) are configured"
                 - "to prevent standard user accounts or groups from having access."
-                - "{{ wn10_au_000515_app_log_permissions.stdout_lines | reject('match', '^$')|list }}"
+                - "{{ wn10_au_000515_app_log_permissions.stdout_lines | reject('match', '^$') | list }}"
         when: win10stig_default_log_location
 
       - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Warning message for default location change."
@@ -1362,10 +1362,36 @@
       - notimplemented
 
 - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  check_mode: no
+  block:
+      - name: "MEDIUM | WN10-AU-000520 | PATCH | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Set Default Log Locations."
+        win_regedit:
+            path: HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\Security
+            value: File
+            state: present
+            data: '%SystemRoot%'
+            type: expandstring
+        when: win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Get Current Permissions For Default Security Log."
+        win_shell: get-acl c:\Windows\System32\winevt\Logs\Security.evtx | FL AccessToString
+        changed_when: false
+        register: wn10_au_000520_security_log_permissions
+        when: win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Permissions warning for accounts."
+        debug:
+            msg:
+                - "Warning!! Ensure the permissions on the Security event log (Security.evtx) are configured"
+                - "to prevent standard user accounts or groups from having access."
+                - "{{ wn10_au_000520_security_log_permissions.stdout_lines | reject('match', '^$') | list }}"
+        when: win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Warning message for default location change."
+        debug:
+            msg:
+                - "Warning!! The location of the logs is not set to default location."
+                - "When adding Eventlog to the permissions, it must be entered as NT Service\\Eventlog."
+        when: not win10stig_default_log_location
   when:
       - wn10_AU_000520
   tags:
