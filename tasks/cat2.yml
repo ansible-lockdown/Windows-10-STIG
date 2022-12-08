@@ -3079,7 +3079,8 @@
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warning!! No DOD Root CA 3 Certificate Installed."
         debug:
             msg:
-                - "Warning!! The DOD Root CA 3 is not installed on the system."
+                - "Warning!! The DOD Root CA 3 is not installed on the system or"
+                - "contains a incorrect Thumbprint for the Root CA Certificate."
         when:
             - wn10_pk_000005_Root_3_Check.stdout == "" or 'D73CA91102A2204A36459ED32213B467D7CE97FB' not in wn10_pk_000005_Root_4_Check.stdout | string
 
@@ -3104,7 +3105,8 @@
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warning!! No DOD Root CA 5 Certificate Installed."
         debug:
             msg:
-                - "Warning!! The DOD Root CA 5 is not installed on the system."
+                - "Warning!! The DOD Root CA 5 is not installed on the system or"
+                - "contains a incorrect Thumbprint for the Root CA Certificate."
         when:
             - wn10_pk_000005_Root_5_Check.stdout == "" or '4ECB5CC3095670454DA1CBD410FC921F46B8564B' not in wn10_pk_000005_Root_4_Check.stdout | string
   when:
