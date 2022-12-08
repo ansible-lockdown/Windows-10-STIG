@@ -3171,7 +3171,7 @@
             - wn10_pk_000015_interop_check_for_ac.stdout == ""
 
       - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | DoD Interoperability Root CA 2 49 Thumb Check."
-        win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*DoD Interoperability*" -and $_.Subject -Like "*DoD*" -and $_.Thumbprint -Like "49CBE933151872E17C8EAE7F0ABA97FB610F6477 "} | FL Subject, Issuer, Thumbprint, NotAfter
+        win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*DoD Interoperability*" -and $_.Subject -Like "*DoD*" -and $_.Thumbprint -Like "49CBE933151872E17C8EAE7F0ABA97FB610F6477"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
         register: wn10_pk_000015_interop_check_for_49
 
