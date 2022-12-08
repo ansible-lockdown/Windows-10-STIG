@@ -3070,9 +3070,9 @@
 - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store."
   block:
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 3."
-        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where Subject -Like "*DoD Root CA 3*" | FL Subject, Thumbprint, NotAfter
+        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 3*" -and $_.Thumbprint -Like "D73CA91102A2204A36459ED32213B467D7CE97FB"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
-        register: wn10_pk_000005_Root_3_Check
+        register: wn10_pk_000005_root_3_Check
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warning!! No DOD Root CA 3 Certificate Installed."
         debug:
@@ -3080,12 +3080,12 @@
                 - "Warning!! The DOD Root CA 3 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
         when:
-            - wn10_pk_000005_Root_3_Check.stdout == "" or 'D73CA91102A2204A36459ED32213B467D7CE97FB' not in wn10_pk_000005_Root_3_Check.stdout | string
+            - wn10_pk_000005_root_3_Check.stdout == ""
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 4."
-        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where Subject -Like "*DoD Root CA 4*" | FL Subject, Thumbprint, NotAfter
+        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 4*" -and $_.Thumbprint -Like "B8269F25DBD937ECAFD4C35A9838571723F2D026"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
-        register: wn10_pk_000005_Root_4_Check
+        register: wn10_pk_000005_root_4_Check
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warning!! No DOD Root CA 4 Certificate Installed."
         debug:
@@ -3093,12 +3093,12 @@
                 - "Warning!! The DOD Root CA 4 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
         when:
-            - wn10_pk_000005_Root_4_Check.stdout == "" or 'B8269F25DBD937ECAFD4C35A9838571723F2D026' not in wn10_pk_000005_Root_4_Check.stdout | string
+            - wn10_pk_000005_root_4_Check.stdout == ""
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 5."
-        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where Subject -Like "*DoD Root CA 5*" | FL Subject, Thumbprint, NotAfter
+        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 5*" -and $_.Thumbprint -Like "4ECB5CC3095670454DA1CBD410FC921F46B8564B"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
-        register: wn10_pk_000005_Root_5_Check
+        register: wn10_pk_000005_root_5_Check
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warning!! No DOD Root CA 5 Certificate Installed."
         debug:
@@ -3106,7 +3106,7 @@
                 - "Warning!! The DOD Root CA 5 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
         when:
-            - wn10_pk_000005_Root_5_Check.stdout == "" or '4ECB5CC3095670454DA1CBD410FC921F46B8564B' not in wn10_pk_000005_Root_5_Check.stdout | string
+            - wn10_pk_000005_root_5_Check.stdout == ""
   when:
       - wn10_PK_000005
   tags:
