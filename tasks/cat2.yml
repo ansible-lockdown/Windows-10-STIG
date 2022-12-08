@@ -1359,7 +1359,6 @@
       - SRG-OS-000057-GPOS-00027
       - SV-220782r569187_rule
       - V-220782
-      - notimplemented
 
 - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts."
   block:
@@ -1403,7 +1402,6 @@
       - SRG-OS-000057-GPOS-00027
       - SV-220783r569187_rule
       - V-220783
-      - notimplemented
 
 - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts."
   block:
@@ -3082,7 +3080,7 @@
                 - "Warning!! The DOD Root CA 3 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
         when:
-            - wn10_pk_000005_Root_3_Check.stdout == "" or 'D73CA91102A2204A36459ED32213B467D7CE97FB' not in wn10_pk_000005_Root_4_Check.stdout | string
+            - wn10_pk_000005_Root_3_Check.stdout == "" or 'D73CA91102A2204A36459ED32213B467D7CE97FB' not in wn10_pk_000005_Root_3_Check.stdout | string
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 4."
         win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where Subject -Like "*DoD Root CA 4*" | FL Subject, Thumbprint, NotAfter
@@ -3108,7 +3106,7 @@
                 - "Warning!! The DOD Root CA 5 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
         when:
-            - wn10_pk_000005_Root_5_Check.stdout == "" or '4ECB5CC3095670454DA1CBD410FC921F46B8564B' not in wn10_pk_000005_Root_4_Check.stdout | string
+            - wn10_pk_000005_Root_5_Check.stdout == "" or '4ECB5CC3095670454DA1CBD410FC921F46B8564B' not in wn10_pk_000005_Root_5_Check.stdout | string
   when:
       - wn10_PK_000005
   tags:
@@ -3120,13 +3118,33 @@
       - SV-220903r819670_rule
       - V-220903
 
-
 - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems."
-  debug:
-      msg:
-          - "Warning! Please install the ECA Root CA certificates"
-          - "ECA Root CA 2"
-          - "ECA Root CA 4"
+  block:
+      - name: Check For ECA Root CA 2."
+        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where Subject -Like "*ECA Root CA 2*" | FL Subject, Thumbprint, NotAfter
+        changed_when: false
+        register: wn10_pk_000010_eca_2_check
+
+      - name: Warning!! No ECA Root CA 2 Certificate Installed."
+        debug:
+            msg:
+                - "Warning!! The ECA Root CA 2 is not installed on the system or"
+                - "contains a incorrect Thumbprint for the Root CA Certificate."
+        when:
+            - wn10_pk_000010_eca_2_check.stdout == "" or 'C313F919A6ED4E0E8451AFA930FB419A20F181E4' not in wn10_pk_000010_eca_2_check.stdout | string
+
+      - name: Check For ECA Root CA 4."
+        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where Subject -Like "*ECA Root CA 4*" | FL Subject, Thumbprint, NotAfter
+        changed_when: false
+        register: wn10_pk_000010_eca_4_check
+
+      - name: Warning!! No ECA Root CA 4 Certificate Installed."
+        debug:
+            msg:
+                - "Warning!! The ECA Root CA 4 is not installed on the system or"
+                - "contains a incorrect Thumbprint for the Root CA Certificate."
+        when:
+            - wn10_pk_000010_eca_4_check.stdout == "" or '73E8BB08E337D6A5A6AEF90CFFDD97D9176CB582' not in wn10_pk_000010_eca_4_check.stdout | string
   when:
       - wn10_PK_000010
   tags:
