@@ -3120,31 +3120,31 @@
 
 - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems."
   block:
-      - name: Check For ECA Root CA 2."
-        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where Subject -Like "*ECA Root CA 2*" | FL Subject, Thumbprint, NotAfter
+      - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Check For ECA Root CA 2."
+        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*ECA Root CA 2*" -and $_.Thumbprint -Like "C313F919A6ED4E0E8451AFA930FB419A20F181E4"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
         register: wn10_pk_000010_eca_2_check
 
-      - name: Warning!! No ECA Root CA 2 Certificate Installed."
+      - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Warning!! No ECA Root CA 2 Certificate Installed."
         debug:
             msg:
                 - "Warning!! The ECA Root CA 2 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
         when:
-            - wn10_pk_000010_eca_2_check.stdout == "" or 'C313F919A6ED4E0E8451AFA930FB419A20F181E4' not in wn10_pk_000010_eca_2_check.stdout | string
+            - wn10_pk_000010_eca_2_check.stdout == ""
 
-      - name: Check For ECA Root CA 4."
-        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where Subject -Like "*ECA Root CA 4*" | FL Subject, Thumbprint, NotAfter
+      - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Check For ECA Root CA 4."
+        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*ECA Root CA 4*" -and $_.Thumbprint -Like "73E8BB08E337D6A5A6AEF90CFFDD97D9176CB582"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
         register: wn10_pk_000010_eca_4_check
 
-      - name: Warning!! No ECA Root CA 4 Certificate Installed."
+      - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Warning!! No ECA Root CA 4 Certificate Installed."
         debug:
             msg:
                 - "Warning!! The ECA Root CA 4 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
         when:
-            - wn10_pk_000010_eca_4_check.stdout == "" or '73E8BB08E337D6A5A6AEF90CFFDD97D9176CB582' not in wn10_pk_000010_eca_4_check.stdout | string
+            - wn10_pk_000010_eca_4_check.stdout == ""
   when:
       - wn10_PK_000010
   tags:
