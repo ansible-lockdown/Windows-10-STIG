@@ -1367,7 +1367,7 @@
             path: HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\Security
             value: File
             state: present
-            data: '%SystemRoot%'
+            data: '%SystemRoot%\system32\winevt\Logs\Security.evtx'
             type: expandstring
         when: win10stig_default_log_location
 
@@ -4211,7 +4211,7 @@
       - SRG-OS-000324-GPOS-00125
       - SV-220980r569187_rule
       - V-220980
-      
+
 - name: "MEDIUM | WN10-UR-000150 | PATCH | The Profile single process user right must only be assigned to the Administrators group."
   win_user_right:
       name: SeProfileSingleProcessPrivilege
