@@ -3194,11 +3194,19 @@
       - V-220905
 
 - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems."
-  debug:
-      msg:
-          - "Warning! Install the US DoD CCEB Interoperability Root CA cross-certificate on unclassified systems."
-          - "Issued To - Issued By - Thumbprint"
-          - "DoD Root CA 3 - US DoD CCEB Interoperability Root CA 2 - AF132AC65DE86FC4FB3FE51FD637EBA0FF0B12A9"
+  block:
+      - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | DoD CCEB Interop Check."
+        win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*US DoD CCEB Interoperability Root CA 2*" -and $_.Subject -Like "*DoD Root CA 3*" -and $_.Thumbprint -Like "AF132AC65DE86FC4FB3FE51FD637EBA0FF0B12A9"} | FL Subject, Issuer, Thumbprint, NotAfter
+        changed_when: false
+        register: wn10_pk_000020_cceb_interop_check
+
+      - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warning!! No DoD Root CA 3 - US DoD CCEB Interoperability Certificate Installed."
+        debug:
+            msg:
+                - "Warning!! The DoD Root CA 3 - US DoD CCEB Interoperability Root CA 2 certificate is not installed on the system or"
+                - "does not contain Thumbprint AF132AC65DE86FC4FB3FE51FD637EBA0FF0B12A9 for the Certificate."
+        when:
+            - wn10_pk_000020_cceb_interop_check.stdout == ""
   when:
       - wn10_PK_000020
   tags:
