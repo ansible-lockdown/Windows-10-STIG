@@ -3026,7 +3026,7 @@
       data: 0
       type: dword
   when:
-      - wn10_SO_000160 or 
+      - wn10_SO_000160 or
         wn10_00_000095
   tags:
       - WN10-SO-000160
