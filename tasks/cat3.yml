@@ -41,8 +41,7 @@
 - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity."
   block:
       - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Powershell To Get Accounts."
-        win_shell: |
-                Get-LocalUser | Where-Object {$_.Lastlogon -le (Get-Date).AddDays(-35)} | Select-Object Name, Enabled, Lastlogon | Format-Table -AutoSize
+        win_shell: Get-LocalUser | Where-Object {$_.Lastlogon -le (Get-Date).AddDays(-35)} | Select-Object Name, Enabled, Lastlogon | Format-Table -AutoSize
         register: wn10_00_000065_user_local_accounts
         changed_when: false
         failed_when: false
@@ -64,7 +63,6 @@
       - SRG-OS-000118-GPOS-00060
       - SV-220711r569187_rule
       - V-220711
-
 
 - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain."
   block:
@@ -207,6 +205,14 @@
             datatype: dword
         when: ansible_windows_domain_member
 
+      - name: "LOW | WN10-CC-000206 | AUDIT | Windows Update must not obtain updates from other PCs on the Internet. | Warning For Domain Based System v1507 LTSB."
+        debug:
+            msg: "Warning!! You Are Version v1507 LTSB which only is STIG compliant you use use 0 or 1 in the win10stig_dodownloadmod_domain setting."
+        when:
+            - ansible_windows_domain_member
+            - win10stig_dodownloadmod_domain != 0 or win10stig_dodownloadmod_domain != 1
+            - win10_displayversion.value == '1507'
+
       - name: "LOW | WN10-CC-000206 | PATCH | Windows Update must not obtain updates from other PCs on the Internet. | Stand-alone"
         win_regedit:
             path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization
@@ -222,7 +228,7 @@
       - CAT3
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220835r569187_rule
+      - SV-220835r857197_rule
       - V-220835
 
 - name: "LOW | WN10-CC-000220 | PATCH | Turning off File Explorer heap termination on corruption must be disabled."

@@ -7,13 +7,14 @@
           - "This is a requirement for STIG compliance"
   when:
       - wn10_00_000005
+      - ansible_windows_domain_member
       - ansible_architecture != "64-bit"
   tags:
       - WN10-00-000005
       - CAT2
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220697r569187_rule
+      - SV-220697r857178_rule
       - V-220697
 
 - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use."
@@ -31,15 +32,15 @@
         when:
             - "'No Instance' in wn10_00_000010_tpm_status.stderr_lines | string"
 
-      - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Full TPM Check." 
+      - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Full TPM Check."
         debug:
             msg:
                 - "Warning!! Please confirm TPM status is Ready for use. Current settings do not meet STIG requirements."
         when:
-            - "'No Instance' not in wn10_00_000010_tpm_status.stderr_lines | string and
-              'IsActivated_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string and
-              'IsEnabled_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string and
-              'IsOwned_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string and
+            - "'No Instance' not in wn10_00_000010_tpm_status.stderr_lines | string
+              'IsActivated_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string
+              'IsEnabled_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string
+              'IsOwned_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string
               'SpecVersion=2.0' or 'SpecVersion=1.2' in wn10_00_000010_tpm_status.stderr_lines | string"
   when:
       - wn10_00_000010
@@ -49,7 +50,7 @@
       - CAT2
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220698r569187_rule
+      - SV-220698r857181_rule
       - V-220698
 
 - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS."
@@ -65,8 +66,7 @@
             msg:
                 - "Warning!! Your system firmware is configured to run in Legacy BIOS."
                 - "UEFI is the requirement for STIG to be in compliance."
-        when:
-            - "'UEFI' not in wn10_00_000015_system_firmware_check.stdout_lines | string"
+        when: "'UEFI' not in wn10_00_000015_system_firmware_check.stdout_lines | string"
   when:
       - wn10_00_000015
       - not win10stig_system_is_container
@@ -114,10 +114,10 @@
       - WN10-00-000030
       - CAT2
       - CCI-001199
-      - CCI-002445
-      - CCI-002446
+      - CCI-002475
+      - CCI-002476
       - SRG-OS-000185-GPOS-00079
-      - SV-220702r819651_rule
+      - SV-220702r859296_rule
       - V-220702
 
 - name: "MEDIUM | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication."
@@ -145,10 +145,10 @@
       - WN10-00-000031
       - CAT2
       - CCI-001199
-      - CCI-002445
-      - CCI-002446
+      - CCI-002475
+      - CCI-002476
       - SRG-OS-000185-GPOS-00079
-      - SV-220703r819653_rule
+      - SV-220703r859157_rule
       - V-220703
 
 - name: "MEDIUM | WN10-00-000032 | PATCH | Windows 10 systems must use a BitLocker PIN with a minimum length of 6 digits for pre-boot authentication."
@@ -167,15 +167,15 @@
       - CCI-002445
       - CCI-002446
       - SRG-OS-000185-GPOS-00079
-      - SV-220704r819655_rule
+      - SV-220704r859297_rule
       - V-220704
 
 - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs."
   block:
       - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Applocker XML Out."
+        win_shell: Get-AppLockerPolicy -Effective -XML > {{ win10stig_applocker_xml_output }}
         changed_when: false
         failed_when: false
-        win_shell: Get-AppLockerPolicy -Effective -XML > {{ win10stig_applocker_xml_output }}
         when:
             - win10stig_applocker
             - win10stig_applocker_output == 1
@@ -198,7 +198,7 @@
         register: win10stig_applocker_output
         when:
             - win10stig_applocker
-            - win10stig_applocker_output != 1
+            - win10stig_applocker_output == 2
 
       - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Check Stdout Print Out."
         debug:
@@ -463,27 +463,29 @@
       - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Get Defender Firewall status"
         win_shell: get-netfirewallprofile -all | Where-Object -Property Enabled -eq True | Select-Object -Property Name | Format-Table -hidetableheaders
         changed_when: false
+        failed_when: false
         register: wn10_00_000135_defender_fw_status
         when: win10stig_firewall_type == "defender"
 
-      - block:
-          - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on Defender Firewall enabled"
-            debug:
-                msg:
-                    - "Warning!! You are using defender and 1 or more profiles are enabled"
-                    - "Please confirm the firewall profiles match the Firewall STIG"
-                    - "{{ wn10_00_000135_defender_fw_status.stdout_lines | select() | list }}"
-            when:
-                - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
+      - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Defender Status Block."
+        block:
+            - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on Defender Firewall enabled"
+              debug:
+                  msg:
+                      - "Warning!! You are using defender and 1 or more profiles are enabled"
+                      - "Please confirm the firewall profiles match the Firewall STIG"
+                      - "{{ wn10_00_000135_defender_fw_status.stdout_lines | select() | list }}"
+              when:
+                  - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
 
-          - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Alert on Defender Firewall disabled"
-            debug:
-                msg:
-                    - "ALERT! You are using Windows Defender as your firewall and it is fully disabled"
-                    - "Please enable the firewall using a Firewall profile provided by STIG"
-                    - "If you are not using Windows Defender as your firewall please adjust the win10stig_firewall_type variable to reflect that"
-            when:
-                - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length == 0
+            - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Alert on Defender Firewall disabled"
+              debug:
+                  msg:
+                      - "ALERT! You are using Windows Defender as your firewall and it is fully disabled"
+                      - "Please enable the firewall using a Firewall profile provided by STIG"
+                      - "If you are not using Windows Defender as your firewall please adjust the win10stig_firewall_type variable to reflect that"
+              when:
+                  - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length == 0
         when: win10stig_firewall_type == "defender"
 
       - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on 3rd party firewall"
@@ -512,36 +514,38 @@
             - win10stig_firewall_type == "defender"
             - ansible_windows_domain_member
             - not win10stig_firewall_automation_managed_inbound
-      # - block:
-      #     - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Deny all"
-      #       win_firewall_rule:
-      #           name: deny_all
-      #           group: automation_created
-      #           action: block
-      #           direction: in
-      #           remoteip: any
-      #           state: present
-      #           enabled: false
 
-      #     - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Allow list"
-      #       win_firewall_rule:
-      #           name: "Allow Remote IP {{ item }}"
-      #           group: automation_created
-      #           action: allow
-      #           direction: in
-      #           remoteip: "{{ item }}"
-      #           state: present
-      #           enabled: false
-      #       with_items:
-      #           - "{{ win10stig_defender_fw_allow_list }}"
-      #       loop_control:
-      #           label: "{{ item }}"
+    #   - name: Test
+    #     block:
+    #         - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Deny all"
+    #           win_firewall_rule:
+    #               name: deny_all
+    #               group: automation_created
+    #               action: block
+    #               direction: in
+    #               remoteip: any
+    #               state: present
+    #               enabled: false
 
-      #     - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Enable both rules"
-      #       win_firewall_rule:
-      #           group: automation_created
-      #           enabled: true
-      #   when: win10stig_firewall_automation_managed_inbound 
+    #         - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Allow list"
+    #           win_firewall_rule:
+    #               name: "Allow Remote IP {{ item }}"
+    #               group: automation_created
+    #               action: allow
+    #               direction: in
+    #               remoteip: "{{ item }}"
+    #               state: present
+    #               enabled: false
+    #           with_items:
+    #               - "{{ win10stig_defender_fw_allow_list }}"
+    #           loop_control:
+    #               label: "{{ item }}"
+
+    #         - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Enable both rules"
+    #           win_firewall_rule:
+    #               group: automation_created
+    #               enabled: true
+    #     when: win10stig_firewall_automation_managed_inbound
   when:
       - wn10_00_000140
   tags:
@@ -635,35 +639,37 @@
 
 - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10."
   block:
-    - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned User Accounts."
-      win_shell: Get-WmiObject -Class win32_useraccount | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
-      changed_when: false
-      register: wn10_00_000190_orphaned_user_accounts
+      - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned User Accounts."
+        win_shell: Get-WmiObject -Class win32_useraccount | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000190_orphaned_user_accounts
 
-    - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned Group Accounts."
-      win_shell: Get-WmiObject -Class win32_group | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
-      changed_when: false
-      register: wn10_00_000190_orphaned_group_accounts
+      - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned Group Accounts."
+        win_shell: Get-WmiObject -Class win32_group | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000190_orphaned_group_accounts
 
-    - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Audit For User Accounts Found."
-      debug:
-          msg:
-              - "Warning!! Please review the User Rights listed for each of any unresolved SID to determine whether they are valid."
-              - "User Accounts"
-              - "----------------------------------------------------------------------"
-              - "{{ wn10_00_000190_orphaned_user_accounts.stdout_lines }}"
-      when:
-          - wn10_00_000190_orphaned_user_accounts.stdout_lines | select() | length > 0
+      - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Audit For User Accounts Found."
+        debug:
+            msg:
+                - "Warning!! Please review the User Rights listed for each of any unresolved SID to determine whether they are valid."
+                - "User Accounts"
+                - "----------------------------------------------------------------------"
+                - "{{ wn10_00_000190_orphaned_user_accounts.stdout_lines }}"
+        when:
+            - wn10_00_000190_orphaned_user_accounts.stdout_lines | select() | length > 0
 
-    - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Audit For Group Accounts Found."
-      debug:
-          msg:
-              - "Warning!! Please review the User Rights listed for each of any unresolved SID to determine whether they are valid."
-              - "Group Accounts"
-              - "----------------------------------------------------------------------"
-              - "{{ wn10_00_000190_orphaned_user_accounts.stdout_lines }}"
-      when:
-          - wn10_00_000190_orphaned_group_accounts.stdout_lines | select() | length > 0
+      - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Audit For Group Accounts Found."
+        debug:
+            msg:
+                - "Warning!! Please review the User Rights listed for each of any unresolved SID to determine whether they are valid."
+                - "Group Accounts"
+                - "----------------------------------------------------------------------"
+                - "{{ wn10_00_000190_orphaned_user_accounts.stdout_lines }}"
+        when:
+            - wn10_00_000190_orphaned_group_accounts.stdout_lines | select() | length > 0
   when:
       - wn10_00_000190
   tags:
@@ -773,7 +779,7 @@
       - V-220740
 
 # Putting this before WN10-AC-000005 ensures the value being set conforms to the needed standard for account settings
-# The Lockout Duration must be greater or equal to the Reset Account Lockout counter. 
+# The Lockout Duration must be greater or equal to the Reset Account Lockout counter.
 - name: "MEDIUM | WN10-AC-000015 | PATCH | The period of time before the bad logon counter is reset must be configured to 15 minutes."
   win_security_policy:
       section: System Access
@@ -1330,6 +1336,7 @@
 
       - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Get Current Permissions For Default Application Log."
         win_shell: get-acl c:\Windows\System32\winevt\Logs\Application.evtx | FL AccessToString
+        failed_when: false
         changed_when: false
         register: wn10_au_000515_app_log_permissions
         when: win10stig_default_log_location
@@ -1374,6 +1381,7 @@
       - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Get Current Permissions For Default Security Log."
         win_shell: get-acl c:\Windows\System32\winevt\Logs\Security.evtx | FL AccessToString
         changed_when: false
+        failed_when: false
         register: wn10_au_000520_security_log_permissions
         when: win10stig_default_log_location
 
@@ -1405,7 +1413,7 @@
 
 - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts."
   block:
-      - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Set Default Log Locations."
+      - name: "MEDIUM | WN10-AU-000525 | PATCH | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Set Default Log Locations."
         win_regedit:
             path: HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\System
             value: File
@@ -1417,6 +1425,7 @@
       - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Get Current Permissions For Default System Log."
         win_shell: get-acl c:\Windows\System32\winevt\Logs\System.evtx | FL AccessToString
         changed_when: false
+        failed_when: false
         register: wn10_au_000520_system_log_permissions
         when: win10stig_default_log_location
 
@@ -1697,7 +1706,7 @@
       - CAT2
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-250319r793300_rule
+      - SV-250319r857185_rule
       - V-250319
 
 - name: "MEDIUM | WN10-CC-000052 | PATCH | Windows 10 must be configured to prioritize ECC Curves with longer key lengths first."
@@ -1720,7 +1729,7 @@
   win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WcmSvc\GroupPolicy
       value: fMinimizeConnections
-      data: 1
+      data: 3
       type: dword
   when:
       - wn10_CC_000055
@@ -1729,7 +1738,7 @@
       - CAT2
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220806r569187_rule
+      - SV-220806r857188_rule
       - V-220806
 
 - name: "MEDIUM | WN10-CC-000060 | PATCH | Connections to non-domain networks when connected to a domain authenticated network must be blocked."
@@ -1896,7 +1905,7 @@
       - CAT2
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220818r569187_rule
+      - SV-220818r857191_rule
       - V-220818
 
 - name: "MEDIUM | WN10-CC-000120 | PATCH | The network selection user interface (UI) must not be displayed on the logon screen."
@@ -1929,7 +1938,7 @@
       - CAT2
       - CCI-000381
       - SRG-OS-000095-GPOS-00049
-      - SV-220820r569187_rule
+      - SV-220820r857194_rule
       - V-220820
 
 - name: "MEDIUM | WN10-CC-000145 | PATCH | Users must be prompted for a password on resume from sleep (on battery)."
@@ -2582,6 +2591,7 @@
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 3."
         win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 3*" -and $_.Thumbprint -Like "D73CA91102A2204A36459ED32213B467D7CE97FB"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
+        failed_when: false
         register: wn10_pk_000005_root_3_Check
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warning!! No DOD Root CA 3 Certificate Installed."
@@ -2589,12 +2599,12 @@
             msg:
                 - "Warning!! The DOD Root CA 3 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
-        when:
-            - wn10_pk_000005_root_3_Check.stdout == ""
+        when: wn10_pk_000005_root_3_Check.stdout == ""
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 4."
         win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 4*" -and $_.Thumbprint -Like "B8269F25DBD937ECAFD4C35A9838571723F2D026"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
+        failed_when: false
         register: wn10_pk_000005_root_4_Check
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warning!! No DOD Root CA 4 Certificate Installed."
@@ -2602,12 +2612,12 @@
             msg:
                 - "Warning!! The DOD Root CA 4 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
-        when:
-            - wn10_pk_000005_root_4_Check.stdout == ""
+        when: wn10_pk_000005_root_4_Check.stdout == ""
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 5."
         win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 5*" -and $_.Thumbprint -Like "4ECB5CC3095670454DA1CBD410FC921F46B8564B"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
+        failed_when: false
         register: wn10_pk_000005_root_5_Check
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warning!! No DOD Root CA 5 Certificate Installed."
@@ -2615,8 +2625,7 @@
             msg:
                 - "Warning!! The DOD Root CA 5 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
-        when:
-            - wn10_pk_000005_root_5_Check.stdout == ""
+        when: wn10_pk_000005_root_5_Check.stdout == ""
   when:
       - wn10_PK_000005
   tags:
@@ -2625,7 +2634,7 @@
       - CCI-002440
       - CCI-000185
       - SRG-OS-000066-GPOS-00034
-      - SV-220903r819670_rule
+      - SV-220903r859299_rule
       - V-220903
 
 - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems."
@@ -2633,6 +2642,7 @@
       - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Check For ECA Root CA 2."
         win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*ECA Root CA 2*" -and $_.Thumbprint -Like "C313F919A6ED4E0E8451AFA930FB419A20F181E4"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
+        failed_when: false
         register: wn10_pk_000010_eca_2_check
 
       - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Warning!! No ECA Root CA 2 Certificate Installed."
@@ -2640,12 +2650,12 @@
             msg:
                 - "Warning!! The ECA Root CA 2 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
-        when:
-            - wn10_pk_000010_eca_2_check.stdout == ""
+        when: wn10_pk_000010_eca_2_check.stdout == ""
 
       - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Check For ECA Root CA 4."
         win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*ECA Root CA 4*" -and $_.Thumbprint -Like "73E8BB08E337D6A5A6AEF90CFFDD97D9176CB582"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
+        failed_when: false
         register: wn10_pk_000010_eca_4_check
 
       - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Warning!! No ECA Root CA 4 Certificate Installed."
@@ -2653,8 +2663,7 @@
             msg:
                 - "Warning!! The ECA Root CA 4 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
-        when:
-            - wn10_pk_000010_eca_4_check.stdout == ""
+        when: wn10_pk_000010_eca_4_check.stdout == ""
   when:
       - wn10_PK_000010
   tags:
@@ -2670,6 +2679,7 @@
       - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | DoD Interoperability Root CA 2 AC Thumb Check."
         win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*DoD Interoperability*" -and $_.Subject -Like "*DoD*" -and $_.Thumbprint -Like "AC06108CA348CC03B53795C64BF84403C1DBD341"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
+        failed_when: false
         register: wn10_pk_000015_interop_check_for_ac
 
       - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warning!! No DoD Interoperability Root CA 2 Certificate Installed."
@@ -2677,12 +2687,12 @@
             msg:
                 - "Warning!! The DoD Root CA 3 - DoD Interoperability Root CA 2 certificate is not installed on the system or"
                 - "does not contain Thumbprint AC06108CA348CC03B53795C64BF84403C1DBD341 for the Certificate."
-        when:
-            - wn10_pk_000015_interop_check_for_ac.stdout == ""
+        when: wn10_pk_000015_interop_check_for_ac.stdout == ""
 
       - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | DoD Interoperability Root CA 2 49 Thumb Check."
         win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*DoD Interoperability*" -and $_.Subject -Like "*DoD*" -and $_.Thumbprint -Like "49CBE933151872E17C8EAE7F0ABA97FB610F6477"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
+        failed_when: false
         register: wn10_pk_000015_interop_check_for_49
 
       - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warning!! No DoD Interoperability Root CA 2 Certificate Installed."
@@ -2690,17 +2700,16 @@
             msg:
                 - "Warning!! The DoD Root CA 3 - DoD Interoperability Root CA 2 certificate is not installed on the system or"
                 - "does not contain Thumbprint 49CBE933151872E17C8EAE7F0ABA97FB610F6477 for the Certificate."
-        when:
-            - wn10_pk_000015_interop_check_for_49.stdout == ""
+        when: wn10_pk_000015_interop_check_for_49.stdout == ""
   when:
       - wn10_PK_000015
   tags:
       - WN10-PK-000015
       - CAT2
       - CCI-000185
-      - CCI-002440
+      - CCI-002470
       - SRG-OS-000066-GPOS-00034
-      - SV-220905r819673_rule
+      - SV-220905r859298_rule
       - V-220905
 
 - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems."
@@ -2708,6 +2717,7 @@
       - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | DoD CCEB Interop Check."
         win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*US DoD CCEB Interoperability Root CA 2*" -and $_.Subject -Like "*DoD Root CA 3*" -and $_.Thumbprint -Like "AF132AC65DE86FC4FB3FE51FD637EBA0FF0B12A9"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
+        failed_when: false
         register: wn10_pk_000020_cceb_interop_check
 
       - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warning!! No DoD Root CA 3 - US DoD CCEB Interoperability Certificate Installed."
@@ -2715,8 +2725,7 @@
             msg:
                 - "Warning!! The DoD Root CA 3 - US DoD CCEB Interoperability Root CA 2 certificate is not installed on the system or"
                 - "does not contain Thumbprint AF132AC65DE86FC4FB3FE51FD637EBA0FF0B12A9 for the Certificate."
-        when:
-            - wn10_pk_000020_cceb_interop_check.stdout == ""
+        when: wn10_pk_000020_cceb_interop_check.stdout == ""
   when:
       - wn10_PK_000020
   tags:
@@ -3017,7 +3026,8 @@
       data: 0
       type: dword
   when:
-      - wn10_SO_000160 or wn10_00_000095
+      - wn10_SO_000160 or 
+        wn10_00_000095
   tags:
       - WN10-SO-000160
       - WN10-00-000095
@@ -3411,7 +3421,7 @@
 
 - name: "MEDIUM | WN10-UR-000040 | PATCH | The Create a pagefile user right must only be assigned to the Administrators group."
   win_user_right:
-      name: SeCreatePagefilePrivilege 
+      name: SeCreatePagefilePrivilege
       users: Administrators
       action: set
   when:
@@ -3426,7 +3436,7 @@
 
 - name: "MEDIUM | WN10-UR-000050 | PATCH | The Create global objects user right must only be assigned to Administrators, Service, Local Service, and Network Service."
   win_user_right:
-      name: SeCreateGlobalPrivilege 
+      name: SeCreateGlobalPrivilege
       action: set
       users:
           - Administrators
@@ -3459,7 +3469,7 @@
 
 - name: "MEDIUM | WN10-UR-000060 | PATCH | The Create symbolic links user right must only be assigned to the Administrators group."
   win_user_right:
-      name: SeCreateSymbolicLinkPrivilege 
+      name: SeCreateSymbolicLinkPrivilege
       users: Administrators
       action: set
   when:
@@ -3516,7 +3526,7 @@
       - CAT2
       - CCI-000213
       - SRG-OS-000080-GPOS-00048
-      - SV-220969r569187_rule
+      - SV-220969r857200_rule
       - V-220969
 
 - name: "MEDIUM | WN10-UR-000080 | PATCH | The Deny log on as a service user right on Windows 10 domain-joined workstations must be configured to prevent access from highly privileged domain accounts."
@@ -3534,7 +3544,7 @@
       - CAT2
       - CCI-000213
       - SRG-OS-000080-GPOS-00048
-      - SV-220970r569187_rule
+      - SV-220970r857203_rule
       - V-220970
 
 - name: "MEDIM | WN10-UR-000085 | PATCH | The Deny log on locally user right on workstations must be configured to prevent access from highly privileged domain accounts on domain systems and unauthenticated access on all systems."

@@ -1,45 +1,23 @@
 ---
 
-# In the second task we are looking at CurrentBuild since that value is used by winver.exe, the atlernative was CurrentBuildNumber.
 - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level."
-  block:
-      - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level. | Get OS Release value"
-        win_reg_stat:
-            path: HKLM:\Software\Microsoft\Windows NT\CurrentVersion
-            name: ReleaseId
-        changed_when: false
-        register: win10_00_000040_audit_releaseid
-        failed_when:
-            - win10_00_000040_audit_releaseid.value is not version('1909','>=') or
-              win10_00_000040_audit_releaseid.value is version('1507', '==') or
-              win10_00_000040_audit_releaseid.value is version('1607', '==') or
-              win10_00_000040_audit_releaseid.value is version('1809', '==')
-
-      - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level | Get OS Build value"
-        win_reg_stat:
-            path: HKLM:\Software\Microsoft\Windows NT\CurrentVersion
-            name: CurrentBuild
-        changed_when: false
-        register: win10_00_000040_audit_currentbuild
-        failed_when:
-            - win10_00_000040_audit_currentbuild.value is not version('1863', '>=') or
-              win10_00_000040_audit_currentbuild.value is version('10240', '==') or
-              win10_00_000040_audit_currentbuild.value is version('14393', '==') or
-              win10_00_000040_audit_currentbuild.value is version('17763', '==')
-
-      - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level | OS Warning."
-        debug:
-            msg:
-                - "Warning!! Your version of Windows will be no longer supported as of June 11th 2024, It is recommended systems be upgraded to the most recently released version."
-        when: win10_00_000040_audit_releaseid.value is version('21H2', '==') or win10_00_000040_audit_currentbuild.value is version('19044', '==')
+  debug:
+      msg:
+          - "Warning!! Your version of Windows 10 does not conform to STIG standards."
+          - "Please update your current version to a supported build or supported LTSC build."
   when:
       - wn10_00_000040
+        win10_displayversion.value != '1507' and win10_currentbuild.value != '10240' or
+        win10_displayversion.value != '1607' and win10_currentbuild.value != '14393' or
+        win10_displayversion.value != '1809' and win10_currentbuild.value != '17763' or
+        win10_displayversion.value != '21H2' and win10_currentbuild.value != '19044' or
+        win10_displayversion.value != '20H2' and win10_currentbuild.value >= '19000'
   tags:
       - WN10-00-000040
       - CAT1
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220706r823104_rule
+      - SV-220706r857183_rule
       - V-220706
 
 # Using ansible.windows.win_service_info because there is a bug in win_service with permissions
@@ -59,8 +37,7 @@
             msg:
                 - "Warning!! You do not have any AV software running"
                 - "Please enable defender or a 3rd party AV software like McAfee or Symantec"
-        when:
-            - win10_00_000045_av_sftw_status.services[0].state != "started"
+        when: win10_00_000045_av_sftw_status.services[0].state != "started"
   when:
       - wn10_00_000045
   tags:
@@ -128,7 +105,7 @@
 
 - name: "HIGH | WN10-00-000145 | PATCH | Data Execution Prevention (DEP) must be configured to at least OptOut."
   block:
-      - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Create Check For Idempotency."
+      - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Status check for idempotency."
         win_shell: BCDEdit /enum "{current}"
         register: win10_00_000145_dep_setting_search
         changed_when: false

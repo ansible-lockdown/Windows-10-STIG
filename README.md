@@ -5,7 +5,7 @@ Windows 10 DISA STIG
 
 Configure a Windows 10 system to be DISA STIG compliant. All findings will be audited by default. Non-disruptive CAT I, CAT II, and CAT III findings will be corrected by default. Disruptive finding remediation can be enabled by setting `win10stig_disruption_high` to `yes`.
 
-This role is based on the Windows 10 DISA STIG: [Version 2, Rel 4 released on  May 31, 2022](https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U_MS_Windows_10_V2R4_STIG.zip).
+This role is based on the Windows 10 DISA STIG: [Version 2, Rel 4 released on  Novenber 9th, 2022](https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U_MS_Windows_10_V2R5_STIG.zip).
 
 Updating
 --------
