@@ -28,6 +28,15 @@
                 - "Warning!! Secure Boot is set to DISABLED."
                 - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
         when: "'False' in wn10_00_000020_secure_boot_audit.stdout | string"
+
+      - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            cid: 'WN10-00-000020'
+        when:
+            - "'undefined' in wn10_00_000020_secure_boot_audit.stderr | string or
+              'CMdlet' in wn10_00_000020_secure_boot_audit.stderr | string or
+              'False' in wn10_00_000020_secure_boot_audit.stdout | string"
   when:
       - wn10_00_000020
   tags:
@@ -54,6 +63,11 @@
                 - "must be disabled or removed from the system after 35 days of inactivity per STIG."
                 - "Inactive accounts that have been reviewed and deemed to be required must be documented with the ISSO.."
                 - "{{ wn10_00_000065_user_local_accounts.stdout_lines }}"
+
+      - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            cid: 'WN10-00-000065'
   when:
       - wn10_00_000065
   tags:
@@ -78,6 +92,11 @@
                 - "Warning!! Below are the local users that are not built in accounts and enabled."
                 - "Please review and remove these local accounts, only AD logins should be occuring."
                 - "{{ wn10_00_000085_local_users.stdout_lines }}"
+
+      - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            cid: 'WN10-00-000085'
   when:
       - wn10_00_000085
       - ansible_windows_domain_member
@@ -207,7 +226,16 @@
 
       - name: "LOW | WN10-CC-000206 | AUDIT | Windows Update must not obtain updates from other PCs on the Internet. | Warning For Domain Based System v1507 LTSB."
         debug:
-            msg: "Warning!! You Are Version v1507 LTSB which only is STIG compliant you use use 0 or 1 in the win10stig_dodownloadmod_domain setting."
+            msg: "Warning!! You Are Version v1507 LTSB which only is STIG compliant when you use use 0 or 1 in the win10stig_dodownloadmod_domain setting."
+        when:
+            - ansible_windows_domain_member
+            - win10stig_dodownloadmod_domain != 0 or win10stig_dodownloadmod_domain != 1
+            - win10_displayversion.value == '1507'
+
+      - name: "LOW | WN10-CC-000206 | AUDIT | Windows Update must not obtain updates from other PCs on the Internet. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            cid: 'WN10-CC-000206'
         when:
             - ansible_windows_domain_member
             - win10stig_dodownloadmod_domain != 0 or win10stig_dodownloadmod_domain != 1
