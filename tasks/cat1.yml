@@ -1,13 +1,20 @@
 ---
 
 - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level."
-  debug:
-      msg:
-          - "Warning!! Your version of Windows 10 does not conform to STIG standards."
-          - "Please update your current version to a supported build or supported LTSC build."
+  block:
+      - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level. | Warning Meassage."
+        debug:
+            msg:
+                - "Warning!! Your version of Windows 10 does not conform to STIG standards."
+                - "Please update your current version to a supported build or supported LTSC build."
+
+      - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            cid: 'WN10-00-000040'
   when:
       - wn10_00_000040
-        win10_displayversion.value != '1507' and win10_currentbuild.value != '10240' or
+      - win10_displayversion.value != '1507' and win10_currentbuild.value != '10240' or
         win10_displayversion.value != '1607' and win10_currentbuild.value != '14393' or
         win10_displayversion.value != '1809' and win10_currentbuild.value != '17763' or
         win10_displayversion.value != '21H2' and win10_currentbuild.value != '19044' or
@@ -32,12 +39,18 @@
         failed_when: false
         register: win10_00_000045_av_sftw_status
 
-      - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program | Alert on service not running"
+      - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program | Alert on service not running."
         debug:
             msg:
                 - "Warning!! You do not have any AV software running"
                 - "Please enable defender or a 3rd party AV software like McAfee or Symantec"
-        when: win10_00_000045_av_sftw_status.services[0].state != "started"
+        when: win10_00_000045_av_sftw_status.exists == false or win10_00_000045_av_sftw_status.services[0].state != "started"
+
+      - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            cid: 'WN10-00-000045'
+        when: win10_00_000045_av_sftw_status.exists == false or win10_00_000045_av_sftw_status.services[0].state != "started"
   when:
       - wn10_00_000045
   tags:
@@ -59,6 +72,12 @@
             msg:
                 - "Warning!! You do not have an NTFS file system. Please format the C:\ to NTFS"
         when: win10_00_000050_c_volume_info != "NTFS"
+
+      - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            cid: 'WN10-00-000050'
+        when: win10_00_000050_c_volume_info != "NTFS"
   when:
       - wn10_00_000050
   tags:
@@ -70,11 +89,18 @@
       - V-220708
 
 - name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system."
-  debug:
-      msg:
-          - "The following users or groups have Administrator rights on this system."
-          - "Please make sure that these users or groups meet the sites policies to be STIG compliant."
-          - "{{ wn10stig_admin_users_groups.stdout_lines }}"
+  block:
+      - name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system. | Show Accounts."
+        debug:
+            msg:
+                - "The following users or groups have Administrator rights on this system."
+                - "Please make sure that these users or groups meet the sites policies to be STIG compliant."
+                - "{{ wn10stig_admin_users_groups.stdout_lines }}"
+
+      - name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            cid: 'WN10-00-000070'
   when:
       - wn10_00_000070
   tags:
@@ -141,11 +167,18 @@
       - V-220727
 
 - name: "HIGH | WN10-00-000240 | AUDIT | Administrative accounts must not be used with applications that access the Internet, such as web browsers, or with potential Internet sources, such as email."
-  debug:
-      msg:
-          - "The following users or groups have Administrator rights on this system"
-          - "You will need to confirm that none of these accounts have access to the internet, such as web browsers, or with potential Internet soruces, such as email"
-          - "{{ wn10stig_admin_users_groups.stdout_lines }}"
+  block:
+      - name: "HIGH | WN10-00-000240 | AUDIT | Administrative accounts must not be used with applications that access the Internet, such as web browsers, or with potential Internet sources, such as email. | Show Accounts Warning."
+        debug:
+            msg:
+                - "The following users or groups have Administrator rights on this system"
+                - "You will need to confirm that none of these accounts have access to the internet, such as web browsers, or with potential Internet soruces, such as email"
+                - "{{ wn10stig_admin_users_groups.stdout_lines }}"
+
+      - name: "HIGH | WN10-00-000240 | AUDIT | Administrative accounts must not be used with applications that access the Internet, such as web browsers, or with potential Internet sources, such as email. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            cid: 'WN10-00-000240'
   when:
       - wn10_00_000240
   tags:
