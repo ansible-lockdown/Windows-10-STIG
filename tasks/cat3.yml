@@ -32,7 +32,7 @@
       - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
-            cid: 'WN10-00-000020'
+            warn_control_id: 'WN10-00-000020'
         when:
             - "'undefined' in wn10_00_000020_secure_boot_audit.stderr | string or
               'CMdlet' in wn10_00_000020_secure_boot_audit.stderr | string or
@@ -67,7 +67,7 @@
       - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
-            cid: 'WN10-00-000065'
+            warn_control_id: 'WN10-00-000065'
   when:
       - wn10_00_000065
   tags:
@@ -96,7 +96,7 @@
       - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
-            cid: 'WN10-00-000085'
+            warn_control_id: 'WN10-00-000085'
   when:
       - wn10_00_000085
       - ansible_windows_domain_member
@@ -235,7 +235,7 @@
       - name: "LOW | WN10-CC-000206 | AUDIT | Windows Update must not obtain updates from other PCs on the Internet. | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
-            cid: 'WN10-CC-000206'
+            warn_control_id: 'WN10-CC-000206'
         when:
             - ansible_windows_domain_member
             - win10stig_dodownloadmod_domain != 0 or win10stig_dodownloadmod_domain != 1
