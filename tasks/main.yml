@@ -61,7 +61,7 @@
   win_reboot:
   when: win10stig_always_reboot
 
-  - name: If Warnings found Output count and control IDs affected
+- name: If Warnings found Output count and control IDs affected
   debug:
       msg:
           - "You have {{ warn_count }} Warning(s) that require investigation(s). Their ID’s are listed below:"

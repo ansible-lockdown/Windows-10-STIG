@@ -44,22 +44,22 @@
             msg:
                 - "Warning!! Please confirm TPM status is Ready for use. Current settings do not meet STIG requirements."
         when:
-            - "'No Instance' not in wn10_00_000010_tpm_status.stderr_lines | string
-              'IsActivated_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string
-              'IsEnabled_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string
-              'IsOwned_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string
-              'SpecVersion=2.0' or 'SpecVersion=1.2' in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'No Instance' not in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'IsActivated_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'IsEnabled_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'IsOwned_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'SpecVersion=2.0' or 'SpecVersion=1.2' in wn10_00_000010_tpm_status.stderr_lines | string"
 
       - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
             warn_control_id: 'WN10-00-000010'
         when:
-            - "'No Instance' not in wn10_00_000010_tpm_status.stderr_lines | string and
-              'IsActivated_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string and
-              'IsEnabled_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string and
-              'IsOwned_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string and
-              'SpecVersion=2.0' or 'SpecVersion=1.2' in wn10_00_000010_tpm_status.stderr_lines | string or
+            - "'No Instance' not in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'IsActivated_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'IsEnabled_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'IsOwned_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'SpecVersion=2.0' or 'SpecVersion=1.2' in wn10_00_000010_tpm_status.stderr_lines | string or
               'No Instance' in wn10_00_000010_tpm_status.stderr_lines | string"
   when:
       - wn10_00_000010
@@ -555,26 +555,25 @@
         register: wn10_00_000135_defender_fw_status
         when: win10stig_firewall_type == "defender"
 
-      - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Defender Status Block."
-        block:
-            - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on Defender Firewall enabled"
-              debug:
-                  msg:
-                      - "Warning!! You are using defender and 1 or more profiles are enabled"
-                      - "Please confirm the firewall profiles match the Firewall STIG"
-                      - "{{ wn10_00_000135_defender_fw_status.stdout_lines | select() | list }}"
-              when:
-                  - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
+      - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on Defender Firewall enabled"
+        debug:
+            msg:
+                - "Warning!! You are using defender and 1 or more profiles are enabled"
+                - "Please confirm the firewall profiles match the Firewall STIG"
+                - "{{ wn10_00_000135_defender_fw_status.stdout_lines | select() | list }}"
+        when:
+            - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
+            - win10stig_firewall_type == "defender"
 
-            - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Alert on Defender Firewall disabled"
-              debug:
-                  msg:
-                      - "ALERT! You are using Windows Defender as your firewall and it is fully disabled"
-                      - "Please enable the firewall using a Firewall profile provided by STIG"
-                      - "If you are not using Windows Defender as your firewall please adjust the win10stig_firewall_type variable to reflect that"
-              when:
-                  - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length == 0
-        when: win10stig_firewall_type == "defender"
+      - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Alert on Defender Firewall disabled"
+        debug:
+            msg:
+                - "Warning!! You are using Windows Defender as your firewall and it is fully disabled"
+                - "Please enable the firewall using a Firewall profile provided by STIG"
+                - "If you are not using Windows Defender as your firewall please adjust the win10stig_firewall_type variable to reflect that"
+        when:
+            - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length == 0
+            - win10stig_firewall_type == "defender"
 
       - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on 3rd party firewall"
         debug:
@@ -589,7 +588,11 @@
             warn_control_id: 'WN10-00-000135'
         when:
             - win10stig_firewall_type == "defender" or
-              win10stig_firewall_type != "defender"
+              win10stig_firewall_type != "defender" or
+            - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
+            - win10stig_firewall_type == "defender" or
+            - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length == 0
+            - win10stig_firewall_type == "defender"
   when:
       - wn10_00_000135
   tags:
@@ -619,38 +622,6 @@
             - win10stig_firewall_type == "defender"
             - ansible_windows_domain_member
             - not win10stig_firewall_automation_managed_inbound
-
-    #   - name: Test
-    #     block:
-    #         - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Deny all"
-    #           win_firewall_rule:
-    #               name: deny_all
-    #               group: automation_created
-    #               action: block
-    #               direction: in
-    #               remoteip: any
-    #               state: present
-    #               enabled: false
-
-    #         - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Allow list"
-    #           win_firewall_rule:
-    #               name: "Allow Remote IP {{ item }}"
-    #               group: automation_created
-    #               action: allow
-    #               direction: in
-    #               remoteip: "{{ item }}"
-    #               state: present
-    #               enabled: false
-    #           with_items:
-    #               - "{{ win10stig_defender_fw_allow_list }}"
-    #           loop_control:
-    #               label: "{{ item }}"
-
-    #         - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Enable both rules"
-    #           win_firewall_rule:
-    #               group: automation_created
-    #               enabled: true
-    #     when: win10stig_firewall_automation_managed_inbound
   when:
       - wn10_00_000140
   tags:
@@ -750,12 +721,6 @@
         failed_when: false
         register: wn10_00_000190_orphaned_user_accounts
 
-      - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned Group Accounts."
-        win_shell: Get-WmiObject -Class win32_group | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
-        changed_when: false
-        failed_when: false
-        register: wn10_00_000190_orphaned_group_accounts
-
       - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Audit For User Accounts Found."
         debug:
             msg:
@@ -765,6 +730,12 @@
                 - "{{ wn10_00_000190_orphaned_user_accounts.stdout_lines }}"
         when:
             - wn10_00_000190_orphaned_user_accounts.stdout_lines | select() | length > 0
+
+      - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned Group Accounts."
+        win_shell: Get-WmiObject -Class win32_group | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000190_orphaned_group_accounts
 
       - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Audit For Group Accounts Found."
         debug:
@@ -3370,8 +3341,15 @@
       - V-220945
 
 - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and non-privileged accounts."
-  debug:
-      msg: "Warning! You are not on a domain which means you should configure Windows Hello for sign on options would be suggested based on the organizations needs and capabilities."
+  block:
+      - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and non-privileged accounts. | Warning Message."
+        debug:
+            msg: "Warning!! You are not on a domain which means you should configure Windows Hello for sign on options would be suggested based on the organizations needs and capabilities."
+
+      - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and non-privileged accounts. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000040'
   when:
       - wn10_SO_000251
       - not ansible_windows_domain_member

@@ -4,8 +4,8 @@
   block:
       - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Check secure boot."
         win_shell: Confirm-SecureBootUEFI
-        failed_when: false
         changed_when: false
+        failed_when: false
         register: wn10_00_000020_secure_boot_audit
 
       - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Virtual System Check."
@@ -51,9 +51,9 @@
   block:
       - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Powershell To Get Accounts."
         win_shell: Get-LocalUser | Where-Object {$_.Lastlogon -le (Get-Date).AddDays(-35)} | Select-Object Name, Enabled, Lastlogon | Format-Table -AutoSize
-        register: wn10_00_000065_user_local_accounts
         changed_when: false
         failed_when: false
+        register: wn10_00_000065_user_local_accounts
 
       - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Print Results."
         debug:
@@ -238,7 +238,8 @@
             warn_control_id: 'WN10-CC-000206'
         when:
             - ansible_windows_domain_member
-            - win10stig_dodownloadmod_domain != 0 or win10stig_dodownloadmod_domain != 1
+            - win10stig_dodownloadmod_domain != 0 or 
+              win10stig_dodownloadmod_domain != 1
             - win10_displayversion.value == '1507'
 
       - name: "LOW | WN10-CC-000206 | PATCH | Windows Update must not obtain updates from other PCs on the Internet. | Stand-alone"
