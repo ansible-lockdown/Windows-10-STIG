@@ -11,7 +11,7 @@
       - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level. | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
-            cid: 'WN10-00-000040'
+            warn_control_id: 'WN10-00-000040'
   when:
       - wn10_00_000040
       - win10_displayversion.value != '1507' and win10_currentbuild.value != '10240' or
@@ -49,7 +49,7 @@
       - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
-            cid: 'WN10-00-000045'
+            warn_control_id: 'WN10-00-000045'
         when: win10_00_000045_av_sftw_status.exists == false or win10_00_000045_av_sftw_status.services[0].state != "started"
   when:
       - wn10_00_000045
@@ -76,7 +76,7 @@
       - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
-            cid: 'WN10-00-000050'
+            warn_control_id: 'WN10-00-000050'
         when: win10_00_000050_c_volume_info != "NTFS"
   when:
       - wn10_00_000050
@@ -100,7 +100,7 @@
       - name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system. | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
-            cid: 'WN10-00-000070'
+            warn_control_id: 'WN10-00-000070'
   when:
       - wn10_00_000070
   tags:
@@ -178,7 +178,7 @@
       - name: "HIGH | WN10-00-000240 | AUDIT | Administrative accounts must not be used with applications that access the Internet, such as web browsers, or with potential Internet sources, such as email. | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
-            cid: 'WN10-00-000240'
+            warn_control_id: 'WN10-00-000240'
   when:
       - wn10_00_000240
   tags:
