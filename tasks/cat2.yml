@@ -1,10 +1,17 @@
 ---
 
 - name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version."
-  debug:
-      msg:
-          - "Warning!! You need to be on a 64-bit operating system when joined to a domain"
-          - "This is a requirement for STIG compliance"
+  block:
+      - name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version. | Warning."
+        debug:
+            msg:
+                - "Warning!! You need to be on a 64-bit operating system when joined to a domain"
+                - "This is a requirement for STIG compliance"
+
+      - name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000005'
   when:
       - wn10_00_000005
       - ansible_windows_domain_member
@@ -42,6 +49,18 @@
               'IsEnabled_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string
               'IsOwned_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string
               'SpecVersion=2.0' or 'SpecVersion=1.2' in wn10_00_000010_tpm_status.stderr_lines | string"
+
+      - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000010'
+        when:
+            - "'No Instance' not in wn10_00_000010_tpm_status.stderr_lines | string and
+              'IsActivated_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string and
+              'IsEnabled_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string and
+              'IsOwned_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string and
+              'SpecVersion=2.0' or 'SpecVersion=1.2' in wn10_00_000010_tpm_status.stderr_lines | string or
+              'No Instance' in wn10_00_000010_tpm_status.stderr_lines | string"
   when:
       - wn10_00_000010
       - ansible_windows_domain_member
@@ -67,6 +86,12 @@
                 - "Warning!! Your system firmware is configured to run in Legacy BIOS."
                 - "UEFI is the requirement for STIG to be in compliance."
         when: "'UEFI' not in wn10_00_000015_system_firmware_check.stdout_lines | string"
+
+      - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000015'
+        when: "'UEFI' not in wn10_00_000015_system_firmware_check.stdout_lines | string"
   when:
       - wn10_00_000015
       - not win10stig_system_is_container
@@ -80,10 +105,17 @@
       - V-220699
 
 - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: continuously, where HBSS is used; 30 days, for any additional internal network scans not covered by HBSS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP)"
-  debug:
-      msg:
-          - "Warning!! Please install DoD-approved ESS software and ensure it is operating continuously"
-          - "Ask site ISSM for documentation fo the ESS software installation and configuration"
+  block:
+      - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: continuously, where HBSS is used; 30 days, for any additional internal network scans not covered by HBSS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP) | Warning."
+        debug:
+            msg:
+                - "Warning!! Please install DoD-approved ESS software and ensure it is operating continuously"
+                - "Ask site ISSM for documentation fo the ESS software installation and configuration"
+
+      - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: continuously, where HBSS is used; 30 days, for any additional internal network scans not covered by HBSS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP) | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000025'
   when:
       - wn10_00_000025
   tags:
@@ -107,6 +139,12 @@
             msg:
                 - "Warning!! BitLocker is not enabled for the C:\ drive"
                 - "Please enable BitLocker for at least the OS drive to conform to STIG Standards"
+        when: "'On' not in wn10_00_000030_bitlocker_status.stdout"
+
+      - name: "MEDIUM | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000030'
         when: "'On' not in wn10_00_000030_bitlocker_status.stdout"
   when:
       - wn10_00_000030
@@ -198,7 +236,7 @@
         register: win10stig_applocker_output
         when:
             - win10stig_applocker
-            - win10stig_applocker_output == 2
+            - win10stig_applocker_output != 1
 
       - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Check Stdout Print Out."
         debug:
@@ -219,6 +257,17 @@
                 - "There is an AppLocker white paper from NSA that can be used as a guide"
                 - "https://www.iad.gov/iad/library/ia-guidance/tech-briefs/application-whitelisting-using-microsoft-applocker.cfm"
         when: not win10stig_applocker
+
+      - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000035'
+        when:
+            - win10stig_applocker
+            - win10stig_applocker_output == 1 or
+            - not win10stig_applocker or
+            - win10stig_applocker
+            - win10stig_applocker_output != 1
   when:
       - wn10_00_000035
   tags:
@@ -230,8 +279,15 @@
       - V-220705
 
 - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system."
-  debug:
-      msg: "Warning!! Please confirm that no other alternative operating systems exist on this system"
+  block:
+      - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system. | Warning."
+        debug:
+            msg: "Warning!! Please confirm that no other alternative operating systems exist on this system."
+
+      - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000055'
   when:
       - wn10_00_000055
   tags:
@@ -255,6 +311,12 @@
             msg:
                 - "Warning!! You have shares that non-system created. Please manually review those shares listed below to make sure appropriate permissions are applied"
                 - "{{ wn10_00_000060_share_names.stdout_lines | select() | list }}"
+        when: wn10_00_000060_share_names.stdout_lines | select() | length > 0
+
+      - name: "MEDIUM | WN10-00-000060 | AUDIT | Non system-created file shares on a system must limit access to groups that require it. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000060'
         when: wn10_00_000060_share_names.stdout_lines | select() | length > 0
   when:
       - wn10_00_000060
@@ -280,6 +342,12 @@
                 - "Warning!! Below are the users in the Backup Operators group. Please review accounts are appropriate."
                 - "{{ wn10_00_000075_bo_members.stdout_lines | select() | list }}"
         when: wn10_00_000075_bo_members.stdout_lines | select() | list | length > 0
+
+      - name: "MEDIUM | WN10-00-000075 | AUDIT | Only accounts responsible for the backup operations must be members of the Backup Operators group. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000075'
+        when: wn10_00_000075_bo_members.stdout_lines | select() | list | length > 0
   when:
       - wn10_00_000075
   tags:
@@ -303,6 +371,12 @@
             msg:
                 - "Warning!! Below are the users in the Hyper-V Administrators group, please remove any unnecessary accounts"
                 - "{{ wn10_00_000080_hyperv_members.stdout_lines | select() | list }}"
+        when: wn10_00_000080_hyperv_members.stdout_lines | select() | list | length > 0
+
+      - name: "MEDIUM | WN10-00-000080 | AUDIT | Only authorized user accounts must be allowed to create or run virtual machines on Windows 10 systems. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000080'
         when: wn10_00_000080_hyperv_members.stdout_lines | select() | list | length > 0
   when:
       - wn10_00_000080
@@ -340,6 +414,14 @@
         when:
             - wn10_00_000090_neverexpire_passwords.stdout_lines | select() | list | length > 0
             - win10stig_disruption_high
+
+      - name: "MEDIUM | WN10-00-000090 | PATCH | Accounts must be configured to require password expiration. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000090'
+        when:
+            - wn10_00_000090_neverexpire_passwords.stdout_lines | select() | list | length > 0
+            - not win10stig_disruption_high
   when:
       - wn10_00_000090
   tags:
@@ -447,6 +529,12 @@
                 - "Please review and remove the following files"
                 - "{{ wn10_00_000130_files.results[0].files | map(attribute='path') | list }}"
         when: not win10stig_disruption_high
+
+      - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000130'
+        when: not win10stig_disruption_high
   when:
       - wn10_00_000130
       - win10stig_lengthy_search
@@ -494,6 +582,14 @@
                 - "Warning!! You are not using Windows Defender as your firewall."
                 - "Please review the required profiles/settings for that firewall to confirm it aligns with STIG standards."
         when: win10stig_firewall_type != "defender"
+
+      - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000135'
+        when:
+            - win10stig_firewall_type == "defender" or
+              win10stig_firewall_type != "defender"
   when:
       - wn10_00_000135
   tags:
@@ -510,6 +606,15 @@
         debug:
             msg:
                 - "Warning!! You are using Windows Defender as your firewall on this host. Please confirm Inbound Rules only allow authorized inbound traffic"
+        when:
+            - win10stig_firewall_type == "defender"
+            - ansible_windows_domain_member
+            - not win10stig_firewall_automation_managed_inbound
+
+      - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000140'
         when:
             - win10stig_firewall_type == "defender"
             - ansible_windows_domain_member
@@ -670,6 +775,14 @@
                 - "{{ wn10_00_000190_orphaned_user_accounts.stdout_lines }}"
         when:
             - wn10_00_000190_orphaned_group_accounts.stdout_lines | select() | length > 0
+
+      - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000190'
+        when:
+            - wn10_00_000190_orphaned_user_accounts.stdout_lines | select() | length > 0 or
+              wn10_00_000190_orphaned_group_accounts.stdout_lines | select() | length > 0
   when:
       - wn10_00_000190
   tags:
@@ -1355,6 +1468,14 @@
                 - "Warning!! The location of the logs is not set to default location."
                 - "When adding Eventlog to the permissions, it must be entered as NT Service\\Eventlog."
         when: not win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-AU-000515'
+        when:
+            - win10stig_default_log_location or
+              not win10stig_default_log_location
   when:
       - wn10_AU_000515
   tags:
@@ -1399,6 +1520,14 @@
                 - "Warning!! The location of the logs is not set to default location."
                 - "When adding Eventlog to the permissions, it must be entered as NT Service\\Eventlog."
         when: not win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-AU-000520'
+        when:
+            - win10stig_default_log_location or
+              not win10stig_default_log_location
   when:
       - wn10_AU_000520
   tags:
@@ -1443,6 +1572,14 @@
                 - "Warning!! The location of the logs is not set to default location."
                 - "When adding Eventlog to the permissions, it must be entered as NT Service\\Eventlog."
         when: not win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-AU-000525'
+        when:
+            - win10stig_default_log_location or
+              not win10stig_default_log_location
   when:
       - wn10_AU_000525
   tags:
@@ -2626,6 +2763,15 @@
                 - "Warning!! The DOD Root CA 5 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
         when: wn10_pk_000005_root_5_Check.stdout == ""
+
+      - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-PK-000005'
+        when:
+            - wn10_pk_000005_root_3_Check.stdout == "" or
+              wn10_pk_000005_root_4_Check.stdout == "" or
+              wn10_pk_000005_root_5_Check.stdout == ""
   when:
       - wn10_PK_000005
   tags:
@@ -2664,6 +2810,14 @@
                 - "Warning!! The ECA Root CA 4 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
         when: wn10_pk_000010_eca_4_check.stdout == ""
+
+      - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-PK-000010'
+        when:
+            - wn10_pk_000010_eca_2_check.stdout == "" or
+              wn10_pk_000010_eca_4_check.stdout == ""
   when:
       - wn10_PK_000010
   tags:
@@ -2701,6 +2855,14 @@
                 - "Warning!! The DoD Root CA 3 - DoD Interoperability Root CA 2 certificate is not installed on the system or"
                 - "does not contain Thumbprint 49CBE933151872E17C8EAE7F0ABA97FB610F6477 for the Certificate."
         when: wn10_pk_000015_interop_check_for_49.stdout == ""
+
+      - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-PK-000015'
+        when:
+            - wn10_pk_000015_interop_check_for_ac.stdout == "" or
+              wn10_pk_000015_interop_check_for_49.stdout == ""
   when:
       - wn10_PK_000015
   tags:
@@ -2725,6 +2887,12 @@
             msg:
                 - "Warning!! The DoD Root CA 3 - US DoD CCEB Interoperability Root CA 2 certificate is not installed on the system or"
                 - "does not contain Thumbprint AF132AC65DE86FC4FB3FE51FD637EBA0FF0B12A9 for the Certificate."
+        when: wn10_pk_000020_cceb_interop_check.stdout == ""
+
+      - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-PK-000020'
         when: wn10_pk_000020_cceb_interop_check.stdout == ""
   when:
       - wn10_PK_000020
