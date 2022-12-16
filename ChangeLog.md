@@ -5,6 +5,7 @@
   - Added Changelog.md and updated.
   - Added Version 2 Release 3 changes during this update.
   - Added Version 2 Release 4 changes during this update. 
+  - Added Version 2 Release 5 changes during this update. 
   - WN10-00-000030, WN10-00-000031, WN10-00-000032 - Changed Check text from 
     “WVD” to “AVD” for Azure Virtual Desktop. 
   - WN10-00-000040 - Updated Check and Fix: Windows servicing levels need to be updated. 
@@ -31,4 +32,5 @@
   - WN10-00-000040 - Updated Check and Fix text regarding versioning. 
   - WN10-CC-000055 - In Check and Fix text, set Minimize simultaneous connections to Enabled; set Minimize Policy Options to 3, Prevent Wi-Fi 
     while on Ethernet. 
-  - Some Rule IDs and CCIs updated due to minor changes in content management system. 
+  - Some Rule IDs and CCIs updated due to minor changes in content management system.
+  - Added Warning Count For End Of Playbook
