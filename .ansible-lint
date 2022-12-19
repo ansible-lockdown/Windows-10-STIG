@@ -1,6 +1,16 @@
 parseable: true
 quiet: true
 skip_list:
+  - 'schema'
+  - 'no-changed-when'
+  - 'fqcn-builtins'
+  - 'experimental'
+  - 'fqcn[action-core]'
+  - 'fqcn[action]'
+  - 'name[casing]'
+  - 'name[template]'
+  - 'jinja[spacing]'
+  - 'var-naming'  # Older playbook no new release
   - '204'
   - '305'
   - '303'

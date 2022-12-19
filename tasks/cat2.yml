@@ -1,25 +1,66 @@
 ---
 
 - name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version."
-  debug:
-      msg:
-          - "Alert! You need to be on a 64-bit operating system when joined to a domain"
-          - "This is a requirement for STIG compliance"
+  block:
+      - name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version. | Warning."
+        debug:
+            msg:
+                - "Warning!! You need to be on a 64-bit operating system when joined to a domain"
+                - "This is a requirement for STIG compliance"
+
+      - name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000005'
   when:
       - wn10_00_000005
+      - ansible_windows_domain_member
       - ansible_architecture != "64-bit"
   tags:
       - WN10-00-000005
       - CAT2
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220697r569187_rule
+      - SV-220697r857178_rule
       - V-220697
 
 - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use."
-  debug:
-      msg:
-          - "Alert! Please confirm TPM status is Ready for use"
+  block:
+      - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Get TPM status."
+        win_command: wmic /namespace:\\root\cimv2\security\microsofttpm path win32_tpm get * /format:textvaluelist.xsl
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000010_tpm_status
+
+      - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Running Instances Check."
+        debug:
+            msg:
+                - "Warning!! Please confirm TPM status is Ready for use, there are no instances currently running."
+        when:
+            - "'No Instance' in wn10_00_000010_tpm_status.stderr_lines | string"
+
+      - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Full TPM Check."
+        debug:
+            msg:
+                - "Warning!! Please confirm TPM status is Ready for use. Current settings do not meet STIG requirements."
+        when:
+            - "'No Instance' not in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'IsActivated_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'IsEnabled_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'IsOwned_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'SpecVersion=2.0' or 'SpecVersion=1.2' in wn10_00_000010_tpm_status.stderr_lines | string"
+
+      - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000010'
+        when:
+            - "'No Instance' not in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'IsActivated_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'IsEnabled_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'IsOwned_InitialValue=TRUE' in wn10_00_000010_tpm_status.stderr_lines | string"
+            - "'SpecVersion=2.0' or 'SpecVersion=1.2' in wn10_00_000010_tpm_status.stderr_lines | string or
+              'No Instance' in wn10_00_000010_tpm_status.stderr_lines | string"
   when:
       - wn10_00_000010
       - ansible_windows_domain_member
@@ -28,12 +69,29 @@
       - CAT2
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220698r569187_rule
+      - SV-220698r857181_rule
       - V-220698
 
 - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS."
-  debug:
-      msg: "Alert! Please make sure to configure UEFI Mode, not Legacy BIOS"
+  block:
+      - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS | Check For UEFI Status."
+        win_shell: $env:firmware_type
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000015_system_firmware_check
+
+      - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS | Legacy BIOS Error."
+        debug:
+            msg:
+                - "Warning!! Your system firmware is configured to run in Legacy BIOS."
+                - "UEFI is the requirement for STIG to be in compliance."
+        when: "'UEFI' not in wn10_00_000015_system_firmware_check.stdout_lines | string"
+
+      - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000015'
+        when: "'UEFI' not in wn10_00_000015_system_firmware_check.stdout_lines | string"
   when:
       - wn10_00_000015
       - not win10stig_system_is_container
@@ -47,10 +105,17 @@
       - V-220699
 
 - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: continuously, where HBSS is used; 30 days, for any additional internal network scans not covered by HBSS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP)"
-  debug:
-      msg:
-          - "Alert! Please install DoD-approved ESS software and ensure it is operating continuously"
-          - "Ask site ISSM for documentation fo the ESS software installation and configuration"
+  block:
+      - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: continuously, where HBSS is used; 30 days, for any additional internal network scans not covered by HBSS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP) | Warning."
+        debug:
+            msg:
+                - "Warning!! Please install DoD-approved ESS software and ensure it is operating continuously"
+                - "Ask site ISSM for documentation fo the ESS software installation and configuration"
+
+      - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: continuously, where HBSS is used; 30 days, for any additional internal network scans not covered by HBSS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP) | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000025'
   when:
       - wn10_00_000025
   tags:
@@ -58,7 +123,7 @@
       - CAT2
       - CCI-001233
       - SRG-OS-000191-GPOS-00080
-      - SV-220701r569187_rule
+      - SV-220701r793197_rule
       - V-220701
 
 - name: "MEDIUM | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest."
@@ -72,8 +137,14 @@
       - name: "MEDIUM | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest."
         debug:
             msg:
-                - "ALERT! BitLocker is not enabled for the C:\ drive"
+                - "Warning!! BitLocker is not enabled for the C:\ drive"
                 - "Please enable BitLocker for at least the OS drive to conform to STIG Standards"
+        when: "'On' not in wn10_00_000030_bitlocker_status.stdout"
+
+      - name: "MEDIUM | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000030'
         when: "'On' not in wn10_00_000030_bitlocker_status.stdout"
   when:
       - wn10_00_000030
@@ -84,7 +155,7 @@
       - CCI-002475
       - CCI-002476
       - SRG-OS-000185-GPOS-00079
-      - SV-220702r569228_rule
+      - SV-220702r859296_rule
       - V-220702
 
 - name: "MEDIUM | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication."
@@ -111,11 +182,11 @@
   tags:
       - WN10-00-000031
       - CAT2
-      - CCI-002476
-      - CCI-002475
       - CCI-001199
+      - CCI-002475
+      - CCI-002476
       - SRG-OS-000185-GPOS-00079
-      - SV-220703r569288_rule
+      - SV-220703r859157_rule
       - V-220703
 
 - name: "MEDIUM | WN10-00-000032 | PATCH | Windows 10 systems must use a BitLocker PIN with a minimum length of 6 digits for pre-boot authentication."
@@ -131,19 +202,72 @@
       - WN10-00-000032
       - CAT2
       - CCI-001199
-      - CCI-002475
-      - CCI-002476
+      - CCI-002445
+      - CCI-002446
       - SRG-OS-000185-GPOS-00079
-      - SV-220704r569290_rule
+      - SV-220704r859297_rule
       - V-220704
 
 - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs."
-  debug:
-      msg:
-          - "Alert! Please confirm you have a deny-all policy in place that utilizes a whitelist for applications."
-          - "This can be done through a utility like AppLocker to limit applications only to authorized applications"
-          - "There is an AppLocker white paper from NASA that can be used as a guide"
-          - "https://www.iad.gov/iad/library/ia-guidance/tech-briefs/application-whitelisting-using-microsoft-applocker.cfm"
+  block:
+      - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Applocker XML Out."
+        win_shell: Get-AppLockerPolicy -Effective -XML > {{ win10stig_applocker_xml_output }}
+        changed_when: false
+        failed_when: false
+        when:
+            - win10stig_applocker
+            - win10stig_applocker_output == 1
+
+      - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Check XML File Warning."
+        debug:
+            msg:
+                - "Warning!! Please review the configuration of Applocker using the XML file located in directory"
+                - "{{ win10stig_applocker_xml_output }} to confirm you have a deny-all policy in place that utilizes"
+                - "a whitelist for applications. There is an AppLocker white paper from NSA that can be used as a guide"
+                - "https://www.iad.gov/iad/library/ia-guidance/tech-briefs/application-whitelisting-using-microsoft-applocker.cfm"
+        when:
+            - win10stig_applocker
+            - win10stig_applocker_output == 1
+
+      - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Check For Applocker To Stdout."
+        win_shell: Get-AppLockerPolicy -Effective -XML
+        changed_when: false
+        failed_when: false
+        register: win10stig_applocker_output
+        when:
+            - win10stig_applocker
+            - win10stig_applocker_output != 1
+
+      - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Check Stdout Print Out."
+        debug:
+            msg:
+                - "Warning!! Please review the configuration of Applocker to confirm you have a deny-all policy in place that utilizes"
+                - "a whitelist for applications. There is an AppLocker white paper from NSA that can be used as a guide"
+                - "https://www.iad.gov/iad/library/ia-guidance/tech-briefs/application-whitelisting-using-microsoft-applocker.cfm"
+                - "{{ win10stig_applocker_output.stdout_lines }}"
+        when:
+            - win10stig_applocker
+            - win10stig_applocker_output != 1
+
+      - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Warning Message When No Applocker."
+        debug:
+            msg:
+                - "Warning!! Applocker is not in use. Please confirm you have a deny-all policy in place that utilizes a whitelist for applications."
+                - "This can be done through a utility like AppLocker to limit applications only to authorized applications"
+                - "There is an AppLocker white paper from NSA that can be used as a guide"
+                - "https://www.iad.gov/iad/library/ia-guidance/tech-briefs/application-whitelisting-using-microsoft-applocker.cfm"
+        when: not win10stig_applocker
+
+      - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000035'
+        when:
+            - win10stig_applocker
+            - win10stig_applocker_output == 1 or
+            - not win10stig_applocker or
+            - win10stig_applocker
+            - win10stig_applocker_output != 1
   when:
       - wn10_00_000035
   tags:
@@ -155,8 +279,15 @@
       - V-220705
 
 - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system."
-  debug:
-      msg: "Alert! Please confirm that no other alternative operating systems exist on this system"
+  block:
+      - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system. | Warning."
+        debug:
+            msg: "Warning!! Please confirm that no other alternative operating systems exist on this system."
+
+      - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000055'
   when:
       - wn10_00_000055
   tags:
@@ -178,8 +309,14 @@
       - name: "MEDIUM | WN10-00-000060 | AUDIT | Non system-created file shares on a system must limit access to groups that require it. | Alert Share Names"
         debug:
             msg:
-                - "Alert! You have shares that non-system created. Please manually review those shares listed below to make sure appropriate permissions are applied"
+                - "Warning!! You have shares that non-system created. Please manually review those shares listed below to make sure appropriate permissions are applied"
                 - "{{ wn10_00_000060_share_names.stdout_lines | select() | list }}"
+        when: wn10_00_000060_share_names.stdout_lines | select() | length > 0
+
+      - name: "MEDIUM | WN10-00-000060 | AUDIT | Non system-created file shares on a system must limit access to groups that require it. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000060'
         when: wn10_00_000060_share_names.stdout_lines | select() | length > 0
   when:
       - wn10_00_000060
@@ -202,8 +339,14 @@
       - name: "MEDIUM | WN10-00-000075 | AUDIT | Only accounts responsible for the backup operations must be members of the Backup Operators group. | Display Backup Operator users"
         debug:
             msg:
-                - "Alert! Below are the users in the Backup Operators group. Please review accounts are appropriate"
+                - "Warning!! Below are the users in the Backup Operators group. Please review accounts are appropriate."
                 - "{{ wn10_00_000075_bo_members.stdout_lines | select() | list }}"
+        when: wn10_00_000075_bo_members.stdout_lines | select() | list | length > 0
+
+      - name: "MEDIUM | WN10-00-000075 | AUDIT | Only accounts responsible for the backup operations must be members of the Backup Operators group. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000075'
         when: wn10_00_000075_bo_members.stdout_lines | select() | list | length > 0
   when:
       - wn10_00_000075
@@ -226,8 +369,14 @@
       - name: "MEDIUM | WN10-00-000080 | AUDIT | Only authorized user accounts must be allowed to create or run virtual machines on Windows 10 systems. | Display Hyper-V group users"
         debug:
             msg:
-                - "Alert! Below are the users in the Hyper-V Administrators group, please remove any unnecessary accounts"
+                - "Warning!! Below are the users in the Hyper-V Administrators group, please remove any unnecessary accounts"
                 - "{{ wn10_00_000080_hyperv_members.stdout_lines | select() | list }}"
+        when: wn10_00_000080_hyperv_members.stdout_lines | select() | list | length > 0
+
+      - name: "MEDIUM | WN10-00-000080 | AUDIT | Only authorized user accounts must be allowed to create or run virtual machines on Windows 10 systems. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000080'
         when: wn10_00_000080_hyperv_members.stdout_lines | select() | list | length > 0
   when:
       - wn10_00_000080
@@ -250,12 +399,12 @@
       - name: "MEDIUM | WN10-00-000090 | AUDIT | Accounts must be configured to require password expiration. | Display list of PW Never Expire users"
         debug:
             msg:
-                - "Alert! You have some accounts that are set to never expire. Please review the below accounts and set an expiration"
+                - "Warning!! You have some accounts that are set to never expire. Please review the below accounts and set an expiration"
                 - "{{ wn10_00_000090_neverexpire_passwords.stdout_lines | select() | list }}"
         when:
             - wn10_00_000090_neverexpire_passwords.stdout_lines | select() | list | length > 0
             - not win10stig_disruption_high
-    
+
       - name: "MEDIUM | WN10-00-000090 | PATCH | Accounts must be configured to require password expiration. | Set PW to Expire for PW Never Expire users"
         win_user:
             name: "{{ item }}"
@@ -265,6 +414,14 @@
         when:
             - wn10_00_000090_neverexpire_passwords.stdout_lines | select() | list | length > 0
             - win10stig_disruption_high
+
+      - name: "MEDIUM | WN10-00-000090 | PATCH | Accounts must be configured to require password expiration. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000090'
+        when:
+            - wn10_00_000090_neverexpire_passwords.stdout_lines | select() | list | length > 0
+            - not win10stig_disruption_high
   when:
       - wn10_00_000090
   tags:
@@ -274,21 +431,6 @@
       - SRG-OS-000076-GPOS-00044
       - SV-220716r569187_rule
       - V-220716
-
-- name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_00_000095
-  tags:
-      - WN10-00-000095
-      - CAT2
-      - CCI-002165
-      - SRG-OS-000312-GPOS-00122
-      - SV-220717r569187_rule
-      - V-220717
-      - notimplemented
 
 - name: "MEDIUM | WN10-00-000105 | PATCH | Simple Network Management Protocol (SNMP) must not be installed on the system."
   block:
@@ -306,6 +448,7 @@
       - wn10_00_000105
   tags:
       - WN10-00-000105
+      - CAT2
       - CCI-000382
       - SRG-OS-000096-GPOS-00050
       - SV-220719r569187_rule
@@ -363,16 +506,16 @@
       - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Search for files"
         win_find:
             paths: '{{ item }}:\'
-            recurse: yes
-            patterns: ['*.p12','*.pfx']
+            recurse: true
+            patterns: ['*.p12', '*.pfx']
         register: wn10_00_000130_files
         with_items:
             - "{{ wn10_00_000130_drive_letters.stdout_lines }}"
 
-      - name: "MEDIUM | WN10-00-000130 | PATCH  | Software certificate installation files must be removed from Windows 10. | Remove Files"
+      - name: "MEDIUM | WN10-00-000130 | PATCH | Software certificate installation files must be removed from Windows 10. | Remove Files"
         win_file:
-          path: "{{ item.path }}"
-          state: absent
+            path: "{{ item.path }}"
+            state: absent
         with_items:
             - "{{ wn10_00_000130_files.results[0].files }}"
         loop_control:
@@ -382,9 +525,15 @@
       - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Alert on files if not Disruptive High"
         debug:
             msg:
-                - "Alert! You have .p12 and/or .pfx files on your system"
+                - "Warning!! You have .p12 and/or .pfx files on your system"
                 - "Please review and remove the following files"
                 - "{{ wn10_00_000130_files.results[0].files | map(attribute='path') | list }}"
+        when: not win10stig_disruption_high
+
+      - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000130'
         when: not win10stig_disruption_high
   when:
       - wn10_00_000130
@@ -402,84 +551,77 @@
       - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Get Defender Firewall status"
         win_shell: get-netfirewallprofile -all | Where-Object -Property Enabled -eq True | Select-Object -Property Name | Format-Table -hidetableheaders
         changed_when: false
+        failed_when: false
         register: wn10_00_000135_defender_fw_status
-        when:  win10stig_firewall_type == "defender"
-
-      - block:
-          - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on Defender Firewall enabled"
-            debug:
-                msg:
-                    - "Warning! You are using defender and 1 or more profiles are enabled"
-                    - "Please confirm the firewall profiles match the Firewall STIG"
-                    - "{{ wn10_00_000135_defender_fw_status.stdout_lines | select() | list }}"
-            when:
-                - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
-          
-          - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Alert on Defender Firewall disabled"
-            debug:
-                msg:
-                    - "ALERT! You are using Windows Defender as your firewall and it is fully disabled"
-                    - "Please enable the firewall using a Firewall profile provided by STIG"
-                    - "If you are not using Windows Defender as your firewall please adjust the win10stig_firewall_type variable to reflect that"
-            when:
-                - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length == 0
         when: win10stig_firewall_type == "defender"
+
+      - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on Defender Firewall enabled"
+        debug:
+            msg:
+                - "Warning!! You are using defender and 1 or more profiles are enabled"
+                - "Please confirm the firewall profiles match the Firewall STIG"
+                - "{{ wn10_00_000135_defender_fw_status.stdout_lines | select() | list }}"
+        when:
+            - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
+            - win10stig_firewall_type == "defender"
+
+      - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Alert on Defender Firewall disabled"
+        debug:
+            msg:
+                - "Warning!! You are using Windows Defender as your firewall and it is fully disabled"
+                - "Please enable the firewall using a Firewall profile provided by STIG"
+                - "If you are not using Windows Defender as your firewall please adjust the win10stig_firewall_type variable to reflect that"
+        when:
+            - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length == 0
+            - win10stig_firewall_type == "defender"
 
       - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on 3rd party firewall"
         debug:
             msg:
-                - "Warning! You are not using Windows Defender as your firewall."
+                - "Warning!! You are not using Windows Defender as your firewall."
                 - "Please review the required profiles/settings for that firewall to confirm it aligns with STIG standards."
         when: win10stig_firewall_type != "defender"
+
+      - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000135'
+        when:
+            - win10stig_firewall_type == "defender" or
+              win10stig_firewall_type != "defender" or
+            - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
+            - win10stig_firewall_type == "defender" or
+              wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length == 0
+            - win10stig_firewall_type == "defender"
   when:
       - wn10_00_000135
   tags:
       - WN10-00-000135
       - CAT2
       - CCI-000366
+      - SRG-OS-000480-GPOS-00227
       - SV-220724r569187_rule
       - V-220724
 
-- name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts." 
+- name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts."
   block:
-      - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Alert if automation managed not enabled" 
+      - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Alert if automation managed not enabled"
         debug:
             msg:
-                - "Alert! You are using Windows Defender as your firewall on this host. Please confirm Inbound Rules only allow authorized inbound traffic"
+                - "Warning!! You are using Windows Defender as your firewall on this host. Please confirm Inbound Rules only allow authorized inbound traffic"
         when:
             - win10stig_firewall_type == "defender"
             - ansible_windows_domain_member
             - not win10stig_firewall_automation_managed_inbound
-      # - block:
-      #     - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Deny all"
-      #       win_firewall_rule:
-      #           name: deny_all
-      #           group: automation_created
-      #           action: block
-      #           direction: in
-      #           remoteip: any
-      #           state: present
-      #           enabled: false
 
-      #     - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Allow list"
-      #       win_firewall_rule:
-      #           name: "Allow Remote IP {{ item }}"
-      #           group: automation_created
-      #           action: allow
-      #           direction: in
-      #           remoteip: "{{ item }}"
-      #           state: present
-      #           enabled: false
-      #       with_items:
-      #           - "{{ win10stig_defender_fw_allow_list }}"
-      #       loop_control:
-      #           label: "{{ item }}"
-
-      #     - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Enable both rules"
-      #       win_firewall_rule:
-      #           group: automation_created
-      #           enabled: true
-      #   when: win10stig_firewall_automation_managed_inbound 
+      - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000140'
+        when:
+            - win10stig_firewall_type == "defender"
+            - ansible_windows_domain_member
+            - not win10stig_firewall_automation_managed_inbound
   when:
       - wn10_00_000140
   tags:
@@ -516,7 +658,7 @@
       - CAT2
       - CCI-000381
       - SRG-OS-000095-GPOS-00049
-      - SV-220729r569187_rule
+      - SV-220729r793187_rule
       - V-220729
 
 - name: "MEDIUM | WN10-00-000165 | PATCH | The Server Message Block (SMB) v1 protocol must be disabled on the SMB server."
@@ -533,7 +675,7 @@
       - CAT2
       - CCI-000381
       - SRG-OS-000095-GPOS-00049
-      - SV-220730r569187_rule
+      - SV-220730r793189_rule
       - V-220730
 
 - name: "MEDIUM | WN10-00-000170 | PATCH | The Server Message Block (SMB) v1 protocol must be disabled on the SMB client."
@@ -551,7 +693,7 @@
       - CAT2
       - CCI-000381
       - SRG-OS-000095-GPOS-00049
-      - SV-220731r569187_rule
+      - SV-220731r793191_rule
       - V-220731
 
 # This service can't be stopped manually (through automation or manually through Services)
@@ -572,8 +714,46 @@
       - V-220732
 
 - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10."
-  debug:
-      msg: "Warning! Please review the User Right listed for each of any unresolved SID to determine whether they are valid"
+  block:
+      - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned User Accounts."
+        win_shell: Get-WmiObject -Class win32_useraccount | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000190_orphaned_user_accounts
+
+      - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Audit For User Accounts Found."
+        debug:
+            msg:
+                - "Warning!! Please review the User Rights listed for each of any unresolved SID to determine whether they are valid."
+                - "User Accounts"
+                - "----------------------------------------------------------------------"
+                - "{{ wn10_00_000190_orphaned_user_accounts.stdout_lines }}"
+        when:
+            - wn10_00_000190_orphaned_user_accounts.stdout_lines | select() | length > 0
+
+      - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned Group Accounts."
+        win_shell: Get-WmiObject -Class win32_group | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
+        changed_when: false
+        failed_when: false
+        register: wn10_00_000190_orphaned_group_accounts
+
+      - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Audit For Group Accounts Found."
+        debug:
+            msg:
+                - "Warning!! Please review the User Rights listed for each of any unresolved SID to determine whether they are valid."
+                - "Group Accounts"
+                - "----------------------------------------------------------------------"
+                - "{{ wn10_00_000190_orphaned_user_accounts.stdout_lines }}"
+        when:
+            - wn10_00_000190_orphaned_group_accounts.stdout_lines | select() | length > 0
+
+      - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000190'
+        when:
+            - wn10_00_000190_orphaned_user_accounts.stdout_lines | select() | length > 0 or
+              wn10_00_000190_orphaned_group_accounts.stdout_lines | select() | length > 0
   when:
       - wn10_00_000190
   tags:
@@ -655,7 +835,7 @@
 
 - name: "MEDIUM | WN10-00-000250 | AUDIT | Windows 10 non-persistent VM sessions should not exceed 24 hours."
   debug:
-      msg: "Alert! Please investigate VDI settings to make sure they are non-persistent and do not exceed 24 hours"
+      msg: "Warning!! Please investigate VDI settings to make sure they are non-persistent and do not exceed 24 hours."
   when:
       - wn10_00_000250
   tags:
@@ -683,7 +863,7 @@
       - V-220740
 
 # Putting this before WN10-AC-000005 ensures the value being set conforms to the needed standard for account settings
-# The Lockout Duration must be greater or equal to the Reset Account Lockout counter. 
+# The Lockout Duration must be greater or equal to the Reset Account Lockout counter.
 - name: "MEDIUM | WN10-AC-000015 | PATCH | The period of time before the bad logon counter is reset must be configured to 15 minutes."
   win_security_policy:
       section: System Access
@@ -713,6 +893,7 @@
       - CCI-002238
       - SRG-OS-000329-GPOS-00128
       - SV-220739r569187_rule
+      - V-220739
 
 - name: "MEDIUM | WN10-AC-000020 | PATCH | The password history must be configured to 24 passwords remembered."
   win_security_policy:
@@ -1015,7 +1196,6 @@
   when:
       - wn10_AU_000085 or
         wn10_AU_000090
-
   tags:
       - WN10-AU-000085
       - WN10-AU-000090
@@ -1224,15 +1404,50 @@
       - CAT2
       - CCI-001849
       - SRG-OS-000341-GPOS-00132
-      - SV-220781r569187_rul
+      - SV-220781r569187_rule
       - V-220781
 
 - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  check_mode: no
-  when: 
+  block:
+      - name: "MEDIUM | WN10-AU-000515 | PATCH | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Set Default Log Locations."
+        win_regedit:
+            path: HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\Application
+            value: File
+            state: present
+            data: '%SystemRoot%\system32\winevt\Logs\Application.evtx'
+            type: expandstring
+        when: win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Get Current Permissions For Default Application Log."
+        win_shell: get-acl c:\Windows\System32\winevt\Logs\Application.evtx | FL AccessToString
+        changed_when: false
+        failed_when: false
+        register: wn10_au_000515_app_log_permissions
+        when: win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Permissions warning for accounts."
+        debug:
+            msg:
+                - "Warning!! Ensure the permissions on the Application event log (Application.evtx) are configured"
+                - "to prevent standard user accounts or groups from having access."
+                - "{{ wn10_au_000515_app_log_permissions.stdout_lines | reject('match', '^$') | list }}"
+        when: win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Warning message for default location change."
+        debug:
+            msg:
+                - "Warning!! The location of the logs is not set to default location."
+                - "When adding Eventlog to the permissions, it must be entered as NT Service\\Eventlog."
+        when: not win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-AU-000515'
+        when:
+            - win10stig_default_log_location or
+              not win10stig_default_log_location
+  when:
       - wn10_AU_000515
   tags:
       - WN10-AU-000515
@@ -1243,13 +1458,47 @@
       - SRG-OS-000057-GPOS-00027
       - SV-220782r569187_rule
       - V-220782
-      - notimplemented
 
 - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  check_mode: no
+  block:
+      - name: "MEDIUM | WN10-AU-000520 | PATCH | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Set Default Log Locations."
+        win_regedit:
+            path: HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\Security
+            value: File
+            state: present
+            data: '%SystemRoot%\system32\winevt\Logs\Security.evtx'
+            type: expandstring
+        when: win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Get Current Permissions For Default Security Log."
+        win_shell: get-acl c:\Windows\System32\winevt\Logs\Security.evtx | FL AccessToString
+        changed_when: false
+        failed_when: false
+        register: wn10_au_000520_security_log_permissions
+        when: win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Permissions warning for accounts."
+        debug:
+            msg:
+                - "Warning!! Ensure the permissions on the Security event log (Security.evtx) are configured"
+                - "to prevent standard user accounts or groups from having access."
+                - "{{ wn10_au_000520_security_log_permissions.stdout_lines | reject('match', '^$') | list }}"
+        when: win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Warning message for default location change."
+        debug:
+            msg:
+                - "Warning!! The location of the logs is not set to default location."
+                - "When adding Eventlog to the permissions, it must be entered as NT Service\\Eventlog."
+        when: not win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-AU-000520'
+        when:
+            - win10stig_default_log_location or
+              not win10stig_default_log_location
   when:
       - wn10_AU_000520
   tags:
@@ -1261,13 +1510,47 @@
       - SRG-OS-000057-GPOS-00027
       - SV-220783r569187_rule
       - V-220783
-      - notimplemented
 
 - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  check_mode: no
+  block:
+      - name: "MEDIUM | WN10-AU-000525 | PATCH | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Set Default Log Locations."
+        win_regedit:
+            path: HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\System
+            value: File
+            state: present
+            data: '%SystemRoot%\system32\winevt\Logs\System.evtx'
+            type: expandstring
+        when: win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Get Current Permissions For Default System Log."
+        win_shell: get-acl c:\Windows\System32\winevt\Logs\System.evtx | FL AccessToString
+        changed_when: false
+        failed_when: false
+        register: wn10_au_000520_system_log_permissions
+        when: win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Permissions warning for accounts."
+        debug:
+            msg:
+                - "Warning!! Ensure the permissions on the Security event log (System.evtx) are configured"
+                - "to prevent standard user accounts or groups from having access."
+                - "{{ wn10_au_000520_system_log_permissions.stdout_lines | reject('match', '^$') | list }}"
+        when: win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Warning message for default location change."
+        debug:
+            msg:
+                - "Warning!! The location of the logs is not set to default location."
+                - "When adding Eventlog to the permissions, it must be entered as NT Service\\Eventlog."
+        when: not win10stig_default_log_location
+
+      - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-AU-000525'
+        when:
+            - win10stig_default_log_location or
+              not win10stig_default_log_location
   when:
       - wn10_AU_000525
   tags:
@@ -1280,24 +1563,18 @@
       - SV-220784r569187_rule
       - V-220784
 
-- name: |
-    "MEDIUM | WN10-AU-000550 | PATCH | Windows 10 must be configured to audit Other Policy Change Events Successes."
-    "MEDIUM | WN10-AU-000555 | PATCH | Windows 10 must be configured to audit Other Policy Change Events Failures."
+- name: "MEDIUM | WN10-AU-000555 | PATCH | Windows 10 must be configured to audit Other Policy Change Events Failures."
   win_audit_policy_system:
       subcategory: Other Policy Change Events
-      audit_type: "{{ (wn10_AU_000550 and not wn10_AU_000555) | ternary ('success', '') }}{{ (wn10_AU_000555 and not wn10_AU_000550) | ternary ('failure', '') }}{{ (wn10_AU_000550 and wn10_AU_000555) | ternary ('success, failure', '') }}"
+      audit_type: failure
   when:
-      - wn10_AU_000550 or
-        wn10_AU_000555
+      - wn10_AU_000555
   tags:
-      - WN10-AU-000550
       - WN10-AU-000555
       - CAT2
       - CCI-000130
       - SRG-OS-000037-GPOS-00015
-      - SV-220785r569187_rule
       - SV-220786r569187_rule
-      - V-220785
       - V-220786
 
 - name: |
@@ -1331,7 +1608,7 @@
       - CAT2
       - CCI-000130
       - SRG-OS-000037-GPOS-00015
-      - SV-220789r569187_rule
+      - SV-220789r819664_rule
       - V-220789
 
 - name: |
@@ -1344,15 +1621,15 @@
       - wn10_AU_000575 or
         wn10_AU_000580
   tags:
-       - WN10-AU-000575
-       - WN10-AU-000580
-       - CAT2
-       - CCI-000130
-       - SRG-OS-000037-GPOS-00015
-       - SV-220790r569187_rule
-       - SV-220791r569187_rule
-       - V-220790
-       - V-220791
+      - WN10-AU-000575
+      - WN10-AU-000580
+      - CAT2
+      - CCI-000130
+      - SRG-OS-000037-GPOS-00015
+      - SV-220790r569187_rule
+      - SV-220791r569187_rule
+      - V-220790
+      - V-220791
 
 - name: "MEDIUM | WN10-CC-000005 | PATCH | Camera access from the lock screen must be disabled."
   win_regedit:
@@ -1383,7 +1660,7 @@
       - CAT2
       - CCI-000381
       - SRG-OS-000095-GPOS-00049
-      - SV-220793r569187_rule
+      - SV-220793r819667_rule
       - V-220793
 
 - name: "MEDIUM | WN10-CC-000010 | PATCH | The display of slide shows on the lock screen must be disabled."
@@ -1461,6 +1738,7 @@
       - wn10_CC_000038
   tags:
       - WN10-CC-000038
+      - CAT2
       - CCI-000381
       - SRG-OS-000095-GPOS-00049
       - SV-220800r569187_rule
@@ -1536,8 +1814,8 @@
       - CAT2
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220804r569187_rule
-      - V-220804
+      - SV-250319r857185_rule
+      - V-250319
 
 - name: "MEDIUM | WN10-CC-000052 | PATCH | Windows 10 must be configured to prioritize ECC Curves with longer key lengths first."
   win_regedit:
@@ -1559,7 +1837,7 @@
   win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WcmSvc\GroupPolicy
       value: fMinimizeConnections
-      data: 1
+      data: 3
       type: dword
   when:
       - wn10_CC_000055
@@ -1568,7 +1846,7 @@
       - CAT2
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220806r569187_rule
+      - SV-220806r857188_rule
       - V-220806
 
 - name: "MEDIUM | WN10-CC-000060 | PATCH | Connections to non-domain networks when connected to a domain authenticated network must be blocked."
@@ -1735,7 +2013,7 @@
       - CAT2
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220818r569187_rule
+      - SV-220818r857191_rule
       - V-220818
 
 - name: "MEDIUM | WN10-CC-000120 | PATCH | The network selection user interface (UI) must not be displayed on the logon screen."
@@ -1768,7 +2046,7 @@
       - CAT2
       - CCI-000381
       - SRG-OS-000095-GPOS-00049
-      - SV-220820r569187_rule
+      - SV-220820r857194_rule
       - V-220820
 
 - name: "MEDIUM | WN10-CC-000145 | PATCH | Users must be prompted for a password on resume from sleep (on battery)."
@@ -1837,7 +2115,7 @@
       - SV-220830r569187_rule
       - V-220830
 
-- name: "MEDIUM | WN10-CC-000200 | PATCH  | Administrator accounts must not be enumerated during elevation."
+- name: "MEDIUM | WN10-CC-000200 | PATCH | Administrator accounts must not be enumerated during elevation."
   win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\CredUI
       value: EnumerateAdministrators
@@ -1868,7 +2146,7 @@
       - CAT2
       - CCI-000366
       - SRG-OS-000480-GPOS-00227
-      - SV-220833r569187_rule
+      - SV-220833r793250_rule
       - V-220833
 
 - name: "MEDIUM | WN10-CC-000205 | PATCH | Windows Telemetry must not be configured to Full."
@@ -1895,7 +2173,7 @@
             value: EnableSmartScreen
             data: 1
             type: dword
-      
+
       - name: "MEDIUM | WN10-CC-000210 | PATCH | The Windows Defender SmartScreen for Explorer must be enabled. | Block ShellSmartScreen"
         win_regedit:
             path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
@@ -1927,7 +2205,7 @@
       - SRG-OS-000433-GPOS-00192
       - SV-220837r569187_rule
       - V-220837
-      
+
 - name: "MEDIUM | WN10-CC-000225 | PATCH | File Explorer shell protocol must run in protected mode."
   win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
@@ -2400,496 +2678,6 @@
       - SV-220871r642141_rule
       - V-220871
 
-- name: "MEDIUM | WN10-EP-000020 | PATCH | Windows 10 Exploit Protection system-level mitigation, Data Execution Prevention (DEP), must be on."
-  block:
-      - name: "MEDIUM | WN10-EP-000020 | AUDIT | Windows 10 Exploit Protection system-level mitigation, Data Execution Prevention (DEP), must be on. | Get DEP Enabled value"
-        win_shell: Get-ProcessMitigation -System | Select-Object -ExpandProperty DEP | Select Enable | Format-List
-        changed_when: false
-        failed_when: false
-        check_mode: no
-        ignore_errors: yes
-        register: wn10_EP_000020_dep_enable_status
-
-
-      - name: "MEDIUM | WN10-EP-000020 | PATCH | Windows 10 Exploit Protection system-level mitigation, Data Execution Prevention (DEP), must be on. | Set DEP Enabled if needed"
-        win_shell: Set-ProcessMitigation -System -Enable DEP
-        when: "'OFF' in wn10_EP_000020_dep_enable_status.stdout"
-  when:
-      - wn10_EP_000020
-      - ansible_distribution_version >= "10.0.1709.0"
-  tags:
-      - WN10-EP-000020
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220873r569187_rule
-      - V-220873
-
-- name: "MEDIUM | WN10-EP-000030 | PATCH | Windows 10 Exploit Protection system-level mitigation, Randomize memory allocations (Bottom-Up ASLR), must be on."
-  block:
-      - name: "MEDIUM | WN10-EP-000030 | AUDIT | Windows 10 Exploit Protection system-level mitigation, Randomize memory allocations (Bottom-Up ASLR), must be on. | Get ASLR BottomUp status"
-        win_shell: Get-ProcessMitigation -System | Select-Object -ExpandProperty ASLR | Select BottomUp | Format-List
-        changed_when: false
-        failed_when: false
-        check_mode: no
-        ignore_errors: yes
-        register: wn10_ep_000030_aslr_bottomup_status
-
-      - name: "MEDIUM | WN10-EP-000030 | PATCH | Windows 10 Exploit Protection system-level mitigation, Randomize memory allocations (Bottom-Up ASLR), must be on. | Set ASLR BottomUp Enabled if needed"
-        win_shell: Set-ProcessMitigation -System -Enable BottomUp
-        when: "'OFF' in wn10_ep_000030_aslr_bottomup_status.stdout"
-  when:
-      - wn10_EP_000030
-      - ansible_distribution_version >= "10.0.1709.0"
-  tags:
-      - WN10-EP-000030
-      - CAT2
-      - CCI-002824
-      - SRG-OS-000433-GPOS-00192
-      - SV-220874r569187_rule
-      - V-220874
-
-- name: "MEDIUM | WN10-EP-000040 | PATCH | Windows 10 Exploit Protection system-level mitigation, Control flow guard (CFG), must be on."
-  block:
-      - name: "MEDIUM | WN10-EP-000040 | AUDIT | Windows 10 Exploit Protection system-level mitigation, Control flow guard (CFG), must be on. | Get CFG Enable status"
-        win_shell: Get-ProcessMitigation -System | Select-Object -ExpandProperty CFG | Select Enable | Format-List
-        changed_when: false
-        failed_when: false
-        check_mode: no
-        ignore_errors: yes
-        register: wn10_ep_000040_cfg_enable_status
-
-      - name: "MEDIUM | WN10-EP-000040 | PATCH | Windows 10 Exploit Protection system-level mitigation, Control flow guard (CFG), must be on. | Set CFG Enabled if needed"
-        win_shell: Set-ProcessMitigation -System -Enable CFG
-        when: "'OFF' in wn10_ep_000040_cfg_enable_status.stdout"
-  when:
-      - wn10_EP_000040
-      - ansible_distribution_version >= "10.0.1709.0"
-  tags:
-      - WN10-EP-000040
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220875r569187_rule
-      - V-220875
-
-- name: "MEDIUM | WN10-EP-000050 | PATCH | Windows 10 Exploit Protection system-level mitigation, Validate exception chains (SEHOP), must be on."
-  block:
-      - name: "MEDIUM | WN10-EP-000050 | AUDIT | Windows 10 Exploit Protection system-level mitigation, Validate exception chains (SEHOP), must be on. | Get SEHOP Enable status"
-        win_shell: Get-ProcessMitigation -System | Select-Object -ExpandProperty SEHOP | Select Enable | Format-List
-        changed_when: false
-        failed_when: false
-        check_mode: no
-        ignore_errors: yes
-        register: wn10_ep_000050_sehop_enable_status
-
-      - name: "MEDIUM | WN10-EP-000050 | PATCH | Windows 10 Exploit Protection system-level mitigation, Validate exception chains (SEHOP), must be on. | Set SEHOP Enabled if needed"
-        win_shell: Set-ProcessMitigation -System -Enable SEHOP
-        when: "'OFF' in wn10_ep_000050_sehop_enable_status.stdout"
-  when:
-      - wn10_EP_000050
-      - ansible_distribution_version >= "10.0.1709.0"
-  tags:
-      - WN10-EP-000050
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220876r569187_rule
-      - V-220876
-
-- name: "MEDIUM | WN10-EP-000060 | PATCH | Windows 10 Exploit Protection system-level mitigation, Validate heap integrity, must be on."
-  block:
-      - name: "MEDIUM | WN10-EP-000060 | AUDIT | Windows 10 Exploit Protection system-level mitigation, Validate heap integrity, must be on. | Get Heap TerminateOnError status"
-        win_shell: Get-ProcessMitigation -System | Select-Object -ExpandProperty HEAP | Select TerminateOnError | Format-List
-        changed_when: false
-        failed_when: false
-        check_mode: no
-        ignore_errors: yes
-        register: wn10_ep_000060_heap_terminateonerror_status
-
-      - name: "MEDIUM | WN10-EP-000060 | PATCH | Windows 10 Exploit Protection system-level mitigation, Validate heap integrity, must be on. | Set Heap TerminateOnError if needed"
-        win_shell: Set-ProcessMitigation -System -Enable TerminateOnError
-        when: "'OFF' in wn10_ep_000060_heap_terminateonerror_status.stdout"
-  when:
-      - wn10_EP_000060
-      - ansible_distribution_version >= "10.0.1709.0"
-  tags:
-      - WN10-EP-000060
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220877r569187_rule
-      - V-220877
-
-- name: "MEDIUM | WN10-EP-000070 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for Acrobat.exe."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000070
-      - ansible_distribution_version >= "10.0.1709.0"
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000070
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220878r569187_rule
-      - V-220878
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000080 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for AcroRd32.exe."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000080
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000080
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220879r569187_rule
-      - V-220879
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000090 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for chrome.exe."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000090
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000090
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220880r569187_rule
-      - V-220880
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000100 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for EXCEL.EXE."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000100
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000100
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220881r569187_rule
-      - V-220881
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000110 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for firefox.exe."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000110
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000110
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220882r569187_rule
-      - V-220882
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000120 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for FLTLDR.EXE."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000120
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000120
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220883r569187_rule
-      - V-220883
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000130 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for GROOVE.EXE."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000130
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000130
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220884r569187_rule
-      - V-220884
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000140 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for iexplore.exe."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000140
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000140
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220885r569187_rule
-      - V-220885
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000150 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for INFOPATH.EXE."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000150
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000150
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220886r569187_rule
-      - V-220886
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000160 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for java.exe, javaw.exe, and javaws.exe."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000160
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000160
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220887r569187_rule
-      - V-220887
-      - notimplemented
-
-- name: "MEDIM | WN10-EP-000170 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for lync.exe."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000170
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000170
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220888r569187_rule
-      - V-220888
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000180 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for MSACCESS.EXE."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000180
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000180
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220889r569187_rule
-      - V-220889
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000190 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for MSPUB.EXE."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000190
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000190
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220890r569187_rule
-      - V-220890
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000200 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for OIS.EXE."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000200
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000200
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220891r569308_rule
-      - V-220891
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000220 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for OUTLOOK.EXE."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000220
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000220
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220893r569187_rule
-      - V-220893
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000230 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for plugin-container.exe."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000230
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000230
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220894r569187_rule
-      - V-220894
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000240 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for POWERPNT.EXE."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000240
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000240
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220895r569187_rule
-      - V-220895
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000250 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for PPTVIEW.EXE."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000250
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000250
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220896r569187_rule
-      - V-220896
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000260 | PATCH | Protection mitigations in Windows 10 must be configured for VISIO.EXE."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000260
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000260
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220897r569187_rule
-      - V-220897
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000270 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for VPREVIEW.EXE."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000270
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000270
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220898r569187_rule
-      - V-220898
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000280 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for WINWORD.EXE."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000280
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000280
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220899r569187_rule
-      - V-220899
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000290 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for wmplayer.exe."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000290
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000290
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220900r569187_rule
-      - V-220900
-      - notimplemented
-
-- name: "MEDIUM | WN10-EP-000300 | PATCH | Exploit Protection mitigations in Windows 10 must be configured for wordpad.exe."
-  win_shell: echo true
-  changed_when: false
-  failed_when: false
-  when:
-      - wn10_EP_000300
-      - win10stig_run_notimplemented
-  tags:
-      - WN10-EP-000300
-      - CAT2
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220901r569187_rule
-      - V-220901
-      - notimplemented
-
 - name: "MEDIUM | WN10-EP-000310 | PATCH | Windows 10 Kernel (Direct Memory Access) DMA Protection must be enabled."
   win_regedit:
       path: HKLM:\Software\Policies\Microsoft\Windows\Kernel DMA Protection
@@ -2906,31 +2694,101 @@
       - SV-220902r569187_rule
       - V-220902
 
-- name: "MEDIUM | WN10-PK-000005 | PATCH | The DoD Root CA certificates must be installed in the Trusted Root Store."
-  debug:
-      msg:
-          - "Warning! Please install the DoD Root CA certificates"
-          - "DoD Root CA 2"
-          - "DoD Root CA 3"
-          - "DoD Root CA 4"
-          - "DoD Root CA 5"
+- name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store."
+  block:
+      - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 3."
+        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 3*" -and $_.Thumbprint -Like "D73CA91102A2204A36459ED32213B467D7CE97FB"} | FL Subject, Issuer, Thumbprint, NotAfter
+        changed_when: false
+        failed_when: false
+        register: wn10_pk_000005_root_3_Check
+
+      - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warning!! No DOD Root CA 3 Certificate Installed."
+        debug:
+            msg:
+                - "Warning!! The DOD Root CA 3 is not installed on the system or"
+                - "contains a incorrect Thumbprint for the Root CA Certificate."
+        when: wn10_pk_000005_root_3_Check.stdout == ""
+
+      - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 4."
+        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 4*" -and $_.Thumbprint -Like "B8269F25DBD937ECAFD4C35A9838571723F2D026"} | FL Subject, Issuer, Thumbprint, NotAfter
+        changed_when: false
+        failed_when: false
+        register: wn10_pk_000005_root_4_Check
+
+      - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warning!! No DOD Root CA 4 Certificate Installed."
+        debug:
+            msg:
+                - "Warning!! The DOD Root CA 4 is not installed on the system or"
+                - "contains a incorrect Thumbprint for the Root CA Certificate."
+        when: wn10_pk_000005_root_4_Check.stdout == ""
+
+      - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 5."
+        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 5*" -and $_.Thumbprint -Like "4ECB5CC3095670454DA1CBD410FC921F46B8564B"} | FL Subject, Issuer, Thumbprint, NotAfter
+        changed_when: false
+        failed_when: false
+        register: wn10_pk_000005_root_5_Check
+
+      - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warning!! No DOD Root CA 5 Certificate Installed."
+        debug:
+            msg:
+                - "Warning!! The DOD Root CA 5 is not installed on the system or"
+                - "contains a incorrect Thumbprint for the Root CA Certificate."
+        when: wn10_pk_000005_root_5_Check.stdout == ""
+
+      - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-PK-000005'
+        when:
+            - wn10_pk_000005_root_3_Check.stdout == "" or
+              wn10_pk_000005_root_4_Check.stdout == "" or
+              wn10_pk_000005_root_5_Check.stdout == ""
   when:
       - wn10_PK_000005
   tags:
       - WN10-PK-000005
       - CAT2
-      - CCI-002470
+      - CCI-002440
       - CCI-000185
       - SRG-OS-000066-GPOS-00034
-      - SV-220903r569310_rule
+      - SV-220903r859299_rule
       - V-220903
 
 - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems."
-  debug:
-      msg:
-          - "Warning! Please install the ECA Root CA certificates"
-          - "ECA Root CA 2"
-          - "ECA Root CA 4"
+  block:
+      - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Check For ECA Root CA 2."
+        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*ECA Root CA 2*" -and $_.Thumbprint -Like "C313F919A6ED4E0E8451AFA930FB419A20F181E4"} | FL Subject, Issuer, Thumbprint, NotAfter
+        changed_when: false
+        failed_when: false
+        register: wn10_pk_000010_eca_2_check
+
+      - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Warning!! No ECA Root CA 2 Certificate Installed."
+        debug:
+            msg:
+                - "Warning!! The ECA Root CA 2 is not installed on the system or"
+                - "contains a incorrect Thumbprint for the Root CA Certificate."
+        when: wn10_pk_000010_eca_2_check.stdout == ""
+
+      - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Check For ECA Root CA 4."
+        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*ECA Root CA 4*" -and $_.Thumbprint -Like "73E8BB08E337D6A5A6AEF90CFFDD97D9176CB582"} | FL Subject, Issuer, Thumbprint, NotAfter
+        changed_when: false
+        failed_when: false
+        register: wn10_pk_000010_eca_4_check
+
+      - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Warning!! No ECA Root CA 4 Certificate Installed."
+        debug:
+            msg:
+                - "Warning!! The ECA Root CA 4 is not installed on the system or"
+                - "contains a incorrect Thumbprint for the Root CA Certificate."
+        when: wn10_pk_000010_eca_4_check.stdout == ""
+
+      - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-PK-000010'
+        when:
+            - wn10_pk_000010_eca_2_check.stdout == "" or
+              wn10_pk_000010_eca_4_check.stdout == ""
   when:
       - wn10_PK_000010
   tags:
@@ -2942,12 +2800,40 @@
       - V-220904
 
 - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems."
-  debug:
-      msg:
-          - "Warning! Install the DoD Interoperability Root CA cross-certificates on unclassified systems."
-          - "Issued To - Issued By - Thumbprint"
-          - "DoD Root CA 2 - DoD Interoperability Root CA 1 - A8C27332CCB4CA49554CE55D34062A7DD2850C02"
-          - "DoD Root CA 3 - DoD Interoperability Root CA 2 - AC06108CA348CC03B53795C64BF84403C1DBD341"
+  block:
+      - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | DoD Interoperability Root CA 2 AC Thumb Check."
+        win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*DoD Interoperability*" -and $_.Subject -Like "*DoD*" -and $_.Thumbprint -Like "AC06108CA348CC03B53795C64BF84403C1DBD341"} | FL Subject, Issuer, Thumbprint, NotAfter
+        changed_when: false
+        failed_when: false
+        register: wn10_pk_000015_interop_check_for_ac
+
+      - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warning!! No DoD Interoperability Root CA 2 Certificate Installed."
+        debug:
+            msg:
+                - "Warning!! The DoD Root CA 3 - DoD Interoperability Root CA 2 certificate is not installed on the system or"
+                - "does not contain Thumbprint AC06108CA348CC03B53795C64BF84403C1DBD341 for the Certificate."
+        when: wn10_pk_000015_interop_check_for_ac.stdout == ""
+
+      - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | DoD Interoperability Root CA 2 49 Thumb Check."
+        win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*DoD Interoperability*" -and $_.Subject -Like "*DoD*" -and $_.Thumbprint -Like "49CBE933151872E17C8EAE7F0ABA97FB610F6477"} | FL Subject, Issuer, Thumbprint, NotAfter
+        changed_when: false
+        failed_when: false
+        register: wn10_pk_000015_interop_check_for_49
+
+      - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warning!! No DoD Interoperability Root CA 2 Certificate Installed."
+        debug:
+            msg:
+                - "Warning!! The DoD Root CA 3 - DoD Interoperability Root CA 2 certificate is not installed on the system or"
+                - "does not contain Thumbprint 49CBE933151872E17C8EAE7F0ABA97FB610F6477 for the Certificate."
+        when: wn10_pk_000015_interop_check_for_49.stdout == ""
+
+      - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-PK-000015'
+        when:
+            - wn10_pk_000015_interop_check_for_ac.stdout == "" or
+              wn10_pk_000015_interop_check_for_49.stdout == ""
   when:
       - wn10_PK_000015
   tags:
@@ -2956,15 +2842,29 @@
       - CCI-000185
       - CCI-002470
       - SRG-OS-000066-GPOS-00034
-      - SV-220905r569314_rule
+      - SV-220905r859298_rule
       - V-220905
 
 - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems."
-  debug:
-      msg:
-          - "Warning! Install the US DoD CCEB Interoperability Root CA cross-certificate on unclassified systems."
-          - "Issued To - Issued By - Thumbprint"
-          - "DoD Root CA 3 - US DoD CCEB Interoperability Root CA 2 - AF132AC65DE86FC4FB3FE51FD637EBA0FF0B12A9"
+  block:
+      - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | DoD CCEB Interop Check."
+        win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*US DoD CCEB Interoperability Root CA 2*" -and $_.Subject -Like "*DoD Root CA 3*" -and $_.Thumbprint -Like "AF132AC65DE86FC4FB3FE51FD637EBA0FF0B12A9"} | FL Subject, Issuer, Thumbprint, NotAfter
+        changed_when: false
+        failed_when: false
+        register: wn10_pk_000020_cceb_interop_check
+
+      - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warning!! No DoD Root CA 3 - US DoD CCEB Interoperability Certificate Installed."
+        debug:
+            msg:
+                - "Warning!! The DoD Root CA 3 - US DoD CCEB Interoperability Root CA 2 certificate is not installed on the system or"
+                - "does not contain Thumbprint AF132AC65DE86FC4FB3FE51FD637EBA0FF0B12A9 for the Certificate."
+        when: wn10_pk_000020_cceb_interop_check.stdout == ""
+
+      - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-PK-000020'
+        when: wn10_pk_000020_cceb_interop_check.stdout == ""
   when:
       - wn10_PK_000020
   tags:
@@ -3256,21 +3156,29 @@
       - SV-220927r569187_rule
       - V-220927
 
-- name: "MEDIUM | WN10-SO-000160 | PATCH | The system must be configured to prevent anonymous users from having the same rights as the Everyone group."
+- name: |
+    "MEDIUM | WN10-SO-000160 | PATCH | The system must be configured to prevent anonymous users from having the same rights as the Everyone group."
+    "MEDIUM | WN10-00-000095 | PATCH | Permissions for system files and directories must conform to minimum requirements."
   win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
       value: EveryoneIncludesAnonymous
       data: 0
       type: dword
   when:
-      - wn10_SO_000160
+      - wn10_SO_000160 or
+        wn10_00_000095
   tags:
       - WN10-SO-000160
+      - WN10-00-000095
       - CAT2
       - CCI-000366
+      - CCI-002165
       - SRG-OS-000480-GPOS-00227
+      - SRG-OS-000312-GPOS-00122
       - SV-220931r569187_rule
+      - SV-220717r569187_rule
       - V-220931
+      - V-220717
 
 - name: "MEDIUM | WN10-SO-000167 | PATCH | Remote calls to the Security Account Manager (SAM) must be restricted to Administrators."
   win_regedit:
@@ -3420,7 +3328,7 @@
   win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: ConsentPromptBehaviorAdmin
-      data: 2 
+      data: 2
       type: dword
   when:
       - wn10_SO_000250
@@ -3433,8 +3341,15 @@
       - V-220945
 
 - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and non-privileged accounts."
-  debug:
-      msg: "Warning! You are not on a domain which means you should configure Windows Hello for sign on options would be suggested based on the organizations needs and capabilities."
+  block:
+      - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and non-privileged accounts. | Warning Message."
+        debug:
+            msg: "Warning!! You are not on a domain which means you should configure Windows Hello for sign on options would be suggested based on the organizations needs and capabilities."
+
+      - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and non-privileged accounts. | Warn Count."
+        ansible.builtin.import_tasks: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-00-000040'
   when:
       - wn10_SO_000251
       - not ansible_windows_domain_member
@@ -3443,7 +3358,7 @@
       - CAT2
       - CCI-000765
       - SRG-OS-000105-GPOS-00052
-      - SV-220946r569187_rule
+      - SV-220946r819676_rule
       - V-220946
 
 - name: "MEDIUM | WN10-SO-000255 | PATCH | User Account Control must automatically deny elevation requests for standard users."
@@ -3538,7 +3453,7 @@
       - CAT2
       - CCI-000199
       - SRG-OS-000076-GPOS-00044
-      - SV-220952r569187_rule
+      - SV-220952r793301_rule
       - V-220952
 
 - name: "MEDIUM | WN10-UC-000020 | PATCH | Zone information must be preserved when saving attachments."
@@ -3652,7 +3567,7 @@
 
 - name: "MEDIUM | WN10-UR-000040 | PATCH | The Create a pagefile user right must only be assigned to the Administrators group."
   win_user_right:
-      name: SeCreatePagefilePrivilege 
+      name: SeCreatePagefilePrivilege
       users: Administrators
       action: set
   when:
@@ -3667,7 +3582,7 @@
 
 - name: "MEDIUM | WN10-UR-000050 | PATCH | The Create global objects user right must only be assigned to Administrators, Service, Local Service, and Network Service."
   win_user_right:
-      name: SeCreateGlobalPrivilege 
+      name: SeCreateGlobalPrivilege
       action: set
       users:
           - Administrators
@@ -3700,7 +3615,7 @@
 
 - name: "MEDIUM | WN10-UR-000060 | PATCH | The Create symbolic links user right must only be assigned to the Administrators group."
   win_user_right:
-      name: SeCreateSymbolicLinkPrivilege 
+      name: SeCreateSymbolicLinkPrivilege
       users: Administrators
       action: set
   when:
@@ -3757,7 +3672,7 @@
       - CAT2
       - CCI-000213
       - SRG-OS-000080-GPOS-00048
-      - SV-220969r569187_rule
+      - SV-220969r857200_rule
       - V-220969
 
 - name: "MEDIUM | WN10-UR-000080 | PATCH | The Deny log on as a service user right on Windows 10 domain-joined workstations must be configured to prevent access from highly privileged domain accounts."
@@ -3775,7 +3690,7 @@
       - CAT2
       - CCI-000213
       - SRG-OS-000080-GPOS-00048
-      - SV-220970r569187_rule
+      - SV-220970r857203_rule
       - V-220970
 
 - name: "MEDIM | WN10-UR-000085 | PATCH | The Deny log on locally user right on workstations must be configured to prevent access from highly privileged domain accounts on domain systems and unauthenticated access on all systems."
@@ -3962,6 +3877,7 @@
       - SRG-OS-000324-GPOS-00125
       - SV-220980r569187_rule
       - V-220980
+
 - name: "MEDIUM | WN10-UR-000150 | PATCH | The Profile single process user right must only be assigned to the Administrators group."
   win_user_right:
       name: SeProfileSingleProcessPrivilege
@@ -4020,6 +3936,6 @@
       - CAT2
       - CCI-000132
       - CCI-000134
-      - SRG-OS-000041
-      - SV-230220r569300_rule
-      - V-230220
+      - SRG-OS-000041-GPOS-00019
+      - SV-252896r821863_rule
+      - V-252896

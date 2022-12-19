@@ -17,6 +17,24 @@
 #   failed_when: no
 #   tags:
 #       - always
+
+- name: "PRELIM | Get Display Version value."
+  win_reg_stat:
+      path: HKLM:\Software\Microsoft\Windows NT\CurrentVersion
+      name: DisplayVersion
+  changed_when: false
+  failed_when: false
+  register: win10_displayversion
+
+- name: "PRELIM | Get OS Build value."
+  win_reg_stat:
+      path: HKLM:\Software\Microsoft\Windows NT\CurrentVersion
+      name: CurrentBuild
+  changed_when: false
+  failed_when: false
+  register: win10_currentbuild
+
+
 - name: "PRELIM | Get Admin Users and Groups"
   win_shell: Get-LocalGroupMember -Name 'Administrators'
   changed_when: false
