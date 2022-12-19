@@ -146,7 +146,6 @@ wn10_AU_000510: true
 wn10_AU_000515: true
 wn10_AU_000520: true
 wn10_AU_000525: true
-wn10_AU_000550: true
 wn10_AU_000555: true
 wn10_AU_000560: true
 wn10_AU_000565: true
@@ -216,34 +215,6 @@ wn10_CC_000360: true
 wn10_CC_000365: true
 wn10_CC_000370: true
 wn10_CC_000385: true
-wn10_EP_000020: true
-wn10_EP_000030: true
-wn10_EP_000040: true
-wn10_EP_000050: true
-wn10_EP_000060: true
-wn10_EP_000070: true
-wn10_EP_000080: true
-wn10_EP_000090: true
-wn10_EP_000100: true
-wn10_EP_000110: true
-wn10_EP_000120: true
-wn10_EP_000130: true
-wn10_EP_000140: true
-wn10_EP_000150: true
-wn10_EP_000160: true
-wn10_EP_000170: true
-wn10_EP_000180: true
-wn10_EP_000190: true
-wn10_EP_000200: true
-wn10_EP_000220: true
-wn10_EP_000230: true
-wn10_EP_000240: true
-wn10_EP_000250: true
-wn10_EP_000260: true
-wn10_EP_000270: true
-wn10_EP_000280: true
-wn10_EP_000290: true
-wn10_EP_000300: true
 wn10_EP_000310: true
 wn10_PK_000005: true
 wn10_PK_000010: true
@@ -319,6 +290,7 @@ wn10_00_000085: true
 wn10_CC_000030: true
 wn10_CC_000035: true
 wn10_CC_000070: true
+wn10_CC_000080: true
 wn10_CC_000170: true
 wn10_CC_000175: true
 wn10_CC_000197: true
@@ -344,14 +316,25 @@ win10stig_always_reboot: true
 # Variables related to individual tasks
 # CAT1
 
-# WN10-00-000045 
+# WN10-00-000045
 # win10stig_av_sftw is the service name of the AV software you are using. This is Service Name, not Display Name
 # Windows Defender = WinDefend
+# AVG Antivirus = AVG Antivirus
+# Total AV Antivirus = SecurityService
+# ESET Antivirus = ekrn
+# Malwarebytes = MBAMServic
+# Bitdefender = VSSERV
+# Trend Micro = Amsp
+# Panda = PSUAService
+# Avast = AvastSvc
+# Kaspersky =
+# Norton =
+# McAfee =
 # To be STIG compliant you need to have either Windows Defender AV enabled/running or a 3rd party AV running (McAfee or Symantec for example)
 win10stig_av_sftw: WinDefend
 
 # WN10-00-000145
-# wn10stig_dep_value is the value to set DEP to. To comply with STIG standards at least OptOut level needs to be set. 
+# wn10stig_dep_value is the value to set DEP to. To comply with STIG standards at least OptOut level needs to be set.
 # Value options are AlwaysOn or OptOut. If OptOut is used you will need to manually select what applications to opt out of DEP
 wn10stig_dep_value: AlwaysOn
 
@@ -369,6 +352,17 @@ win10stig_bitlocker_tpmpin_registry_value: 1
 # win10stig_bitlocker_min_pin_length is the minimum length for the BitLocker PIN
 # This value needs to be 6 or greater
 win10stig_bitlocker_min_pin_length: 6
+
+# WN10-00-000035
+# If win10stig_applocker is set to true the task will print the applocker current config to either XML file or stdout.
+# If you decide to use a temp folder make sure it is created or the task will fail and error.
+win10stig_applocker: false
+# win10stig_applocker_output will allow end user to decide if they would like it outoput to XML file for audit purpose
+# or if the end user would like it displayed in stdout for review.
+# 1 - XML File (Default)
+# 2 - stdout
+win10stig_applocker_output: 2
+win10stig_applocker_xml_output: c:\temp\applocker_output.xml
 
 # WN10-00-000135
 # win10stig_firewall_type is the firewall type that is being used on the host
@@ -389,7 +383,7 @@ win10stig_firewall_type: defender
 # resetlockoutcount is the duration in minutes between failed login attempts for the counter to zero
 # To conform to STIG standards this value needs to be 15 minutes or greater
 # !!!!! Important !!!!!!!
-# The lockoutduration value has to be equal to or greater than resetlockoutcount value. 
+# The lockoutduration value has to be equal to or greater than resetlockoutcount value.
 # Failure to follow that standard will result in tasks failing since that is out of bounds for those settings in the OS
 # WN10-AC-000020
 # passwordhistory is the number of passwords to cycle through
@@ -412,7 +406,7 @@ win10stig_account_settings:
     min_pass_age: 1
     min_pass_length: 14
 
-# win10stig_audit_settings is the group of variables used to enable success/failure loging for various audit logging categories. 
+# win10stig_audit_settings is the group of variables used to enable success/failure loging for various audit logging categories.
 # There will only be variables here for controls that don't have a corresponding success and failure STIG control
 # This gives control to the end user to set the required STIG value but also give flexabilty to add the other setting if needed
 # WN10-AU-000030
@@ -455,7 +449,7 @@ win10stig_account_settings:
 # security_system_extension_include_failure set to false will set Security System Extension to log only successful events related to extension codes being loaded by the security subsystem
 # security_system_extension_include_failure set to true will set Security System Extension to log both successful and failed events related to extension codes being loaded by the security subsystem
 # WN10-AU-000570
-# detailed_file_share_include_success set to false will set Detailed File Share to log only failed events related to accessing files and folders on a shared folder 
+# detailed_file_share_include_success set to false will set Detailed File Share to log only failed events related to accessing files and folders on a shared folder
 # detailed_file_share_include_success set to true will set Detailed File Share to log both failed and successful events related to accessing files and folders on a shared folder
 win10stig_audit_settings:
     security_group_mngmnt_include_failure: false
@@ -473,20 +467,26 @@ win10stig_audit_settings:
     security_system_extension_include_failure: false
     detailed_file_share_include_success: false
 
-# wn10_AU_000500
+# WN10-AU-000500
 # win10stig_app_log_max_size is the max size in KB for Event Viewer Application Logs
 # To conform to STIG standards this value needs to be 32768 KB or greater
 win10stig_app_log_max_size: 32768
 
-# wn10_AU_000505
+# WN10-AU-000505
 # win10stig_sec_log_max_size is the max size in KB for Event Viewer Security Logs
 # To conform to STIG standards this value needs to be 1024000 or greater
 win10stig_sec_log_max_size: 1024000
 
+# WN10-AU-000510
 # win10stig_sys_log_max_size is the max size in KB for the Event Viewer System Logs
 # 32768
 win10stig_sys_log_max_size: 32768
 
+# WN10-AU-000515
+# WN10-AU-000520
+win10stig_default_log_location: true
+
+# WN10-CC-000085
 # win10stig_boot_driver_init_policy is the default behavior for Early Launch Antimalware - Boot-Start Driver Initialization plicy
 # Options are list below, a value of 7 (All) does not conform to STIG standards
 # 1 - Good and unknown
@@ -502,6 +502,7 @@ win10stig_boot_driver_init_policy: 3
 # 2 - Enhanced - This should only be used on Windows 10 v1709 or later
 win10stig_allow_telemetry_value: 1
 
+# WN10-CC-000260
 # win10stig_min_pin_length is the minimum PIN length for setting authentication PIN's
 # This value needs to be 6 or greater to conform to STIG standards
 win10stig_min_pin_length: 6
@@ -514,26 +515,40 @@ win10stig_new_administrator_name: newadmin
 # win10stig_new_guest_name is the name the built-in Guest account will be renamed to
 win10stig_new_guest_name: newguest
 
+# WN10-SO-000070
 # win10stig_inactivity_timeout is the machine inactivity limit in seconds.
 # To conform to STIG this value needs to be 900 seconds or less, excluding 0 which disables the inactivity limit
 win10stig_inactivity_timeout: 900
 
+# WN10-SO-000095
 # win10stig_smartcard_remove_action is the value set to SmartCard removal actions
 # To conform to STIG standards please only use the two options below
 # 1, this will lock the workstation when a SmartCeard is removed
 # 2, this will force logoff when a SmartCard is removed
 win10stig_smartcard_remove_action: 1
 
+# WN10-SO-000280
 # win10stig_max_pass_age is the maximum age in days for the local administrator
 # To conform to STIG this needs to be 60 days or less
 win10stig_max_pass_age: 60
 
 # CAT3
 
+# WN10-CC-000080
+# win10stig_hypervisor_enforce_code_integrity is the variable setting for the registry to select which
+# style of Turn On Virtualization Based Security you would like to choose.
+# The policy settings referenced in the Fix section will configure the following registry value. However due to hardware requirements,
+# the registry value alone does not ensure proper function.
+# "Enabled with UEFI lock" is preferred as more secure; however, it cannot be turned off remotely through a group policy change if there is an issue.
+# These are the only two options to use to be STIG compliant.
+# 1 - Enabled with UEFI lock
+# 2 - Enabled without lock
+win10stig_hypervisor_enforce_code_integrity: 1
+
 # WN10-CC-000206
-# win10stig_dodownloadmod_domain: is the DODownloadMode variable for systems that are a member of a domain. 
+# win10stig_dodownloadmod_domain: is the DODownloadMode variable for systems that are a member of a domain.
 # This can be any of the below values, the only available option that is not within STIG standards is Internet value of 3
-# HTTP Only = 0, LAN(1) = 1, Group (2) = 2, Simple (99) = 99
+# HTTP Only = 0, LAN(1) = 1, Group (2) = 2, Simple (99) = 99, Bypass (100) = 100
 # Documenation on values: https://admx.help/?Category=Windows_11_2022&Policy=Microsoft.Policies.DeliveryOptimization::DownloadMode
 win10stig_dodownloadmod_domain: 0
 # win10stig_dodownloadmod_standalone is the DODownloadMode variable for systems that are in a stand-alone mode, not on a domain.
