@@ -602,19 +602,19 @@
         debug:
             msg:
                 - "Warning!! You are using Windows Defender as your firewall on this host. Please confirm Inbound Rules only allow authorized inbound traffic"
-        # when:
-        #     - win10stig_firewall_type == "defender"
-        #     - ansible_windows_domain_member
-        #     - not win10stig_firewall_automation_managed_inbound
+        when:
+            - win10stig_firewall_type == "defender"
+            - ansible_windows_domain_member
+            - not win10stig_firewall_automation_managed_inbound
 
       - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
             warn_control_id: 'WN10-00-000140'
-        # when:
-        #     - win10stig_firewall_type == "defender"
-        #     - ansible_windows_domain_member
-        #     - not win10stig_firewall_automation_managed_inbound
+        when:
+            - win10stig_firewall_type == "defender"
+            - ansible_windows_domain_member
+            - not win10stig_firewall_automation_managed_inbound
   when:
       - wn10_00_000140
   tags:
