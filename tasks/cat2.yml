@@ -391,7 +391,7 @@
 - name: "MEDIUM | WN10-00-000090 | PATCH | Accounts must be configured to require password expiration."
   block:
       - name: "MEDIUM | WN10-00-000090 | AUDIT | Accounts must be configured to require password expiration. | Get list of PW Never Expire users"
-        win_shell: get-localuser  | select Name, Enabled, PasswordExpires | Where-Object -Property Enabled -eq True | Where { $_.PasswordExpires -eq $null } | Select-Object -Property Name | Format-Table -hidetableheaders
+        win_shell: get-localuser | select Name, Enabled, PasswordExpires | Where-Object -Property Enabled -eq True | Where { $_.PasswordExpires -eq $null } | Select-Object -Property Name | Format-Table -hidetableheaders
         changed_when: false
         failed_when: false
         register: wn10_00_000090_neverexpire_passwords
@@ -586,13 +586,6 @@
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
             warn_control_id: 'WN10-00-000135'
-        when:
-            - win10stig_firewall_type == "defender" or
-              win10stig_firewall_type != "defender" or
-            - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
-            - win10stig_firewall_type == "defender" or
-              wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length == 0
-            - win10stig_firewall_type == "defender"
   when:
       - wn10_00_000135
   tags:
@@ -3345,7 +3338,7 @@
       - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and non-privileged accounts. | Warning Message."
         debug:
             msg: "Warning!! You are not on a domain which means you should configure Windows Hello for sign on options would be suggested based on the organizations needs and capabilities."
-
+            
       - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and non-privileged accounts. | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
