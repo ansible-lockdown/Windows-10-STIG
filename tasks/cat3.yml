@@ -238,7 +238,7 @@
             warn_control_id: 'WN10-CC-000206'
         when:
             - ansible_windows_domain_member
-            - win10stig_dodownloadmod_domain != 0 or 
+            - win10stig_dodownloadmod_domain != 0 or
               win10stig_dodownloadmod_domain != 1
             - win10_displayversion.value == '1507'
 
