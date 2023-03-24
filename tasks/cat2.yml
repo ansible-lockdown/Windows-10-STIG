@@ -2267,7 +2267,7 @@
   win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main
       value: FormSuggest Passwords
-      data: no
+      data: no  # yamllint disable-line rule:truthy
       type: string
   when:
       - wn10_CC_000245
@@ -3338,7 +3338,7 @@
       - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and non-privileged accounts. | Warning Message."
         debug:
             msg: "Warning!! You are not on a domain which means you should configure Windows Hello for sign on options would be suggested based on the organizations needs and capabilities."
-            
+
       - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and non-privileged accounts. | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
