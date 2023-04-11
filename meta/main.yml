@@ -8,13 +8,25 @@ galaxy_info:
     role_name: windows10_stig
     namespace: mindpointgroup
     min_ansible_version: 2.9.0
+
     platforms:
-        - name: Fedora
+        - name: Windows
           versions:
               - 10
+
     galaxy_tags:
         - system
         - security
         - stig
         - hardening
-dependencies: []
+        - benchmark
+        - microsoft
+        - windows
+        - complianceascode
+        - compliance
+
+    collections:
+        - ansible.windows
+        - community.windows
+
+    dependencies: []
