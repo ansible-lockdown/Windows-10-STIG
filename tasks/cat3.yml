@@ -3,27 +3,27 @@
 - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems."
   block:
       - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Check secure boot."
-        win_shell: Confirm-SecureBootUEFI
+        ansible.windows.win_shell: Confirm-SecureBootUEFI
         changed_when: false
         failed_when: false
         register: wn10_00_000020_secure_boot_audit
 
       - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Virtual System Check."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Your running a virtual system that does not support Secure Boot."
                 - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
         when: "'undefined' in wn10_00_000020_secure_boot_audit.stderr | string"
 
       - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Hardware Not supported Check."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Your computers hardware does not support Secure Boot."
                 - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
         when: "'CMdlet' in wn10_00_000020_secure_boot_audit.stderr | string"
 
       - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Secure Boot Set To Disabled."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Secure Boot is set to DISABLED."
                 - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
@@ -50,13 +50,13 @@
 - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity."
   block:
       - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Powershell To Get Accounts."
-        win_shell: Get-LocalUser | Where-Object {$_.Lastlogon -le (Get-Date).AddDays(-35)} | Select-Object Name, Enabled, Lastlogon | Format-Table -AutoSize
+        ansible.windows.win_shell: Get-LocalUser | Where-Object {$_.Lastlogon -le (Get-Date).AddDays(-35)} | Select-Object Name, Enabled, Lastlogon | Format-Table -AutoSize
         changed_when: false
         failed_when: false
         register: wn10_00_000065_user_local_accounts
 
       - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Print Results."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Review the list below and make sure it meets site policies."
                 - "The list below includes all accounts that have not been logged into for the last 35 days, those unused accounts"
@@ -81,13 +81,13 @@
 - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain."
   block:
       - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Get Local Users list"
-        win_shell: get-localuser | Where-Object -Property Enabled -eq True | Select-Object -Property Name | format-table -hidetableheaders
+        ansible.windows.win_shell: get-localuser | Where-Object -Property Enabled -eq True | Select-Object -Property Name | format-table -hidetableheaders
         changed_when: false
         failed_when: false
         register: wn10_00_000085_local_users
 
       - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Show Local Users list"
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Below are the local users that are not built in accounts and enabled."
                 - "Please review and remove these local accounts, only AD logins should be occuring."
@@ -109,7 +109,7 @@
       - V-220715
 
 - name: "LOW | WN10-CC-000030 | PATCH | The system must be configured to prevent Internet Control Message Protocol (ICMP) redirects from overriding Open Shortest Path First (OSPF) generated routes."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters
       value: EnableICMPRedirect
       state: present
@@ -126,7 +126,7 @@
       - V-220797
 
 - name: "LOW | WN10-CC-000035 | PATCH | The system must be configured to ignore NetBIOS name release requests except from WINS servers."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\Netbt\Parameters
       value: NoNameReleaseOnDemand
       state: present
@@ -143,7 +143,7 @@
       - V-220798
 
 - name: "LOW | WN10-CC-000070 | PATCH | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection"
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard
       value: "{{ item }}"
       state: present
@@ -163,7 +163,7 @@
       - V-220811
 
 - name: "LOW | WN10-CC-000170 | PATCH | The setting to allow Microsoft accounts to be optional for modern style apps must be enabled"
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: MSAOptional
       state: present
@@ -180,7 +180,7 @@
       - V-220825
 
 - name: "LOW | WN10-CC-000175 | PATCH | The Application Compatibility Program Inventory must be prevented from collecting data and sending the information to Microsoft."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\AppCompat
       value: DisableInventory
       state: present
@@ -197,7 +197,7 @@
       - V-220826
 
 - name: "LOW | WN10-CC-000197 | PATCH | Microsoft consumer experiences must be turned off."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent
       value: DisableWindowsConsumerFeatures
       state: present
@@ -216,7 +216,7 @@
 - name: "LOW | WN10-CC-000206 | PATCH | Windows Update must not obtain updates from other PCs on the Internet."
   block:
       - name: "LOW | WN10-CC-000206 | PATCH | Windows Update must not obtain updates from other PCs on the Internet. | On a domain"
-        win_regedit:
+        ansible.windows.win_regedit:
             path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization
             value: DODownloadMode
             state: present
@@ -225,7 +225,7 @@
         when: ansible_windows_domain_member
 
       - name: "LOW | WN10-CC-000206 | AUDIT | Windows Update must not obtain updates from other PCs on the Internet. | Warning For Domain Based System v1507 LTSB."
-        debug:
+        ansible.builtin.debug:
             msg: "Warning!! You Are Version v1507 LTSB which only is STIG compliant when you use use 0 or 1 in the win10stig_dodownloadmod_domain setting."
         when:
             - ansible_windows_domain_member
@@ -243,7 +243,7 @@
             - win10_displayversion.value == '1507'
 
       - name: "LOW | WN10-CC-000206 | PATCH | Windows Update must not obtain updates from other PCs on the Internet. | Stand-alone"
-        win_regedit:
+        ansible.windows.win_regedit:
             path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization
             value: DODownloadMode
             state: present
@@ -261,7 +261,7 @@
       - V-220835
 
 - name: "LOW | WN10-CC-000220 | PATCH | Turning off File Explorer heap termination on corruption must be disabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer
       value: NoHeapTerminationOnCorruption
       state: present
@@ -278,7 +278,7 @@
       - V-220838
 
 - name: "LOW | WN10-CC-000390 | PATCH | Windows 10 should be configured to prevent users from receiving suggestions for third-party or additional applications."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKCU:\SOFTWARE\Policies\Microsoft\Windows\CloudContent
       value: DisableThirdPartySuggestions
       state: present
@@ -295,7 +295,7 @@
       - V-220872
 
 - name: "LOW | WN10-SO-000050 | PATCH | The computer account password must not be prevented from being reset."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
       value: DisablePasswordChange
       state: present
@@ -312,7 +312,7 @@
       - V-220917
 
 - name: "LOW | WN10-SO-000055 | PATCH | The maximum age for machine account passwords must be configured to 30 days or less."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
       value: MaximumPasswordAge
       state: present
@@ -328,7 +328,7 @@
       - V-220918
 
 - name: "LOW | WN10-SO-000080 | PATCH | The Windows dialog box title for the legal banner must be configured."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: LegalNoticeCaption
       state: present
@@ -350,7 +350,7 @@
       - V-220922
 
 - name: "LOW | WN10-SO-000085 | PATCH | Caching of logon credentials must be limited."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon
       value: CachedLogonsCount
       state: present
@@ -367,7 +367,7 @@
       - V-220923
 
 - name: "LOW | WN10-SO-000240 | PATCH | The default permissions of global system objects must be increased."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager
       value: ProtectionMode
       state: present
@@ -384,7 +384,7 @@
       - V-220943
 
 - name: "LOW | WN10-UC-000015 | PATCH | Toast notifications to the lock screen must be turned off."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications
       value: NoToastApplicationNotificationOnLockScreen
       state: present
@@ -401,7 +401,7 @@
       - V-220954
 
 - name: "LOW | WN10-CC-000080 | PATCH | Virtualization-based protection of code integrity must be enabled.."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard\
       value: HypervisorEnforcedCodeIntegrity
       state: present
