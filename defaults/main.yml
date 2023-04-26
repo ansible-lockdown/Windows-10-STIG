@@ -312,7 +312,6 @@ win10stig_web_server: false
 # Value of true will always reboot after the role has run, value of false will prevent system from rebooting after the role has run.
 win10stig_always_reboot: true
 
-
 # Variables related to individual tasks
 # CAT1
 
