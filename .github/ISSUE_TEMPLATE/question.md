@@ -7,10 +7,11 @@ assignees: ''
 
 ---
 
-**Question**
+# Question
+
 Pose question here.
 
-**Environment (please complete the following information):**
+## Environment (please complete the following information)
 
 - Ansible Version: [e.g. 2.10]
 - Host Python Version: [e.g. Python 3.7.6]
