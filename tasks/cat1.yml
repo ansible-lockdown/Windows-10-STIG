@@ -327,6 +327,7 @@
       datatype: dword
   when:
       - wn10_CC_000330
+      - not win_skip_for_test
   tags:
       - WN10-CC-000330
       - CAT1
@@ -344,6 +345,7 @@
       datatype: dword
   when:
       - wn10_CC_000345
+      - not win_skip_for_test
   tags:
       - WN10-CC-000345
       - CAT1

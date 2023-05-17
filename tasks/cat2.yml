@@ -847,6 +847,7 @@
       value: "{{ win10stig_account_settings.lockoutbadcount }}"
   when:
       - wn10_AC_000010
+      - not win10stig_cloud_based_system
   tags:
       - WN10-AC-000010
       - CAT2
@@ -864,6 +865,7 @@
       value: "{{ win10stig_account_settings.resetlockoutcount }}"
   when:
       - wn10_AC_000015
+      - not win10stig_cloud_based_system
   tags:
       - WN10-AC-000015
       - CAT2
@@ -880,6 +882,7 @@
       value: "{{ win10stig_account_settings.lockoutduration }}"
   when:
       - wn10_AC_000005
+      - not win10stig_cloud_based_system
   tags:
       - WN10-AC-000005
       - CAT2
@@ -2563,6 +2566,7 @@
       type: dword
   when:
       - wn10_CC_000335
+      - not win_skip_for_test
   tags:
       - WN10-CC-000335
       - CAT2
@@ -2580,6 +2584,7 @@
       type: dword
   when:
       - wn10_CC_000350
+      - not win_skip_for_test
   tags:
       - WN10-CC-000350
       - CAT2
@@ -2597,6 +2602,7 @@
       type: dword
   when:
       - wn10_CC_000355
+      - not win_skip_for_test
   tags:
       - WN10-CC-000355
       - CAT2
@@ -2613,6 +2619,7 @@
       type: dword
   when:
       - wn10_CC_000360
+      - not win_skip_for_test
   tags:
       - WN10-CC-000360
       - CAT2
@@ -2892,6 +2899,7 @@
       value: 0
   when:
       - wn10_SO_000005
+      - not win_skip_for_test
   tags:
       - WN10-SO-000005
       - CAT2
@@ -2938,6 +2946,7 @@
       value: "{{ win10stig_new_administrator_name }}"
   when:
       - wn10_SO_000020
+      - not win_skip_for_test
   tags:
       - WN10-SO-000020
       - CAT2
@@ -3309,6 +3318,7 @@
       type: dword
   when:
       - wn10_SO_000245
+      - not win_skip_for_test
   tags:
       - WN10-SO-000245
       - CAT2

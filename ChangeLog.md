@@ -1,5 +1,11 @@
 # Changelog
 
+## May 2023 Update
+  - Updated Pieplines For Testing
+  - Added Banner
+  - Added Skip For Testing to controls that will break in cloud. 
+  - Added Support for Azure for Controls that break. 
+
 ## Release 1.0.0
   - Updated Readme
   - Added Changelog.md and updated.
