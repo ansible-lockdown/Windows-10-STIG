@@ -21,10 +21,21 @@ win10stig_disruption_high: false
 # If there is an action tied to the lengthy search the action task will be disabled as well
 win10stig_lengthy_search: true
 
-winstig_skip_for_travis: false
-
-# Some tasks need to be skipped for CI/CD testing to work correctly
-winstig_skip_for_test: false
+# win_skip_for_test is used in the playbook to skip over certain controls that
+# may cause breaking changes when running it for testing purposes.  These generally consist of winrm controls
+# that are needed to keep the ansible connection alive.
+# Controls that will be skipped:
+# WN10-CC-000330 - CAT1
+# WN10-CC-000345 - CAT1
+# WN10-CC-000335 - CAT2
+# WN10-CC-000350 - CAT2
+# WN10-CC-000355 - CAT2
+# WN10-CC-000360 - CAT2
+# WN10-SO-000020 - CAT2
+# WN10-SO-000245 - CAT2
+# WN10-SO-000005 - CAT2
+# WN10-SO-000020 - CAT2
+win_skip_for_test: false
 
 win10stig_workaround_for_disa_benchmark: true
 win10stig_workaround_for_ssg_benchmark: true
