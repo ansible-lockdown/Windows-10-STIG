@@ -29,3 +29,7 @@ variable "OS_publisher" {
 variable "OS_version" {
   description = "The version of the OS"
 }
+
+variable "product_id" {
+  description = "This is the offer that azure gives you for the image"
+}
