@@ -23,7 +23,7 @@ variable "hostname" {
 }
 
 variable "OS_publisher" {
-  description = "The version of the OS, also known as publisher in Template azure file""
+  description = "The version of the OS, also known as publisher in Template azure file"
 }
 
 variable "OS_version" {
