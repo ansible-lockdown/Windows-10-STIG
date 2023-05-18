@@ -538,7 +538,6 @@
   when:
       - wn10_00_000130
       - win10stig_lengthy_search
-      - not win_skip_for_test
   tags:
       - WN10-00-000130
       - CAT2
