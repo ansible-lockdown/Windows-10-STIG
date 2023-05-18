@@ -1,5 +1,5 @@
 ---
 
-- name: reboot_windows
+- name: reboot windows
   ansible.windows.win_reboot:
       reboot_timeout: 3600
