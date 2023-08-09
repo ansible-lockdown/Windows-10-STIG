@@ -12,6 +12,7 @@
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
             warn_control_id: 'WN10-00-000040'
+  # When statement does not follow standard formatting.
   when:
       - wn10_00_000040
       - win10_displayversion.value != '1507' and win10_currentbuild.value != '10240' or
@@ -137,9 +138,9 @@
   block:
       - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Status check for idempotency."
         ansible.windows.win_shell: BCDEdit /enum "{current}"
-        register: win10_00_000145_dep_setting_search
         changed_when: false
         failed_when: false
+        register: win10_00_000145_dep_setting_search
 
       - name: "HIGH | WN10-00-000145 | PATCH | Data Execution Prevention (DEP) must be configured to at least OptOut. | Make change to match {{ wnstig_dep_value }}."
         ansible.windows.win_shell: BCDEdit /set "{current}" nx {{ wn10stig_dep_value }}

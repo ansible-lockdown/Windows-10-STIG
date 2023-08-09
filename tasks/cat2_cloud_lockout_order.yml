@@ -1,8 +1,6 @@
 ---
 # THE FOLLOWING 3 CONTROLS WILL FAIL UNLESS THEY ARE IN THE FOLLOWING ORDER FOR CLOUD BASED SYSTEMS
-# CONTROL WN10-AC-000010
-# CONTROL WN10-AC-000005
-# CONTROL WN10-AC-000015
+# CONTROL WN10-AC-000010, CONTROL WN10-AC-000005, CONTROL WN10-AC-000015
 # Needs to go before WN10-AC-000005 since the Lockout Duration could be disabled if the Lockout Policy is set to 0 causing the task to fail
 - name: "MEDIUM | WN10-AC-000010 | PATCH | The number of allowed bad logon attempts must be configured to 3 or less."
   community.windows.win_security_policy:

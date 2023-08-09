@@ -38,17 +38,11 @@ win10stig_lengthy_search: false
 # WN10-SO-000020 - CAT2
 win_skip_for_test: false
 
-win10stig_workaround_for_disa_benchmark: true
-win10stig_workaround_for_ssg_benchmark: true
-
 # tweak role to run in a non-privileged container
 win10stig_system_is_container: false
 
 # tweak role to run skip tasks irrelevant for virtualized computers
 win10stig_system_is_vm: true
-
-# This will skip the echo true tasks related to not implimented controls
-win10stig_run_notimplemented: false
 
 # These variables correspond with the STIG IDs defined in the STIG and allows you to enable/disable specific rules.
 # PLEASE NOTE: These work in coordination with the cat1, cat2, cat3 group variables. You must enable an entire group
