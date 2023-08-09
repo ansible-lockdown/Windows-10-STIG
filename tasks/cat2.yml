@@ -36,8 +36,7 @@
         ansible.builtin.debug:
             msg:
                 - "Warning!! Please confirm TPM status is Ready for use, there are no instances currently running."
-        when:
-            - "'No Instance' in wn10_00_000010_tpm_status.stderr_lines | string"
+        when: "'No Instance' in wn10_00_000010_tpm_status.stderr_lines | string"
 
       - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Full TPM Check."
         ansible.builtin.debug:
@@ -501,6 +500,7 @@
       - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Get Drive Letters"
         ansible.windows.win_shell: Get-Volume | ?{ $_.DriveType -eq 'Fixed' } | Select-Object -ExpandProperty 'DriveLetter'
         changed_when: false
+        failed_when: false
         register: wn10_00_000130_drive_letters
 
       - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Search for files"
@@ -624,7 +624,6 @@
       - SRG-OS-000480-GPOS-00227
       - SV-220725r569187_rule
       - V-220725
-      - notimplemented
 
 - name: "MEDIUM | WN10-00-000155 | PATCH | The Windows PowerShell 2.0 feature must be disabled on the system."
   ansible.windows.win_optional_feature:
@@ -721,8 +720,7 @@
                 - "User Accounts"
                 - "----------------------------------------------------------------------"
                 - "{{ wn10_00_000190_orphaned_user_accounts.stdout_lines }}"
-        when:
-            - wn10_00_000190_orphaned_user_accounts.stdout_lines | select() | length > 0
+        when: wn10_00_000190_orphaned_user_accounts.stdout_lines | select() | length > 0
 
       - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned Group Accounts."
         ansible.windows.win_shell: Get-WmiObject -Class win32_group | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
@@ -737,8 +735,7 @@
                 - "Group Accounts"
                 - "----------------------------------------------------------------------"
                 - "{{ wn10_00_000190_orphaned_user_accounts.stdout_lines }}"
-        when:
-            - wn10_00_000190_orphaned_group_accounts.stdout_lines | select() | length > 0
+        when: wn10_00_000190_orphaned_group_accounts.stdout_lines | select() | length > 0
 
       - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
@@ -838,6 +835,15 @@
       - SRG-OS-000185-GPOS-00079
       - SV-220738r569187_rule
       - V-220738
+
+# Controls wn10_00_000005, WN19-AC-000020, and WN19-AC-000030 need to be in a different order for cloud based systems (AWS, Azure, etc.) vs non-cloud systems (VMWare, VirtualBox, etc.)
+# The task below loads the control group in the correct order for cloud based systems
+- name: "CAT2 task side load for WN19-AC-000010, WN10-AC-000015, and WN10-AC-000005"
+  ansible.builtin.import_tasks: cat2_cloud_lockout_order.yml
+  when:
+      - win10stig_cloud_based_system
+  tags:
+      - cat2_cloud_lockout_order
 
 # Needs to go before WN10-AC-000005 since the Lockout Duration could be disabled if the Lockout Policy is set to 0 causing the task to fail
 - name: "MEDIUM | WN10-AC-000010 | PATCH | The number of allowed bad logon attempts must be configured to 3 or less."
@@ -2882,7 +2888,6 @@
   failed_when: false
   when:
       - wn10_RG_000005
-      - win10stig_run_notimplemented
   tags:
       - WN10-RG-000005
       - CAT2
@@ -2890,7 +2895,6 @@
       - SRG-OS-000324-GPOS-00125
       - SV-220907r569187_rule
       - V-220907
-      - notimplemented
 
 - name: "MEDIUM | WN10-SO-000005 | PATCH | The built-in administrator account must be disabled."
   community.windows.win_security_policy:
