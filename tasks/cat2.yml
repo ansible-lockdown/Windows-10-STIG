@@ -300,7 +300,7 @@
 - name: "MEDIUM | WN10-00-000060 | PATCH | Non system-created file shares on a system must limit access to groups that require it."
   block:
       - name: "MEDIUM | WN10-00-000060 | AUDIT | Non system-created file shares on a system must limit access to groups that require it. | Get Share Names"
-        win_shell: Get-SmbShare | Where-Object { ($_.Name -notlike "ADMIN$") -and ($_.Name -notlike 'C$') -and ($_.Name -notlike 'IPC$') } | Select-Object -Property Name | format-table -hidetableheaders
+        ansible.windows.win_shell: Get-SmbShare | Where-Object { ($_.Name -notlike "ADMIN$") -and ($_.Name -notlike 'C$') -and ($_.Name -notlike 'IPC$') } | Select-Object -Property Name | format-table -hidetableheaders
         changed_when: false
         failed_when: false
         register: wn10_00_000060_share_names

@@ -43,3 +43,4 @@ benchparse/
 
 # GitHub Action/Workflow files
 .github/
+.DS_Store
