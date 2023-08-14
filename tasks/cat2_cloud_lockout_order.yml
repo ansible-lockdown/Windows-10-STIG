@@ -1,0 +1,50 @@
+---
+# THE FOLLOWING 3 CONTROLS WILL FAIL UNLESS THEY ARE IN THE FOLLOWING ORDER FOR CLOUD BASED SYSTEMS
+# CONTROL WN10-AC-000010, CONTROL WN10-AC-000005, CONTROL WN10-AC-000015
+# Needs to go before WN10-AC-000005 since the Lockout Duration could be disabled if the Lockout Policy is set to 0 causing the task to fail.
+- name: "MEDIUM | WN10-AC-000010 | PATCH | The number of allowed bad logon attempts must be configured to 3 or less."
+  community.windows.win_security_policy:
+      section: System Access
+      key: LockoutBadCount
+      value: "{{ win10stig_account_settings.lockoutbadcount }}"
+  when:
+      - wn10_AC_000010
+  tags:
+      - WN10-AC-000010
+      - CAT2
+      - CCI-000044
+      - SRG-OS-000021-GPOS-00005
+      - SV-220740r569187_rule
+      - V-220740
+
+- name: "MEDIUM | WN10-AC-000005 | PATCH | Windows 10 account lockout duration must be configured to 15 minutes or greater."
+  community.windows.win_security_policy:
+      section: System Access
+      key: LockoutDuration
+      value: "{{ win10stig_account_settings.lockoutduration }}"
+  when:
+      - wn10_AC_000005
+  tags:
+      - WN10-AC-000005
+      - CAT2
+      - CCI-002238
+      - SRG-OS-000329-GPOS-00128
+      - SV-220739r569187_rule
+      - V-220739
+
+# The Lockout Duration must be greater or equal to the Reset Account Lockout counter.
+- name: "MEDIUM | WN10-AC-000015 | PATCH | The period of time before the bad logon counter is reset must be configured to 15 minutes."
+  community.windows.win_security_policy:
+      section: System Access
+      key: ResetLockoutCount
+      value: "{{ win10stig_account_settings.resetlockoutcount }}"
+  when:
+      - wn10_AC_000015
+  tags:
+      - WN10-AC-000015
+      - CAT2
+      - CCI-000044
+      - CCI-002238
+      - SRG-OS-000021-GPOS-00005
+      - SV-220741r569187_rule
+      - V-220741

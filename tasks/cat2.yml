@@ -3,7 +3,7 @@
 - name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version."
   block:
       - name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version. | Warning."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! You need to be on a 64-bit operating system when joined to a domain"
                 - "This is a requirement for STIG compliance"
@@ -27,20 +27,19 @@
 - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use."
   block:
       - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Get TPM status."
-        win_command: wmic /namespace:\\root\cimv2\security\microsofttpm path win32_tpm get * /format:textvaluelist.xsl
+        ansible.windows.win_command: wmic /namespace:\\root\cimv2\security\microsofttpm path win32_tpm get * /format:textvaluelist.xsl
         changed_when: false
         failed_when: false
         register: wn10_00_000010_tpm_status
 
       - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Running Instances Check."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Please confirm TPM status is Ready for use, there are no instances currently running."
-        when:
-            - "'No Instance' in wn10_00_000010_tpm_status.stderr_lines | string"
+        when: "'No Instance' in wn10_00_000010_tpm_status.stderr_lines | string"
 
       - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Full TPM Check."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Please confirm TPM status is Ready for use. Current settings do not meet STIG requirements."
         when:
@@ -75,13 +74,13 @@
 - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS."
   block:
       - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS | Check For UEFI Status."
-        win_shell: $env:firmware_type
+        ansible.windows.win_shell: $env:firmware_type
         changed_when: false
         failed_when: false
         register: wn10_00_000015_system_firmware_check
 
       - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS | Legacy BIOS Error."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Your system firmware is configured to run in Legacy BIOS."
                 - "UEFI is the requirement for STIG to be in compliance."
@@ -107,7 +106,7 @@
 - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: continuously, where HBSS is used; 30 days, for any additional internal network scans not covered by HBSS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP)"
   block:
       - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: continuously, where HBSS is used; 30 days, for any additional internal network scans not covered by HBSS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP) | Warning."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Please install DoD-approved ESS software and ensure it is operating continuously"
                 - "Ask site ISSM for documentation fo the ESS software installation and configuration"
@@ -129,13 +128,13 @@
 - name: "MEDIUM | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest."
   block:
       - name: "MEDIUM | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest."
-        win_shell: get-bitlockervolume -MountPoint "C:" | select ProtectionStatus | format-list
+        ansible.windows.win_shell: get-bitlockervolume -MountPoint "C:" | select ProtectionStatus | format-list
         changed_when: false
         failed_when: false
         register: wn10_00_000030_bitlocker_status
 
       - name: "MEDIUM | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! BitLocker is not enabled for the C:\ drive"
                 - "Please enable BitLocker for at least the OS drive to conform to STIG Standards"
@@ -161,7 +160,7 @@
 - name: "MEDIUM | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication."
   block:
       - name: "MEDIUM | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication. | Set Advanced Startup value"
-        win_regedit:
+        ansible.windows.win_regedit:
             path: HKLM:\SOFTWARE\Policies\Microsoft\FVE
             value: UseAdvancedStartup
             state: present
@@ -169,7 +168,7 @@
             type: dword
 
       - name: "MEDIUM | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication. | Set BitLocker Pin settings"
-        win_regedit:
+        ansible.windows.win_regedit:
             path: HKLM:\SOFTWARE\Policies\Microsoft\FVE
             value: "{{ win10stig_bitlocker_pin_type }}"
             state: present
@@ -190,7 +189,7 @@
       - V-220703
 
 - name: "MEDIUM | WN10-00-000032 | PATCH | Windows 10 systems must use a BitLocker PIN with a minimum length of 6 digits for pre-boot authentication."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\FVE
       value: MinimumPIN
       state: present
@@ -211,7 +210,7 @@
 - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs."
   block:
       - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Applocker XML Out."
-        win_shell: Get-AppLockerPolicy -Effective -XML > {{ win10stig_applocker_xml_output }}
+        ansible.windows.win_shell: Get-AppLockerPolicy -Effective -XML > {{ win10stig_applocker_xml_output }}
         changed_when: false
         failed_when: false
         when:
@@ -219,7 +218,7 @@
             - win10stig_applocker_output == 1
 
       - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Check XML File Warning."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Please review the configuration of Applocker using the XML file located in directory"
                 - "{{ win10stig_applocker_xml_output }} to confirm you have a deny-all policy in place that utilizes"
@@ -230,7 +229,7 @@
             - win10stig_applocker_output == 1
 
       - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Check For Applocker To Stdout."
-        win_shell: Get-AppLockerPolicy -Effective -XML
+        ansible.windows.win_shell: Get-AppLockerPolicy -Effective -XML
         changed_when: false
         failed_when: false
         register: win10stig_applocker_output
@@ -239,7 +238,7 @@
             - win10stig_applocker_output != 1
 
       - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Check Stdout Print Out."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Please review the configuration of Applocker to confirm you have a deny-all policy in place that utilizes"
                 - "a whitelist for applications. There is an AppLocker white paper from NSA that can be used as a guide"
@@ -250,7 +249,7 @@
             - win10stig_applocker_output != 1
 
       - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception wn10_AU_000085to allow the execution of authorized software programs. | Warning Message When No Applocker."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Applocker is not in use. Please confirm you have a deny-all policy in place that utilizes a whitelist for applications."
                 - "This can be done through a utility like AppLocker to limit applications only to authorized applications"
@@ -281,7 +280,7 @@
 - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system."
   block:
       - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system. | Warning."
-        debug:
+        ansible.builtin.debug:
             msg: "Warning!! Please confirm that no other alternative operating systems exist on this system."
 
       - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system. | Warn Count."
@@ -301,13 +300,13 @@
 - name: "MEDIUM | WN10-00-000060 | PATCH | Non system-created file shares on a system must limit access to groups that require it."
   block:
       - name: "MEDIUM | WN10-00-000060 | AUDIT | Non system-created file shares on a system must limit access to groups that require it. | Get Share Names"
-        win_shell: Get-SmbShare | Where-Object { ($_.Name -notlike "ADMIN$") -and ($_.Name -notlike 'C$') -and ($_.Name -notlike 'IPC$') } | Select-Object -Property Name | format-table -hidetableheaders
+        ansible.windows.win_shell: Get-SmbShare | Where-Object { ($_.Name -notlike "ADMIN$") -and ($_.Name -notlike 'C$') -and ($_.Name -notlike 'IPC$') } | Select-Object -Property Name | format-table -hidetableheaders
         changed_when: false
         failed_when: false
         register: wn10_00_000060_share_names
 
       - name: "MEDIUM | WN10-00-000060 | AUDIT | Non system-created file shares on a system must limit access to groups that require it. | Alert Share Names"
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! You have shares that non-system created. Please manually review those shares listed below to make sure appropriate permissions are applied"
                 - "{{ wn10_00_000060_share_names.stdout_lines | select() | list }}"
@@ -331,13 +330,13 @@
 - name: "MEDIUM | WN10-00-000075 | AUDIT | Only accounts responsible for the backup operations must be members of the Backup Operators group."
   block:
       - name: "MEDIUM | WN10-00-000075 | AUDIT | Only accounts responsible for the backup operations must be members of the Backup Operators group. | Get Backup Operator users"
-        win_shell: get-localgroupmember -Name "Backup Operators" | Select-Object -Property Name | Format-Table -hidetableheaders
+        ansible.windows.win_shell: get-localgroupmember -Name "Backup Operators" | Select-Object -Property Name | Format-Table -hidetableheaders
         changed_when: false
         failed_when: false
         register: wn10_00_000075_bo_members
 
       - name: "MEDIUM | WN10-00-000075 | AUDIT | Only accounts responsible for the backup operations must be members of the Backup Operators group. | Display Backup Operator users"
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Below are the users in the Backup Operators group. Please review accounts are appropriate."
                 - "{{ wn10_00_000075_bo_members.stdout_lines | select() | list }}"
@@ -361,13 +360,13 @@
 - name: "MEDIUM | WN10-00-000080 | AUDIT | Only authorized user accounts must be allowed to create or run virtual machines on Windows 10 systems."
   block:
       - name: "MEDIUM | WN10-00-000080 | AUDIT | Only authorized user accounts must be allowed to create or run virtual machines on Windows 10 systems. | Get Hyper-V group users"
-        win_shell: get-localgroupmember -Name "Hyper-V Administrators" | Select-Object -Property Name | Format-Table -hidetableheaders
+        ansible.windows.win_shell: get-localgroupmember -Name "Hyper-V Administrators" | Select-Object -Property Name | Format-Table -hidetableheaders
         changed_when: false
         failed_when: false
         register: wn10_00_000080_hyperv_members
 
       - name: "MEDIUM | WN10-00-000080 | AUDIT | Only authorized user accounts must be allowed to create or run virtual machines on Windows 10 systems. | Display Hyper-V group users"
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Below are the users in the Hyper-V Administrators group, please remove any unnecessary accounts"
                 - "{{ wn10_00_000080_hyperv_members.stdout_lines | select() | list }}"
@@ -391,13 +390,13 @@
 - name: "MEDIUM | WN10-00-000090 | PATCH | Accounts must be configured to require password expiration."
   block:
       - name: "MEDIUM | WN10-00-000090 | AUDIT | Accounts must be configured to require password expiration. | Get list of PW Never Expire users"
-        win_shell: get-localuser  | select Name, Enabled, PasswordExpires | Where-Object -Property Enabled -eq True | Where { $_.PasswordExpires -eq $null } | Select-Object -Property Name | Format-Table -hidetableheaders
+        ansible.windows.win_shell: get-localuser | select Name, Enabled, PasswordExpires | Where-Object -Property Enabled -eq True | Where { $_.PasswordExpires -eq $null } | Select-Object -Property Name | Format-Table -hidetableheaders
         changed_when: false
         failed_when: false
         register: wn10_00_000090_neverexpire_passwords
 
       - name: "MEDIUM | WN10-00-000090 | AUDIT | Accounts must be configured to require password expiration. | Display list of PW Never Expire users"
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! You have some accounts that are set to never expire. Please review the below accounts and set an expiration"
                 - "{{ wn10_00_000090_neverexpire_passwords.stdout_lines | select() | list }}"
@@ -406,7 +405,7 @@
             - not win10stig_disruption_high
 
       - name: "MEDIUM | WN10-00-000090 | PATCH | Accounts must be configured to require password expiration. | Set PW to Expire for PW Never Expire users"
-        win_user:
+        ansible.windows.win_user:
             name: "{{ item }}"
             password_never_expires: false
         with_items:
@@ -435,13 +434,13 @@
 - name: "MEDIUM | WN10-00-000105 | PATCH | Simple Network Management Protocol (SNMP) must not be installed on the system."
   block:
       - name: "MEDIUM | WN10-00-000105 | AUDIT | Simple Network Management Protocol (SNMP) must not be installed on the system. | Get SNMP State"
-        win_shell: Get-WindowsCapability  -Online -Name "SNMP*" | Select-Object -Property State | Format-Table -hidetableheaders
+        ansible.windows.win_shell: Get-WindowsCapability  -Online -Name "SNMP*" | Select-Object -Property State | Format-Table -hidetableheaders
         changed_when: false
         failed_when: false
         register: wn10_00_000105_snmp_state
 
       - name: "MEDIUM | WN10-00-000105 | PATCH | Simple Network Management Protocol (SNMP) must not be installed on the system. | Remove SNMP"
-        win_shell: remove-WindowsCapability  -Online -Name "SNMP.Client~~~~0.0.1.0"
+        ansible.windows.win_shell: remove-WindowsCapability  -Online -Name "SNMP.Client~~~~0.0.1.0"
         notify: reboot windows
         when: "'Installed' in wn10_00_000105_snmp_state.stdout"
   when:
@@ -455,7 +454,7 @@
       - V-220719
 
 - name: "MEDIUM | WN10-00-000110 | PATCH | Simple TCP/IP Services must not be installed on the system."
-  win_optional_feature:
+  ansible.windows.win_optional_feature:
       name: SimpleTCP
       state: absent
   when:
@@ -469,7 +468,7 @@
       - V-220720
 
 - name: "MEDIUM | WN10-00-000115 | PATCH | The Telnet Client must not be installed on the system."
-  win_optional_feature:
+  ansible.windows.win_optional_feature:
       name: TelnetClient
       state: absent
   when:
@@ -483,7 +482,7 @@
       - V-220721
 
 - name: "MEDIUM | WN10-00-000120 | PATCH | The TFTP Client must not be installed on the system."
-  win_optional_feature:
+  ansible.windows.win_optional_feature:
       name: TFTP
       state: absent
   when:
@@ -499,12 +498,13 @@
 - name: "MEDIUM | WN10-00-000130 | PATCH | Software certificate installation files must be removed from Windows 10."
   block:
       - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Get Drive Letters"
-        win_shell: Get-Volume | ?{ $_.DriveType -eq 'Fixed' } | Select-Object -ExpandProperty 'DriveLetter'
+        ansible.windows.win_shell: Get-Volume | ?{ $_.DriveType -eq 'Fixed' } | Select-Object -ExpandProperty 'DriveLetter'
         changed_when: false
+        failed_when: false
         register: wn10_00_000130_drive_letters
 
       - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Search for files"
-        win_find:
+        ansible.windows.win_find:
             paths: '{{ item }}:\'
             recurse: true
             patterns: ['*.p12', '*.pfx']
@@ -513,7 +513,7 @@
             - "{{ wn10_00_000130_drive_letters.stdout_lines }}"
 
       - name: "MEDIUM | WN10-00-000130 | PATCH | Software certificate installation files must be removed from Windows 10. | Remove Files"
-        win_file:
+        ansible.windows.win_file:
             path: "{{ item.path }}"
             state: absent
         with_items:
@@ -523,7 +523,7 @@
         when: win10stig_disruption_high
 
       - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Alert on files if not Disruptive High"
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! You have .p12 and/or .pfx files on your system"
                 - "Please review and remove the following files"
@@ -549,14 +549,14 @@
 - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system."
   block:
       - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Get Defender Firewall status"
-        win_shell: get-netfirewallprofile -all | Where-Object -Property Enabled -eq True | Select-Object -Property Name | Format-Table -hidetableheaders
+        ansible.windows.win_shell: get-netfirewallprofile -all | Where-Object -Property Enabled -eq True | Select-Object -Property Name | Format-Table -hidetableheaders
         changed_when: false
         failed_when: false
         register: wn10_00_000135_defender_fw_status
         when: win10stig_firewall_type == "defender"
 
       - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on Defender Firewall enabled"
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! You are using defender and 1 or more profiles are enabled"
                 - "Please confirm the firewall profiles match the Firewall STIG"
@@ -566,7 +566,7 @@
             - win10stig_firewall_type == "defender"
 
       - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Alert on Defender Firewall disabled"
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! You are using Windows Defender as your firewall and it is fully disabled"
                 - "Please enable the firewall using a Firewall profile provided by STIG"
@@ -576,7 +576,7 @@
             - win10stig_firewall_type == "defender"
 
       - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn on 3rd party firewall"
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! You are not using Windows Defender as your firewall."
                 - "Please review the required profiles/settings for that firewall to confirm it aligns with STIG standards."
@@ -586,13 +586,6 @@
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
             warn_control_id: 'WN10-00-000135'
-        when:
-            - win10stig_firewall_type == "defender" or
-              win10stig_firewall_type != "defender" or
-            - wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length > 0
-            - win10stig_firewall_type == "defender" or
-              wn10_00_000135_defender_fw_status.stdout_lines | select() | list | length == 0
-            - win10stig_firewall_type == "defender"
   when:
       - wn10_00_000135
   tags:
@@ -606,7 +599,7 @@
 - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts."
   block:
       - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Alert if automation managed not enabled"
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! You are using Windows Defender as your firewall on this host. Please confirm Inbound Rules only allow authorized inbound traffic"
         when:
@@ -631,10 +624,9 @@
       - SRG-OS-000480-GPOS-00227
       - SV-220725r569187_rule
       - V-220725
-      - notimplemented
 
 - name: "MEDIUM | WN10-00-000155 | PATCH | The Windows PowerShell 2.0 feature must be disabled on the system."
-  win_optional_feature:
+  ansible.windows.win_optional_feature:
       name: MicrosoftWindowsPowerShellV2Root
       state: absent
   when:
@@ -648,7 +640,7 @@
       - V-220728
 
 - name: "MEDIUM | WN10-00-000160 | PATCH | The Server Message Block (SMB) v1 protocol must be disabled on the system."
-  win_optional_feature:
+  ansible.windows.win_optional_feature:
       name: SMB1Protocol
       state: absent
   when:
@@ -662,7 +654,7 @@
       - V-220729
 
 - name: "MEDIUM | WN10-00-000165 | PATCH | The Server Message Block (SMB) v1 protocol must be disabled on the SMB server."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters
       value: SMB1
       state: present
@@ -679,7 +671,7 @@
       - V-220730
 
 - name: "MEDIUM | WN10-00-000170 | PATCH | The Server Message Block (SMB) v1 protocol must be disabled on the SMB client."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\mrxsmb10
       value: Start
       state: present
@@ -699,7 +691,7 @@
 # This service can't be stopped manually (through automation or manually through Services)
 # You need to disable then reboot Windows for the service to be stopped
 - name: "MEDIUM | WN10-00-000175 | PATCH | The Secondary Logon service must be disabled on Windows 10."
-  win_service:
+  ansible.windows.win_service:
       name: seclogon
       start_mode: disabled
   notify: reboot windows
@@ -716,36 +708,34 @@
 - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10."
   block:
       - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned User Accounts."
-        win_shell: Get-WmiObject -Class win32_useraccount | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
+        ansible.windows.win_shell: Get-WmiObject -Class win32_useraccount | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
         changed_when: false
         failed_when: false
         register: wn10_00_000190_orphaned_user_accounts
 
       - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Audit For User Accounts Found."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Please review the User Rights listed for each of any unresolved SID to determine whether they are valid."
                 - "User Accounts"
                 - "----------------------------------------------------------------------"
                 - "{{ wn10_00_000190_orphaned_user_accounts.stdout_lines }}"
-        when:
-            - wn10_00_000190_orphaned_user_accounts.stdout_lines | select() | length > 0
+        when: wn10_00_000190_orphaned_user_accounts.stdout_lines | select() | length > 0
 
       - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned Group Accounts."
-        win_shell: Get-WmiObject -Class win32_group | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
+        ansible.windows.win_shell: Get-WmiObject -Class win32_group | Where-Object {$_.SID -match "*S"} | Select name,sid,domain
         changed_when: false
         failed_when: false
         register: wn10_00_000190_orphaned_group_accounts
 
       - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Audit For Group Accounts Found."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Please review the User Rights listed for each of any unresolved SID to determine whether they are valid."
                 - "Group Accounts"
                 - "----------------------------------------------------------------------"
                 - "{{ wn10_00_000190_orphaned_user_accounts.stdout_lines }}"
-        when:
-            - wn10_00_000190_orphaned_group_accounts.stdout_lines | select() | length > 0
+        when: wn10_00_000190_orphaned_group_accounts.stdout_lines | select() | length > 0
 
       - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
@@ -767,7 +757,7 @@
 - name: "MEDIUM | WN10-00-000210 | PATCH | Bluetooth must be turned off unless approved by the organization."
   block:
       - name: "MEDIUM | WN10-00-000210 | PATCH | Bluetooth must be turned off unless approved by the organization. | Disable BT in the registry"
-        win_regedit:
+        ansible.windows.win_regedit:
             path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ActionCenter\QuickActions\All\SystemSettings_Device_BluetoothQuickAction
             value: Type
             state: present
@@ -776,7 +766,7 @@
         notify: reboot windows
 
       - name: "MEDIUM | WN10-00-000210 | PATCH | Bluetooth must be turned off unless approved by the organization. | Disable BT service"
-        win_service:
+        ansible.windows.win_service:
             name: bthserv
             state: stopped
             start_mode: disabled
@@ -793,7 +783,7 @@
 - name: "MEDIUM | WN10-00-000220 | PATCH | Bluetooth must be turned off when not in use."
   block:
       - name: "MEDIUM | WN10-00-000220 | PATCH | Bluetooth must be turned off when not in use. | Disable BT in the registry"
-        win_regedit:
+        ansible.windows.win_regedit:
             path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ActionCenter\QuickActions\All\SystemSettings_Device_BluetoothQuickAction
             value: Type
             state: present
@@ -802,7 +792,7 @@
         notify: reboot windows
 
       - name: "MEDIUM | WN10-00-000220 | PATCH | Bluetooth must be turned off when not in use. | Disable BT service"
-        win_service:
+        ansible.windows.win_service:
             name: bthserv
             state: stopped
             start_mode: disabled
@@ -817,7 +807,7 @@
       - V-220735
 
 - name: "MEDIUM | WN10-00-000230 | PATCH | The system must notify the user when a Bluetooth device attempts to connect."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKCU:\Software\Microsoft\BluetoothAuthenticationAgent
       value: AcceptIncomingRequests
       state: present
@@ -834,7 +824,7 @@
       - V-220736
 
 - name: "MEDIUM | WN10-00-000250 | AUDIT | Windows 10 non-persistent VM sessions should not exceed 24 hours."
-  debug:
+  ansible.builtin.debug:
       msg: "Warning!! Please investigate VDI settings to make sure they are non-persistent and do not exceed 24 hours."
   when:
       - wn10_00_000250
@@ -846,14 +836,24 @@
       - SV-220738r569187_rule
       - V-220738
 
+# Controls wn10_00_000005, WN19-AC-000020, and WN19-AC-000030 need to be in a different order for cloud based systems (AWS, Azure, etc.) vs non-cloud systems (VMWare, VirtualBox, etc.)
+# The task below loads the control group in the correct order for cloud based systems
+- name: "CAT2 task side load for WN19-AC-000010, WN10-AC-000015, and WN10-AC-000005"
+  ansible.builtin.import_tasks: cat2_cloud_lockout_order.yml
+  when:
+      - win10stig_cloud_based_system
+  tags:
+      - cat2_cloud_lockout_order
+
 # Needs to go before WN10-AC-000005 since the Lockout Duration could be disabled if the Lockout Policy is set to 0 causing the task to fail
 - name: "MEDIUM | WN10-AC-000010 | PATCH | The number of allowed bad logon attempts must be configured to 3 or less."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: LockoutBadCount
       value: "{{ win10stig_account_settings.lockoutbadcount }}"
   when:
       - wn10_AC_000010
+      - not win10stig_cloud_based_system
   tags:
       - WN10-AC-000010
       - CAT2
@@ -865,12 +865,13 @@
 # Putting this before WN10-AC-000005 ensures the value being set conforms to the needed standard for account settings
 # The Lockout Duration must be greater or equal to the Reset Account Lockout counter.
 - name: "MEDIUM | WN10-AC-000015 | PATCH | The period of time before the bad logon counter is reset must be configured to 15 minutes."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: ResetLockoutCount
       value: "{{ win10stig_account_settings.resetlockoutcount }}"
   when:
       - wn10_AC_000015
+      - not win10stig_cloud_based_system
   tags:
       - WN10-AC-000015
       - CAT2
@@ -881,12 +882,13 @@
       - V-220741
 
 - name: "MEDIUM | WN10-AC-000005 | PATCH | Windows 10 account lockout duration must be configured to 15 minutes or greater."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: LockoutDuration
       value: "{{ win10stig_account_settings.lockoutduration }}"
   when:
       - wn10_AC_000005
+      - not win10stig_cloud_based_system
   tags:
       - WN10-AC-000005
       - CAT2
@@ -896,7 +898,7 @@
       - V-220739
 
 - name: "MEDIUM | WN10-AC-000020 | PATCH | The password history must be configured to 24 passwords remembered."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: PasswordHistorySize
       value: "{{ win10stig_account_settings.passwordhistory }}"
@@ -911,7 +913,7 @@
       - V-220742
 
 - name: "MEDIUM | WN10-AC-000025 | PATCH | The maximum password age must be configured to 60 days or less."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: MaximumPasswordAge
       value: "{{ win10stig_account_settings.max_pass_age }}"
@@ -926,7 +928,7 @@
       - V-220743
 
 - name: "MEDIUM | WN10-AC-000030 | PATCH | The minimum password age must be configured to at least 1 day."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: MinimumPasswordAge
       value: "{{ win10stig_account_settings.min_pass_age }}"
@@ -941,7 +943,7 @@
       - V-220744
 
 - name: "MEDIUM | WN10-AC-000035 | PATCH | Passwords must, at a minimum, be 14 characters."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: MinimumPasswordLength
       value: "{{ win10stig_account_settings.min_pass_length }}"
@@ -956,7 +958,7 @@
       - V-220745
 
 - name: "MEDIUM | WN10-AC-000040 | PATCH | The built-in Microsoft password complexity filter must be enabled."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: PasswordComplexity
       value: 1
@@ -976,7 +978,7 @@
 - name: |
     "MEDIUM | WN10-AU-000005 | PATCH | The system must be configured to audit Account Logon - Credential Validation failures."
     "MEDIUM | WN10-AU-000010 | PATCH |  The system must be configured to audit Account Logon - Credential Validation successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Credential Validation
       audit_type: "{{ (wn10_AU_000005 and not wn10_AU_000010) | ternary ('failure', '') }}{{ (wn10_AU_000010 and not wn10_AU_000005) | ternary ('success', '') }}{{ (wn10_AU_000005 and wn10_AU_000010) | ternary ('success, failure', '') }}"
   when:
@@ -994,7 +996,7 @@
       - V-220749
 
 - name: "MEDIUM | WN10-AU-000030 | PATCH | The system must be configured to audit Account Management - Security Group Management successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Security Group Management
       audit_type: "{{ win10stig_audit_settings.security_group_mngmnt_include_failure | ternary ('success, failure', 'success' ) }}"
   when:
@@ -1016,7 +1018,7 @@
 - name: |
     "MEDIUM | WN10-AU-000035 | PATCH | The system must be configured to audit Account Management - User Account Management failures."
     "MEDIUM | WN10-AU-000040 | PATCH | The system must be configured to audit Account Management - User Account Management successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: User Account Management
       audit_type: "{{ (wn10_AU_000035 and not wn10_AU_000040) | ternary ('failure', '') }}{{ (wn10_AU_000040 and not wn10_AU_000035) | ternary ('success', '') }}{{ (wn10_AU_000035 and wn10_AU_000040) | ternary ('success, failure', '') }}"
   when:
@@ -1040,7 +1042,7 @@
       - V-220752
 
 - name: "MEDIUM | WN10-AU-000045 | PATCH | The system must be configured to audit Detailed Tracking - PNP Activity successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Plug and Play Events
       audit_type: "{{ win10stig_audit_settings.pnp_activity_include_failure | ternary ('success, failure', 'success' ) }}"
   when:
@@ -1055,7 +1057,7 @@
       - V-220753
 
 - name: "MEDIUM | WN10-AU-000050 | PATCH | The system must be configured to audit Detailed Tracking - Process Creation successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Process Creation
       audit_type: "{{ win10stig_audit_settings.process_creation_include_failure | ternary ('success, failure', 'success' ) }}"
   when:
@@ -1070,7 +1072,7 @@
       - V-220754
 
 - name: "MEDIUM | WN10-AU-000054 | PATCH | The system must be configured to audit Logon/Logoff - Account Lockout failures."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Account Lockout
       audit_type: "{{ win10stig_audit_settings.accnt_lockout_include_success | ternary ('success, failure', 'failure' ) }}"
   when:
@@ -1084,7 +1086,7 @@
       - V-220755
 
 - name: "MEDIUM | WN10-AU-000060 | PATCH | The system must be configured to audit Logon/Logoff - Group Membership successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Group Membership
       audit_type: "{{ win10stig_audit_settings.group_membership_include_failure | ternary ('success, failure', 'success' ) }}"
   when:
@@ -1098,7 +1100,7 @@
       - V-220756
 
 - name: "MEDIUM | WN10-AU-000065 | PATCH | The system must be configured to audit Logon/Logoff - Logoff successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Logoff
       audit_type: "{{ win10stig_audit_settings.logoff_include_failure | ternary ('success, failure', 'success' ) }}"
   when:
@@ -1115,7 +1117,7 @@
 - name: |
     "MEDIUM | WN10-AU-000070 | PATCH | The system must be configured to audit Logon/Logoff - Logon failures."
     "MEDIUM | WN10-AU-000075 | PATCH | The system must be configured to audit Logon/Logoff - Logon successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Logon
       audit_type: "{{ (wn10_AU_000070 and not wn10_AU_000075) | ternary ('failure', '') }}{{ (wn10_AU_000075 and not wn10_AU_000070) | ternary ('success', '') }}{{ (wn10_AU_000070 and wn10_AU_000075) | ternary ('success, failure', '') }}"
   when:
@@ -1134,7 +1136,7 @@
       - V-220759
 
 - name: "MEDIUM | WN10-AU-000080 | PATCH | The system must be configured to audit Logon/Logoff - Special Logon successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Special Logon
       audit_type: "{{ win10stig_audit_settings.special_logon_include_failure | ternary ('success, failure', 'success' ) }}"
   when:
@@ -1150,7 +1152,7 @@
 - name: |
     "MEDIUM | WN10-AU-000081 | PATCH | Windows 10 must be configured to audit Object Access - File Share failures."
     "MEDIUM | WN10-AU-000082 | PATCH | Windows 10 must be configured to audit Object Access - File Share successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: File Share
       audit_type: "{{ (wn10_AU_000081 and not wn10_AU_000082) | ternary ('failure', '') }}{{ (wn10_AU_000082 and not wn10_AU_000081) | ternary ('success', '') }}{{ (wn10_AU_000081 and wn10_AU_000082) | ternary ('success, failure', '') }}"
   when:
@@ -1170,7 +1172,7 @@
 - name: |
     "MEDIUM | WN10-AU-000083 | PATCH | Windows 10 must be configured to audit Object Access - Other Object Access Events successes."
     "MEDIUM | WN10-AU-000084 | PATCH | Windows 10 must be configured to audit Object Access - Other Object Access Events failures."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Other Object Access Events
       audit_type: "{{ (wn10_AU_000083 and not wn10_AU_000084) | ternary ('success', '') }}{{ (wn10_AU_000084 and not wn10_AU_000083) | ternary ('failure', '') }}{{ (wn10_AU_000083 and wn10_AU_000084) | ternary ('success, failure', '') }}"
   when:
@@ -1190,7 +1192,7 @@
 - name: |
     "MEDIUM | WN10-AU-000085 | PATCH | The system must be configured to audit Object Access - Removable Storage failures."
     "MEDIUM | WN10-AU-000090 | PATCH | The system must be configured to audit Object Access - Removable Storage successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Removable Storage
       audit_type: "{{ (wn10_AU_000085 and not wn10_AU_000090) | ternary ('failure', '') }}{{ (wn10_AU_000090 and not wn10_AU_000085) | ternary ('success', '') }}{{ (wn10_AU_000085 and wn10_AU_000090) | ternary ('success, failure', '') }}"
   when:
@@ -1208,7 +1210,7 @@
       - V-220766
 
 - name: "MEDIUM | WN10-AU-000100 | PATCH | The system must be configured to audit Policy Change - Audit Policy Change successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Audit Policy Change
       audit_type: "{{ win10stig_audit_settings.audit_policy_change_include_failure | ternary ('success, failure', 'success' ) }}"
   when:
@@ -1222,7 +1224,7 @@
       - V-220767
 
 - name: "MEDIUM | WN10-AU-000105 | PATCH | The system must be configured to audit Policy Change - Authentication Policy Change successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Authentication Policy Change
       audit_type: "{{ win10stig_audit_settings.authentication_policy_change_include_failure | ternary ('success, failure', 'success' ) }}"
   when:
@@ -1237,7 +1239,7 @@
       - V-220768
 
 - name: "MEDIUM | WN10-AU-000107 | PATCH | The system must be configured to audit Policy Change - Authorization Policy Change successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Authorization Policy Change
       audit_type: "{{ win10stig_audit_settings.authorization_policy_change_include_failure | ternary ('success, failure', 'success' ) }}"
   when:
@@ -1253,7 +1255,7 @@
 - name: |
     "MEDIUM | WN10-AU-000110 | PATCH | The system must be configured to audit Privilege Use - Sensitive Privilege Use failures."
     "MEDIUM | WN10-AU-000115 | PATCH | The system must be configured to audit Privilege Use - Sensitive Privilege Use successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Sensitive Privilege Use
       audit_type: "{{ (wn10_AU_000110 and not wn10_AU_000115) | ternary ('failure', '') }}{{ (wn10_AU_000115 and not wn10_AU_000110) | ternary ('success', '') }}{{ (wn10_AU_000110 and wn10_AU_000115) | ternary ('success, failure', '') }}"
   when:
@@ -1272,7 +1274,7 @@
       - V-220771
 
 - name: "MEDIUM | WN10-AU-000120 | PATCH | The system must be configured to audit System - IPSec Driver failures."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: IPSec Driver
       audit_type: "{{ win10stig_audit_settings.ipsec_drive_include_success | ternary ('success, failure', 'failure' ) }}"
   when:
@@ -1288,7 +1290,7 @@
 - name: |
     "MEDIUM | WN10-AU-000130 | PATCH | The system must be configured to audit System - Other System Events successes."
     "MEDIUM | WN10-AU-000135 | PATCH | The system must be configured to audit System - Other System Events failures."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Other System Events
       audit_type: "{{ (wn10_AU_000130 and not wn10_AU_000135) | ternary ('success', '') }}{{ (wn10_AU_000135 and not wn10_AU_000130) | ternary ('failure', '') }}{{ (wn10_AU_000130 and wn10_AU_000135) | ternary ('success, failure', '') }}"
   when:
@@ -1306,7 +1308,7 @@
       - V-220774
 
 - name: "MEDIUM | WN10-AU-000140 | PATCH | The system must be configured to audit System - Security State Change successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Security State Change
       audit_type: "{{ win10stig_audit_settings.security_state_change_include_failure | ternary ('success, failure', 'success' ) }}"
   when:
@@ -1321,7 +1323,7 @@
       - V-220775
 
 - name: "MEDIUM | WN10-AU-000150 | PATCH | The system must be configured to audit System - Security System Extension successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Security System Extension
       audit_type: "{{ win10stig_audit_settings.security_system_extension_include_failure | ternary ('success, failure', 'success' ) }}"
   when:
@@ -1338,7 +1340,7 @@
 - name: |
     "MEDIUM | WN10-AU-000155 | PATCH | The system must be configured to audit System - System Integrity failures."
     "MEDIUM | WN10-AU-000160 | PATCH | The system must be configured to audit System - System Integrity successes."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: System Integrity
       audit_type: "{{ (wn10_AU_000155 and not wn10_AU_000160) | ternary ('failure', '') }}{{ (wn10_AU_000160 and not wn10_AU_000155) | ternary ('success', '') }}{{ (wn10_AU_000155 and wn10_AU_000160) | ternary ('success, failure', '') }}"
   when:
@@ -1357,7 +1359,7 @@
       - V-220778
 
 - name: "MEDIUM | WN10-AU-000500 | PATCH | The Application event log size must be configured to 32768 KB or greater."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\Application
       value: MaxSize
       state: present
@@ -1374,7 +1376,7 @@
       - V-220779
 
 - name: "MEDIUM | WN10-AU-000505 | PATCH | The Security event log size must be configured to 1024000 KB or greater."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\Security
       value: MaxSize
       state: present
@@ -1391,7 +1393,7 @@
       - V-220780
 
 - name: "MEDIUM | WN10-AU-000510 | PATCH | The System event log size must be configured to 32768 KB or greater."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\System
       value: MaxSize
       state: present
@@ -1410,7 +1412,7 @@
 - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts."
   block:
       - name: "MEDIUM | WN10-AU-000515 | PATCH | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Set Default Log Locations."
-        win_regedit:
+        ansible.windows.win_regedit:
             path: HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\Application
             value: File
             state: present
@@ -1419,14 +1421,14 @@
         when: win10stig_default_log_location
 
       - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Get Current Permissions For Default Application Log."
-        win_shell: get-acl c:\Windows\System32\winevt\Logs\Application.evtx | FL AccessToString
+        ansible.windows.win_shell: get-acl c:\Windows\System32\winevt\Logs\Application.evtx | FL AccessToString
         changed_when: false
         failed_when: false
         register: wn10_au_000515_app_log_permissions
         when: win10stig_default_log_location
 
       - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Permissions warning for accounts."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Ensure the permissions on the Application event log (Application.evtx) are configured"
                 - "to prevent standard user accounts or groups from having access."
@@ -1434,7 +1436,7 @@
         when: win10stig_default_log_location
 
       - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Warning message for default location change."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! The location of the logs is not set to default location."
                 - "When adding Eventlog to the permissions, it must be entered as NT Service\\Eventlog."
@@ -1462,7 +1464,7 @@
 - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts."
   block:
       - name: "MEDIUM | WN10-AU-000520 | PATCH | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Set Default Log Locations."
-        win_regedit:
+        ansible.windows.win_regedit:
             path: HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\Security
             value: File
             state: present
@@ -1471,14 +1473,14 @@
         when: win10stig_default_log_location
 
       - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Get Current Permissions For Default Security Log."
-        win_shell: get-acl c:\Windows\System32\winevt\Logs\Security.evtx | FL AccessToString
+        ansible.windows.win_shell: get-acl c:\Windows\System32\winevt\Logs\Security.evtx | FL AccessToString
         changed_when: false
         failed_when: false
         register: wn10_au_000520_security_log_permissions
         when: win10stig_default_log_location
 
       - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Permissions warning for accounts."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Ensure the permissions on the Security event log (Security.evtx) are configured"
                 - "to prevent standard user accounts or groups from having access."
@@ -1486,7 +1488,7 @@
         when: win10stig_default_log_location
 
       - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Warning message for default location change."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! The location of the logs is not set to default location."
                 - "When adding Eventlog to the permissions, it must be entered as NT Service\\Eventlog."
@@ -1514,7 +1516,7 @@
 - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts."
   block:
       - name: "MEDIUM | WN10-AU-000525 | PATCH | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Set Default Log Locations."
-        win_regedit:
+        ansible.windows.win_regedit:
             path: HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\System
             value: File
             state: present
@@ -1523,14 +1525,14 @@
         when: win10stig_default_log_location
 
       - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Get Current Permissions For Default System Log."
-        win_shell: get-acl c:\Windows\System32\winevt\Logs\System.evtx | FL AccessToString
+        ansible.windows.win_shell: get-acl c:\Windows\System32\winevt\Logs\System.evtx | FL AccessToString
         changed_when: false
         failed_when: false
         register: wn10_au_000520_system_log_permissions
         when: win10stig_default_log_location
 
       - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Permissions warning for accounts."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Ensure the permissions on the Security event log (System.evtx) are configured"
                 - "to prevent standard user accounts or groups from having access."
@@ -1538,7 +1540,7 @@
         when: win10stig_default_log_location
 
       - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Warning message for default location change."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! The location of the logs is not set to default location."
                 - "When adding Eventlog to the permissions, it must be entered as NT Service\\Eventlog."
@@ -1564,7 +1566,7 @@
       - V-220784
 
 - name: "MEDIUM | WN10-AU-000555 | PATCH | Windows 10 must be configured to audit Other Policy Change Events Failures."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Other Policy Change Events
       audit_type: failure
   when:
@@ -1580,7 +1582,7 @@
 - name: |
     "MEDIUM | WN10-AU-000560 | PATCH | Windows 10 must be configured to audit other Logon/Logoff Events Successes."
     "MEIDUM | WN10-AU-000565 | PATCH | Windows 10 must be configured to audit other Logon/Logoff Events Failures."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Other Logon/Logoff Events
       audit_type: "{{ (wn10_AU_000560 and not wn10_AU_000565) | ternary ('success', '') }}{{ (wn10_AU_000565 and not wn10_AU_000560) | ternary ('failure', '') }}{{ (wn10_AU_000560 and wn10_AU_000565) | ternary ('success, failure', '') }}"
   when:
@@ -1598,7 +1600,7 @@
       - V-220788
 
 - name: "MEDIUM | WN10-AU-000570 | PATCH | Windows 10 must be configured to audit Detailed File Share Failures."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: Detailed File Share
       audit_type: "{{ win10stig_audit_settings.detailed_file_share_include_success | ternary ('success, failure', 'failure' ) }}"
   when:
@@ -1614,7 +1616,7 @@
 - name: |
     "MEDIUM | WN10-AU-000575 | PATCH | Windows 10 must be configured to audit MPSSVC Rule-Level Policy Change Successes."
     "MEDIUM | WN10-AU-000580 | PATCH | Windows 10 must be configured to audit MPSSVC Rule-Level Policy Change Failures."
-  win_audit_policy_system:
+  community.windows.win_audit_policy_system:
       subcategory: MPSSVC Rule-Level Policy Change
       audit_type: "{{ (wn10_AU_000575 and not wn10_AU_000580) | ternary ('success', '') }}{{ (wn10_AU_000580 and not wn10_AU_000575) | ternary ('failure', '') }}{{ (wn10_AU_000575 and wn10_AU_000580) | ternary ('success, failure', '') }}"
   when:
@@ -1632,7 +1634,7 @@
       - V-220791
 
 - name: "MEDIUM | WN10-CC-000005 | PATCH | Camera access from the lock screen must be disabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization
       value: NoLockScreenCamera
       data: 1
@@ -1648,7 +1650,7 @@
       - V-220792
 
 - name: "MEDIUM | WN10-CC-000007 | PATCH | Windows 10 must cover or disable the built-in or attached camera when not in use."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\webcam
       value: Value
       data: deny
@@ -1664,7 +1666,7 @@
       - V-220793
 
 - name: "MEDIUM | WN10-CC-000010 | PATCH | The display of slide shows on the lock screen must be disabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization
       value: NoLockScreenSlideshow
       data: 1
@@ -1680,7 +1682,7 @@
       - V-220794
 
 - name: "MEDIUM | WN10-CC-000020 | PATCH | IPv6 source routing must be configured to highest protection."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters
       value: DisableIpSourceRouting
       data: 2
@@ -1696,7 +1698,7 @@
       - V-220795
 
 - name: "MEDIUM | WN10-CC-000025 | PATCH | The system must be configured to prevent IP source routing."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters
       value: DisableIPSourceRouting
       data: 2
@@ -1712,7 +1714,7 @@
       - V-220796
 
 - name: "MEDIUM | WN10-CC-000037 | PATCH | Local administrator accounts must have their privileged token filtered to prevent elevated privileges from being used over the network on domain systems."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: LocalAccountTokenFilterPolicy
       data: 0
@@ -1729,7 +1731,7 @@
       - V-220799
 
 - name: "MEDIUM | WN10-CC-000038 | PATCH | WDigest Authentication must be disabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\Wdigest
       value: UseLogonCredential
       data: 0
@@ -1745,7 +1747,7 @@
       - V-220800
 
 - name: "MEDIUM | WN10-CC-000039 | PATCH | Run as different user must be removed from context menus."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:{{ item }}
       value: SuppressionPolicy
       data: 4096
@@ -1766,7 +1768,7 @@
       - V-220801
 
 - name: "MEDIUM | WN10-CC-000040 | PATCH | Insecure logons to an SMB server must be disabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\LanmanWorkstation
       value: AllowInsecureGuestAuth
       data: 0
@@ -1782,7 +1784,7 @@
       - V-220802
 
 - name: "MEDIUM | WN10-CC-000044 | PATCH | Internet connection sharing must be disabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Network Connections
       value: NC_ShowSharedAccessUI
       data: 0
@@ -1798,7 +1800,7 @@
       - V-220803
 
 - name: "MEDIUM | WN10-CC-000050 | PATCH | Hardened UNC Paths must be defined to require mutual authentication and integrity for at least the SYSVOL and NETLOGON shares."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\NetworkProvider\HardenedPaths
       value: "{{ item }}"
       data: RequireMutualAuthentication=1, RequireIntegrity=1
@@ -1818,7 +1820,7 @@
       - V-250319
 
 - name: "MEDIUM | WN10-CC-000052 | PATCH | Windows 10 must be configured to prioritize ECC Curves with longer key lengths first."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Cryptography\Configuration\SSL\00010002
       value: EccCurves
       data: NistP384 NistP256
@@ -1834,7 +1836,7 @@
       - V-220805
 
 - name: "MEDIUM | WN10-CC-000055 | PATCH | Simultaneous connections to the Internet or a Windows domain must be limited."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WcmSvc\GroupPolicy
       value: fMinimizeConnections
       data: 3
@@ -1850,7 +1852,7 @@
       - V-220806
 
 - name: "MEDIUM | WN10-CC-000060 | PATCH | Connections to non-domain networks when connected to a domain authenticated network must be blocked."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WcmSvc\GroupPolicy
       value: fBlockNonDomain
       data: 1
@@ -1868,7 +1870,7 @@
 
 # This functionality has been removed in Windows 10 v1803 and newer and is not applicable to those newer versions
 - name: "MEDIUM | WN10-CC-000065 | PATCH | Wi-Fi Sense must be disabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\WcmSvc\wifinetworkmanager\config
       value: AutoConnectAllowedOEM
       data: 0
@@ -1885,7 +1887,7 @@
       - V-220808
 
 - name: "MEDIUM | WN10-CC-000066 | PATCH | Command line data must be included in process creation events."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit
       value: ProcessCreationIncludeCmdLine_Enabled
       data: 1
@@ -1902,7 +1904,7 @@
 
 # This control is not applicable to Windows 10 version 1507 and 1607
 - name: "MEDIUM | WN10-CC-000068 | PATCH | Windows 10 must be configured to enable Remote host allows delegation of non-exportable credentials."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation
       value: AllowProtectedCreds
       data: 1
@@ -1920,7 +1922,7 @@
       - V-220810
 
 - name: "MEDIUM | WN10-CC-000085 | PATCH | Early Launch Antimalware, Boot-Start Driver Initialization Policy must prevent boot drivers."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Policies\EarlyLaunch
       value: DriverLoadPolicy
       data: "{{ win10stig_boot_driver_init_policy }}"
@@ -1936,7 +1938,7 @@
       - V-220813
 
 - name: "MEDIUM | WN10-CC-000090 | PATCH | Group Policy objects must be reprocessed even if they have not changed."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Group Policy\{35378EAC-683F-11D2-A89A-00C04FBBCFA2}
       value: NoGPOListChanges
       data: 0
@@ -1952,7 +1954,7 @@
       - V-220814
 
 - name: "MEDIUM | WN10-CC-000100 | PATCH | Downloading print driver packages over HTTP must be prevented."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers
       value: DisableWebPnPDownload
       data: 1
@@ -1968,7 +1970,7 @@
       - V-220815
 
 - name: "MEDIUM | WN10-CC-000105 | PATCH | Web publishing and online ordering wizards must be prevented from downloading a list of providers."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
       value: NoWebServices
       data: 1
@@ -1984,7 +1986,7 @@
       - V-220816
 
 - name: "MEDIUM | WN10-CC-000110 | PATCH | Printing over HTTP must be prevented."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers
       value: DisableHTTPPrinting
       data: 1
@@ -2000,7 +2002,7 @@
       - V-220817
 
 - name: "MEDIUM | WN10-CC-000115 | PATCH | Systems must at least attempt device authentication using certificates."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters
       value: DevicePKInitEnabled
       data: 1
@@ -2017,7 +2019,7 @@
       - V-220818
 
 - name: "MEDIUM | WN10-CC-000120 | PATCH | The network selection user interface (UI) must not be displayed on the logon screen."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
       value: DontDisplayNetworkSelectionUI
       data: 1
@@ -2033,7 +2035,7 @@
       - V-220819
 
 - name: "MEDIUM | WN10-CC-000130 | PATCH | Local users on domain-joined computers must not be enumerated."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
       value: EnumerateLocalUsers
       data: 0
@@ -2050,7 +2052,7 @@
       - V-220820
 
 - name: "MEDIUM | WN10-CC-000145 | PATCH | Users must be prompted for a password on resume from sleep (on battery)."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Power\PowerSettings\0e796bdb-100d-47d6-a2d5-f7d2daa51f51
       value: DCSettingIndex
       data: 1
@@ -2066,7 +2068,7 @@
       - V-220821
 
 - name: "MEDIUM | WN10-CC-000150 | PATCH | The user must be prompted for a password on resume from sleep (plugged in)."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Power\PowerSettings\0e796bdb-100d-47d6-a2d5-f7d2daa51f51
       value: ACSettingIndex
       data: 1
@@ -2082,7 +2084,7 @@
       - V-220822
 
 - name: "MEDIUM | WN10-CC-000165 | PATCH | Unauthenticated RPC clients must be restricted from connecting to the RPC server."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Rpc
       value: RestrictRemoteClients
       data: 1
@@ -2099,7 +2101,7 @@
 
 # Windows 10 v1507 LTSB version does not include this setting and this control is NA to those systems
 - name: "MEDIUM | WN10-CC-000195 | PATCH | Enhanced anti-spoofing for facial recognition must be enabled on Window 10."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Biometrics\FacialFeatures
       value: EnhancedAntiSpoofing
       data: 1
@@ -2116,7 +2118,7 @@
       - V-220830
 
 - name: "MEDIUM | WN10-CC-000200 | PATCH | Administrator accounts must not be enumerated during elevation."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\CredUI
       value: EnumerateAdministrators
       data: 0
@@ -2132,7 +2134,7 @@
       - V-220832
 
 - name: "MEDIUM | WN10-CC-000204 | PATCH | If Enhanced diagnostic data is enabled it must be limited to the minimum required to support Windows Analytics."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection
       value: LimitEnhancedDiagnosticDataWindowsAnalytics
       data: 1
@@ -2150,7 +2152,7 @@
       - V-220833
 
 - name: "MEDIUM | WN10-CC-000205 | PATCH | Windows Telemetry must not be configured to Full."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection
       value: AllowTelemetry
       data: "{{ win10stig_allow_telemetry_value }}"
@@ -2168,14 +2170,14 @@
 - name: "MEDIUM | WN10-CC-000210 | PATCH | The Windows Defender SmartScreen for Explorer must be enabled."
   block:
       - name: "MEDIUM | WN10-CC-000210 | PATCH | The Windows Defender SmartScreen for Explorer must be enabled. | SmartScreen enable"
-        win_regedit:
+        ansible.windows.win_regedit:
             path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
             value: EnableSmartScreen
             data: 1
             type: dword
 
       - name: "MEDIUM | WN10-CC-000210 | PATCH | The Windows Defender SmartScreen for Explorer must be enabled. | Block ShellSmartScreen"
-        win_regedit:
+        ansible.windows.win_regedit:
             path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
             value: ShellSmartScreenLevel
             data: Block
@@ -2191,7 +2193,7 @@
       - V-220836
 
 - name: "MEDIUM | WN10-CC-000215 | PATCH | Explorer Data Execution Prevention must be enabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer
       value: NoDataExecutionPrevention
       data: 0
@@ -2207,7 +2209,7 @@
       - V-220837
 
 - name: "MEDIUM | WN10-CC-000225 | PATCH | File Explorer shell protocol must run in protected mode."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
       value: PreXPSP2ShellProtocolBehavior
       data: 0
@@ -2223,7 +2225,7 @@
       - V-220839
 
 - name: "MEDIUM | WN10-CC-000230 | PATCH | Users must not be allowed to ignore Windows Defender SmartScreen filter warnings for malicious websites in Microsoft Edge."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\PhishingFilter
       value: PreventOverride
       data: 1
@@ -2239,7 +2241,7 @@
       - V-220840
 
 - name: "MEDIUM | WN10-CC-000235 | PATCH | Users must not be allowed to ignore Windows Defender SmartScreen filter warnings for unverified files in Microsoft Edge."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\PhishingFilter
       value: PreventOverrideAppRepUnknown
       data: 1
@@ -2255,7 +2257,7 @@
       - V-220841
 
 - name: "MEDIUM | WN10-CC-000238 | PATCH | Windows 10 must be configured to prevent certificate error overrides in Microsoft Edge."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Internet Settings
       value: PreventCertErrorOverrides
       data: 1
@@ -2271,10 +2273,10 @@
       - V-220842
 
 - name: "MEDIUM | WN10-CC-000245 | PATCH | The password manager function in the Edge browser must be disabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main
       value: FormSuggest Passwords
-      data: no
+      data: no  # yamllint disable-line rule:truthy
       type: string
   when:
       - wn10_CC_000245
@@ -2287,7 +2289,7 @@
       - V-220843
 
 - name: "MEDIUM | WN10-CC-000250 | PATCH | The Windows Defender SmartScreen filter for Microsoft Edge must be enabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\PhishingFilter
       value: EnabledV9
       data: 1
@@ -2303,7 +2305,7 @@
       - V-220844
 
 - name: "MEDIUM | WN10-CC-000252 | PATCH | Windows 10 must be configured to disable Windows Game Recording and Broadcasting."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR
       value: AllowGameDVR
       data: 0
@@ -2319,7 +2321,7 @@
       - V-220845
 
 - name: "MEDIUM | WN10-CC-000255 | PATCH | The use of a hardware security device with Windows Hello for Business must be enabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\PassportForWork
       value: RequireSecurityDevice
       data: 1
@@ -2335,7 +2337,7 @@
       - V-220846
 
 - name: "MEDIUM | WN10-CC-000260 | PATCH | Windows 10 must be configured to require a minimum pin length of six characters or greater."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\PassportForWork\PINComplexity
       value: MinimumPINLength
       data: "{{ win10stig_min_pin_length }}"
@@ -2351,7 +2353,7 @@
       - V-220847
 
 - name: "MEDIUM | WN10-CC-000270 | PATCH | Passwords must not be saved in the Remote Desktop Client."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
       value: DisablePasswordSaving
       data: 1
@@ -2367,7 +2369,7 @@
       - V-220848
 
 - name: "MEDIUM | WN10-CC-000275 | PATCH | Local drives must be prevented from sharing with Remote Desktop Session Hosts."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
       value: fDisableCdm
       data: 1
@@ -2383,7 +2385,7 @@
       - V-220849
 
 - name: "MEDIUM | WN10-CC-000280 | PATCH | Remote Desktop Services must always prompt a client for passwords upon connection."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
       value: fPromptForPassword
       data: 1
@@ -2399,7 +2401,7 @@
       - V-220850
 
 - name: "MEDIUM | WN10-CC-000285 | PATCH | The Remote Desktop Session Host must require secure RPC communications."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
       value: fEncryptRPCTraffic
       data: 1
@@ -2415,7 +2417,7 @@
       - V-220851
 
 - name: "MEDIUM | WN10-CC-000290 | PATCH | Remote Desktop Services must be configured with the client connection encryption set to the required level."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
       value: MinEncryptionLevel
       data: 3
@@ -2432,7 +2434,7 @@
       - V-220852
 
 - name: "MEDIUM | WN10-CC-000295 | PATCH | Attachments must be prevented from being downloaded from RSS feeds."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Feeds
       value: DisableEnclosureDownload
       data: 1
@@ -2448,7 +2450,7 @@
       - V-220853
 
 - name: "MEDIUM | WN10-CC-000300 | PATCH | Basic authentication for RSS feeds over HTTP must not be used."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Feeds
       value: AllowBasicAuthInClear
       data: 0
@@ -2464,7 +2466,7 @@
       - V-220854
 
 - name: "MEDIUM | WN10-CC-000305 | PATCH | Indexing of encrypted files must be turned off."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search
       value: AllowIndexingEncryptedStoresOrItems
       data: 0
@@ -2480,7 +2482,7 @@
       - V-220855
 
 - name: "MEDIUM | WN10-CC-000310 | PATCH | Users must be prevented from changing installation options."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer
       value: EnableUserControl
       data: 0
@@ -2496,7 +2498,7 @@
       - V-220856
 
 - name: "MEDIUM | WN10-CC-000320 | PATCH | Users must be notified if a web-based program attempts to install software."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer
       value: SafeForScripting
       data: 0
@@ -2512,7 +2514,7 @@
       - V-220858
 
 - name: "MEDIUM | WN10-CC-000325 | PATCH | Automatically signing in the last interactive user after a system-initiated restart must be disabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: DisableAutomaticRestartSignOn
       data: 1
@@ -2528,7 +2530,7 @@
       - V-220859
 
 - name: "MEDIUM | WN10-CC-000326 | PATCH | PowerShell script block logging must be enabled on Windows 10."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging
       value: EnableScriptBlockLogging
       data: 1
@@ -2544,7 +2546,7 @@
       - V-220860
 
 - name: "MEDIUM | WN10-CC-000328 | PATCH | The Windows Explorer Preview pane must be disabled for Windows 10."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
       value: "{{ item }}"
       data: 1
@@ -2563,13 +2565,14 @@
       - V-220861
 
 - name: "MEDIUM | WN10-CC-000335 | PATCH | The Windows Remote Management (WinRM) client must not allow unencrypted traffic."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client
       value: AllowUnencryptedTraffic
       data: 0
       type: dword
   when:
       - wn10_CC_000335
+      - not win_skip_for_test
   tags:
       - WN10-CC-000335
       - CAT2
@@ -2580,13 +2583,14 @@
       - V-220863
 
 - name: "MEDIUM | WN10-CC-000350 | PATCH | The Windows Remote Management (WinRM) service must not allow unencrypted traffic."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service
       value: AllowUnencryptedTraffic
       data: 0
       type: dword
   when:
       - wn10_CC_000350
+      - not win_skip_for_test
   tags:
       - WN10-CC-000350
       - CAT2
@@ -2597,13 +2601,14 @@
       - V-220866
 
 - name: "MEDIUM | WN10-CC-000355 | PATCH | The Windows Remote Management (WinRM) service must not store RunAs credentials."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service
       value: DisableRunAs
       data: 1
       type: dword
   when:
       - wn10_CC_000355
+      - not win_skip_for_test
   tags:
       - WN10-CC-000355
       - CAT2
@@ -2613,13 +2618,14 @@
       - V-220867
 
 - name: "MEDIUM | WN10-CC-000360 | PATCH | The Windows Remote Management (WinRM) client must not use Digest authentication."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client
       value: AllowDigest
       data: 0
       type: dword
   when:
       - wn10_CC_000360
+      - not win_skip_for_test
   tags:
       - WN10-CC-000360
       - CAT2
@@ -2630,7 +2636,7 @@
 
 # If "Allow voice activation” policy is configured to disallow applications to be activated with voice for all users this control is NA
 - name: "MEDIUM | WN10-CC-000365 | PATCH | Windows 10 must be configured to prevent Windows apps from being activated by voice while the system is locked."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy
       value: LetAppsActivateWithVoiceAboveLock
       data: 2
@@ -2647,7 +2653,7 @@
       - V-220869
 
 - name: "MEDIUM | WN10-CC-000370 | PATCH | The convenience PIN for Windows 10 must be disabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\Software\Policies\Microsoft\Windows\System
       value: AllowDomainPINLogon
       data: 0
@@ -2663,7 +2669,7 @@
       - V-220870
 
 - name: "MEDIUM | WN10-CC-000385 | PATCH | Windows Ink Workspace must be configured to disallow access above the lock."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\Software\Policies\Microsoft\WindowsInkWorkspace
       value: AllowWindowsInkWorkspace
       data: 1
@@ -2679,7 +2685,7 @@
       - V-220871
 
 - name: "MEDIUM | WN10-EP-000310 | PATCH | Windows 10 Kernel (Direct Memory Access) DMA Protection must be enabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\Software\Policies\Microsoft\Windows\Kernel DMA Protection
       value: DeviceEnumerationPolicy
       data: 0
@@ -2697,39 +2703,39 @@
 - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store."
   block:
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 3."
-        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 3*" -and $_.Thumbprint -Like "D73CA91102A2204A36459ED32213B467D7CE97FB"} | FL Subject, Issuer, Thumbprint, NotAfter
+        ansible.windows.win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 3*" -and $_.Thumbprint -Like "D73CA91102A2204A36459ED32213B467D7CE97FB"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
         failed_when: false
         register: wn10_pk_000005_root_3_Check
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warning!! No DOD Root CA 3 Certificate Installed."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! The DOD Root CA 3 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
         when: wn10_pk_000005_root_3_Check.stdout == ""
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 4."
-        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 4*" -and $_.Thumbprint -Like "B8269F25DBD937ECAFD4C35A9838571723F2D026"} | FL Subject, Issuer, Thumbprint, NotAfter
+        ansible.windows.win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 4*" -and $_.Thumbprint -Like "B8269F25DBD937ECAFD4C35A9838571723F2D026"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
         failed_when: false
         register: wn10_pk_000005_root_4_Check
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warning!! No DOD Root CA 4 Certificate Installed."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! The DOD Root CA 4 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
         when: wn10_pk_000005_root_4_Check.stdout == ""
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 5."
-        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 5*" -and $_.Thumbprint -Like "4ECB5CC3095670454DA1CBD410FC921F46B8564B"} | FL Subject, Issuer, Thumbprint, NotAfter
+        ansible.windows.win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*DoD Root CA 5*" -and $_.Thumbprint -Like "4ECB5CC3095670454DA1CBD410FC921F46B8564B"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
         failed_when: false
         register: wn10_pk_000005_root_5_Check
 
       - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warning!! No DOD Root CA 5 Certificate Installed."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! The DOD Root CA 5 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
@@ -2757,26 +2763,26 @@
 - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems."
   block:
       - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Check For ECA Root CA 2."
-        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*ECA Root CA 2*" -and $_.Thumbprint -Like "C313F919A6ED4E0E8451AFA930FB419A20F181E4"} | FL Subject, Issuer, Thumbprint, NotAfter
+        ansible.windows.win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*ECA Root CA 2*" -and $_.Thumbprint -Like "C313F919A6ED4E0E8451AFA930FB419A20F181E4"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
         failed_when: false
         register: wn10_pk_000010_eca_2_check
 
       - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Warning!! No ECA Root CA 2 Certificate Installed."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! The ECA Root CA 2 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
         when: wn10_pk_000010_eca_2_check.stdout == ""
 
       - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Check For ECA Root CA 4."
-        win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*ECA Root CA 4*" -and $_.Thumbprint -Like "73E8BB08E337D6A5A6AEF90CFFDD97D9176CB582"} | FL Subject, Issuer, Thumbprint, NotAfter
+        ansible.windows.win_shell: Get-ChildItem -Path Cert:Localmachine\root | Where {$_.Subject -Like "*ECA Root CA 4*" -and $_.Thumbprint -Like "73E8BB08E337D6A5A6AEF90CFFDD97D9176CB582"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
         failed_when: false
         register: wn10_pk_000010_eca_4_check
 
       - name: "MEDIUM | WN10-PK-000010 | PATCH | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Warning!! No ECA Root CA 4 Certificate Installed."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! The ECA Root CA 4 is not installed on the system or"
                 - "contains a incorrect Thumbprint for the Root CA Certificate."
@@ -2802,26 +2808,26 @@
 - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems."
   block:
       - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | DoD Interoperability Root CA 2 AC Thumb Check."
-        win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*DoD Interoperability*" -and $_.Subject -Like "*DoD*" -and $_.Thumbprint -Like "AC06108CA348CC03B53795C64BF84403C1DBD341"} | FL Subject, Issuer, Thumbprint, NotAfter
+        ansible.windows.win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*DoD Interoperability*" -and $_.Subject -Like "*DoD*" -and $_.Thumbprint -Like "AC06108CA348CC03B53795C64BF84403C1DBD341"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
         failed_when: false
         register: wn10_pk_000015_interop_check_for_ac
 
       - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warning!! No DoD Interoperability Root CA 2 Certificate Installed."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! The DoD Root CA 3 - DoD Interoperability Root CA 2 certificate is not installed on the system or"
                 - "does not contain Thumbprint AC06108CA348CC03B53795C64BF84403C1DBD341 for the Certificate."
         when: wn10_pk_000015_interop_check_for_ac.stdout == ""
 
       - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | DoD Interoperability Root CA 2 49 Thumb Check."
-        win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*DoD Interoperability*" -and $_.Subject -Like "*DoD*" -and $_.Thumbprint -Like "49CBE933151872E17C8EAE7F0ABA97FB610F6477"} | FL Subject, Issuer, Thumbprint, NotAfter
+        ansible.windows.win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*DoD Interoperability*" -and $_.Subject -Like "*DoD*" -and $_.Thumbprint -Like "49CBE933151872E17C8EAE7F0ABA97FB610F6477"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
         failed_when: false
         register: wn10_pk_000015_interop_check_for_49
 
       - name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warning!! No DoD Interoperability Root CA 2 Certificate Installed."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! The DoD Root CA 3 - DoD Interoperability Root CA 2 certificate is not installed on the system or"
                 - "does not contain Thumbprint 49CBE933151872E17C8EAE7F0ABA97FB610F6477 for the Certificate."
@@ -2848,13 +2854,13 @@
 - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems."
   block:
       - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | DoD CCEB Interop Check."
-        win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*US DoD CCEB Interoperability Root CA 2*" -and $_.Subject -Like "*DoD Root CA 3*" -and $_.Thumbprint -Like "AF132AC65DE86FC4FB3FE51FD637EBA0FF0B12A9"} | FL Subject, Issuer, Thumbprint, NotAfter
+        ansible.windows.win_shell: Get-ChildItem -Path Cert:Localmachine\disallowed | Where {$_.Issuer -Like "*US DoD CCEB Interoperability Root CA 2*" -and $_.Subject -Like "*DoD Root CA 3*" -and $_.Thumbprint -Like "AF132AC65DE86FC4FB3FE51FD637EBA0FF0B12A9"} | FL Subject, Issuer, Thumbprint, NotAfter
         changed_when: false
         failed_when: false
         register: wn10_pk_000020_cceb_interop_check
 
       - name: "MEDIUM | WN10-PK-000020 | PATCH | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warning!! No DoD Root CA 3 - US DoD CCEB Interoperability Certificate Installed."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! The DoD Root CA 3 - US DoD CCEB Interoperability Root CA 2 certificate is not installed on the system or"
                 - "does not contain Thumbprint AF132AC65DE86FC4FB3FE51FD637EBA0FF0B12A9 for the Certificate."
@@ -2877,12 +2883,11 @@
       - V-220906
 
 - name: "MEDIUM | WN10-RG-000005 | PATCH | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained."
-  win_shell: echo true
+  ansible.windows.win_shell: echo true
   changed_when: false
   failed_when: false
   when:
       - wn10_RG_000005
-      - win10stig_run_notimplemented
   tags:
       - WN10-RG-000005
       - CAT2
@@ -2890,15 +2895,15 @@
       - SRG-OS-000324-GPOS-00125
       - SV-220907r569187_rule
       - V-220907
-      - notimplemented
 
 - name: "MEDIUM | WN10-SO-000005 | PATCH | The built-in administrator account must be disabled."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: EnableAdminAccount
       value: 0
   when:
       - wn10_SO_000005
+      - not win_skip_for_test
   tags:
       - WN10-SO-000005
       - CAT2
@@ -2908,7 +2913,7 @@
       - V-220908
 
 - name: "MEDIUM | WN10-SO-000010 | PATCH | The built-in guest account must be disabled."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: EnableGuestAccount
       value: 0
@@ -2923,7 +2928,7 @@
       - V-220909
 
 - name: "MEDIUM | WN10-SO-000015 | PATCH | Local accounts with blank passwords must be restricted to prevent access from the network."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
       value: LimitBlankPasswordUse
       data: 1
@@ -2939,12 +2944,13 @@
       - V-220910
 
 - name: "MEDIUM | WN10-SO-000020 | PATCH | The built-in administrator account must be renamed."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: NewAdministratorName
       value: "{{ win10stig_new_administrator_name }}"
   when:
       - wn10_SO_000020
+      - not win_skip_for_test
   tags:
       - WN10-SO-000020
       - CAT2
@@ -2954,7 +2960,7 @@
       - V-220911
 
 - name: "MEDIUM | WN10-SO-000025 | PATCH | The built-in guest account must be renamed."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: NewGuestName
       value: "{{ win10stig_new_guest_name }}"
@@ -2969,7 +2975,7 @@
       - V-220912
 
 - name: "MEDIUM | WN10-SO-000030 | PATCH | Audit policy using subcategories must be enabled"
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
       value: SCENoApplyLegacyAuditPolicy
       data: 1
@@ -2985,7 +2991,7 @@
       - V-220913
 
 - name: "MEDIUM | WN10-SO-000035 | PATCH | Outgoing secure channel traffic must be encrypted or signed."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
       value: RequireSignOrSeal
       data: 1
@@ -3002,7 +3008,7 @@
       - V-220914
 
 - name: "MEDIUM | WN10-SO-000040 | PATCH | Outgoing secure channel traffic must be encrypted when possible."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
       value: SealSecureChannel
       data: 1
@@ -3019,7 +3025,7 @@
       - V-220915
 
 - name: "MEDIUM | WN10-SO-000045 | PATCH | Outgoing secure channel traffic must be signed when possible."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
       value: SignSecureChannel
       data: 1
@@ -3036,7 +3042,7 @@
       - V-220916
 
 - name: "MEDIUM | WN10-SO-000060 | PATCH | The system must be configured to require a strong session key."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
       value: RequireStrongKey
       data: 1
@@ -3053,7 +3059,7 @@
       - V-220919
 
 - name: "MEDIUM | WN10-SO-000070 | PATCH | The machine inactivity limit must be set to 15 minutes, locking the system with the screensaver."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: InactivityTimeoutSecs
       data: "{{ win10stig_inactivity_timeout }}"
@@ -3069,7 +3075,7 @@
       - V-220920
 
 - name: "MEDIUM | WN10-SO-000075 | PATCH | The required legal notice must be configured to display before console logon."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: LegalNoticeText
       data: "{{ win10stig_legalnotice }}"
@@ -3091,7 +3097,7 @@
       - V-220921
 
 - name: "MEDIUM | WN10-SO-000095 | PATCH | The Smart Card removal option must be configured to Force Logoff or Lock Workstation."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon
       value: SCRemoveOption
       data: "{{ win10stig_smartcard_remove_action }}"
@@ -3107,7 +3113,7 @@
       - V-220924
 
 - name: "MEDIUM | WN10-SO-000100 | PATCH | The Windows SMB client must be configured to always perform SMB packet signing."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters
       value: RequireSecuritySignature
       data: 1
@@ -3124,7 +3130,7 @@
       - V-220925
 
 - name: "MEDIUM | WN10-SO-000110 | PATCH | Unencrypted passwords must not be sent to third-party SMB Servers."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters
       value: EnablePlainTextPassword
       data: 0
@@ -3140,7 +3146,7 @@
       - V-220926
 
 - name: "MEDIUM | WN10-SO-000120 | PATCH | The Windows SMB server must be configured to always perform SMB packet signing."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\LanManServer\Parameters
       value: RequireSecuritySignature
       data: 1
@@ -3159,7 +3165,7 @@
 - name: |
     "MEDIUM | WN10-SO-000160 | PATCH | The system must be configured to prevent anonymous users from having the same rights as the Everyone group."
     "MEDIUM | WN10-00-000095 | PATCH | Permissions for system files and directories must conform to minimum requirements."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
       value: EveryoneIncludesAnonymous
       data: 0
@@ -3181,7 +3187,7 @@
       - V-220717
 
 - name: "MEDIUM | WN10-SO-000167 | PATCH | Remote calls to the Security Account Manager (SAM) must be restricted to Administrators."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
       value: RestrictRemoteSAM
       data: O:BAG:BAD:(A;;RC;;;BA)
@@ -3197,7 +3203,7 @@
       - V-220933
 
 - name: "MEDIUM | WN10-SO-000180 | PATCH | NTLM must be prevented from falling back to a Null session."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\LSA\MSV1_0
       value: allownullsessionfallback
       data: 0
@@ -3213,7 +3219,7 @@
       - V-220934
 
 - name: "MEDIUM | WN10-SO-000185 | PATCH | PKU2U authentication using online identities must be prevented."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\LSA\pku2u
       value: AllowOnlineID
       data: 0
@@ -3229,7 +3235,7 @@
       - V-220935
 
 - name: "MEDIUM | WN10-SO-000190 | PATCH | Kerberos encryption types must be configured to prevent the use of DES and RC4 encryption suites."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters
       value: SupportedEncryptionTypes
       data: 2147483640
@@ -3245,7 +3251,7 @@
       - V-220936
 
 - name: "MEDIUM | WN10-SO-000210 | PATCH | The system must be configured to the required LDAP client signing level."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\LDAP
       value: LDAPClientIntegrity
       data: 1
@@ -3261,7 +3267,7 @@
       - V-220939
 
 - name: "MEDIUM | WN10-SO-000215 | PATCH | The system must be configured to meet the minimum session security requirement for NTLM SSP based clients."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0
       value: NTLMMinClientSec
       data: 537395200
@@ -3277,7 +3283,7 @@
       - V-220940
 
 - name: "MEDIUM | WN10-SO-000220 | PATCH | The system must be configured to meet the minimum session security requirement for NTLM SSP based servers."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0
       value: NTLMMinServerSec
       data: 537395200
@@ -3293,7 +3299,7 @@
       - V-220941
 
 - name: "MEDIUM | WN10-SO-000230 | PATCH | The system must be configured to use FIPS-compliant algorithms for encryption, hashing, and signing."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\FIPSAlgorithmPolicy
       value: Enabled
       data: 1
@@ -3309,13 +3315,14 @@
       - V-220942
 
 - name: "MEDIUM | WN10-SO-000245 | PATCH | User Account Control approval mode for the built-in Administrator must be enabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: FilterAdministratorToken
       data: 1
       type: dword
   when:
       - wn10_SO_000245
+      - not win_skip_for_test
   tags:
       - WN10-SO-000245
       - CAT2
@@ -3325,7 +3332,7 @@
       - V-220944
 
 - name: "MEDIUM | WN10-SO-000250 | PATCH | User Account Control must, at minimum, prompt administrators for consent on the secure desktop."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: ConsentPromptBehaviorAdmin
       data: 2
@@ -3343,7 +3350,7 @@
 - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and non-privileged accounts."
   block:
       - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and non-privileged accounts. | Warning Message."
-        debug:
+        ansible.builtin.debug:
             msg: "Warning!! You are not on a domain which means you should configure Windows Hello for sign on options would be suggested based on the organizations needs and capabilities."
 
       - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and non-privileged accounts. | Warn Count."
@@ -3362,7 +3369,7 @@
       - V-220946
 
 - name: "MEDIUM | WN10-SO-000255 | PATCH | User Account Control must automatically deny elevation requests for standard users."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: ConsentPromptBehaviorUser
       data: 0
@@ -3378,7 +3385,7 @@
       - V-220947
 
 - name: "MEDIUM | WN10-SO-000260 | PATCH | User Account Control must be configured to detect application installations and prompt for elevation."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: EnableInstallerDetection
       data: 1
@@ -3394,7 +3401,7 @@
       - V-220948
 
 - name: "MEDIUM | WN10-SO-000265 | PATCH | User Account Control must only elevate UIAccess applications that are installed in secure locations."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: EnableSecureUIAPaths
       data: 1
@@ -3410,7 +3417,7 @@
       - V-220949
 
 - name: "MEDIUM | WN10-SO-000270 | PATCH | User Account Control must run all administrators in Admin Approval Mode, enabling UAC."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: EnableLUA
       data: 1
@@ -3426,7 +3433,7 @@
       - V-220950
 
 - name: "MEDIUM | WN10-SO-000275 | PATCH | User Account Control must virtualize file and registry write failures to per-user locations."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
       value: EnableVirtualization
       data: 1
@@ -3442,7 +3449,7 @@
       - V-220951
 
 - name: "MEDIUM | WN10-SO-000280 | PATCH | Passwords for enabled local Administrator accounts must be changed at least every 60 days."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: MaximumPasswordAge
       value: "{{ win10stig_max_pass_age }}"
@@ -3457,7 +3464,7 @@
       - V-220952
 
 - name: "MEDIUM | WN10-UC-000020 | PATCH | Zone information must be preserved when saving attachments."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Attachments
       value: SaveZoneInformation
       data: 2
@@ -3473,7 +3480,7 @@
       - V-220955
 
 - name: "MEDIUM | WN10-UR-000005 | PATCH | The Access Credential Manager as a trusted caller user right must not be assigned to any groups or accounts."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeTrustedCredManAccessPrivilege
       users: []
   when:
@@ -3487,7 +3494,7 @@
       - V-220956
 
 - name: "MEDIUM | WN10-UR-000010 | PATCH | The Access this computer from the network user right must only be assigned to the Administrators and Remote Desktop Users groups."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeNetworkLogonRight
       action: set
       users:
@@ -3504,7 +3511,7 @@
       - V-220957
 
 - name: "MEDIUM | WN10-UR-000025 | PATCH | The Allow log on locally user right must only be assigned to the Administrators and Users groups."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeInteractiveLogonRight
       action: set
       users:
@@ -3521,7 +3528,7 @@
       - V-220959
 
 - name: "MEDIUM | WN10-UR-000030 | PATCH | The Back up files and directories user right must only be assigned to the Administrators group."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeBackupPrivilege
       users: Administrators
       action: set
@@ -3538,7 +3545,7 @@
 - name: "MEDIUM | WN10-UR-000035 | PATCH | The Change the system time user right must only be assigned to Administrators and Local Service and NT SERVICE\autotimesvc."
   block:
       - name: "MEDIUM | WN10-UR-000035 | PATCH | The Change the system time user right must only be assigned to Administrators and Local Service and NT SERVICE\autotimesvc. | Set for Win 10 v1909 and newer"
-        win_user_right:
+        ansible.windows.win_user_right:
             name: SeSystemtimePrivilege
             action: set
             users:
@@ -3548,7 +3555,7 @@
         when: ansible_distribution_version >= "10.0.1909.0"
 
       - name: "MEDIUM | WN10-UR-000035 | PATCH | The Change the system time user right must only be assigned to Administrators and Local Service and NT SERVICE\autotimesvc."
-        win_user_right:
+        ansible.windows.win_user_right:
             name: SeSystemtimePrivilege
             action: set
             users:
@@ -3566,7 +3573,7 @@
       - V-220961
 
 - name: "MEDIUM | WN10-UR-000040 | PATCH | The Create a pagefile user right must only be assigned to the Administrators group."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeCreatePagefilePrivilege
       users: Administrators
       action: set
@@ -3581,7 +3588,7 @@
       - V-220962
 
 - name: "MEDIUM | WN10-UR-000050 | PATCH | The Create global objects user right must only be assigned to Administrators, Service, Local Service, and Network Service."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeCreateGlobalPrivilege
       action: set
       users:
@@ -3600,7 +3607,7 @@
       - V-220964
 
 - name: "MEDIUM | WN10-UR-000055 | PATCH | The Create permanent shared objects user right must not be assigned to any groups or accounts."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeCreatePermanentPrivilege
       users: []
   when:
@@ -3614,7 +3621,7 @@
       - V-220965
 
 - name: "MEDIUM | WN10-UR-000060 | PATCH | The Create symbolic links user right must only be assigned to the Administrators group."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeCreateSymbolicLinkPrivilege
       users: Administrators
       action: set
@@ -3631,7 +3638,7 @@
 - name: "MEDIUM | WN10-UR-000070 | PATCH | The Deny access to this computer from the network user right on workstations must be configured to prevent access from highly privileged domain accounts and local accounts on domain systems and unauthenticated access on all systems."
   block:
       - name: "MEDIUM | WN10-UR-000070 | PATCH | The Deny access to this computer from the network user right on workstations must be configured to prevent access from highly privileged domain accounts and local accounts on domain systems and unauthenticated access on all systems. | Domain member systems"
-        win_user_right:
+        ansible.windows.win_user_right:
             name: SeDenyNetworkLogonRight
             action: set
             users:
@@ -3642,7 +3649,7 @@
         when: ansible_windows_domain_member
 
       - name: "MEDIUM | WN10-UR-000070 | PATCH | The Deny access to this computer from the network user right on workstations must be configured to prevent access from highly privileged domain accounts and local accounts on domain systems and unauthenticated access on all systems. | Non-Domain systems"
-        win_user_right:
+        ansible.windows.win_user_right:
             name: SeDenyNetworkLogonRight
             users: Guests
             action: set
@@ -3658,7 +3665,7 @@
       - V-220968
 
 - name: "MEDIUM | WN10-UR-000075 | PATCH | The Deny log on as a batch job user right on domain-joined workstations must be configured to prevent access from highly privileged domain accounts."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeDenyBatchLogonRight
       action: set
       users:
@@ -3676,7 +3683,7 @@
       - V-220969
 
 - name: "MEDIUM | WN10-UR-000080 | PATCH | The Deny log on as a service user right on Windows 10 domain-joined workstations must be configured to prevent access from highly privileged domain accounts."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeDenyServiceLogonRight
       users:
           - Enterprise Admin
@@ -3696,7 +3703,7 @@
 - name: "MEDIM | WN10-UR-000085 | PATCH | The Deny log on locally user right on workstations must be configured to prevent access from highly privileged domain accounts on domain systems and unauthenticated access on all systems."
   block:
       - name: "MEDIM | WN10-UR-000085 | PATCH | The Deny log on locally user right on workstations must be configured to prevent access from highly privileged domain accounts on domain systems and unauthenticated access on all systems. | Domain member systems"
-        win_user_right:
+        ansible.windows.win_user_right:
             name: SeDenyInteractiveLogonRight
             action: set
             users:
@@ -3706,7 +3713,7 @@
         when: ansible_windows_domain_member
 
       - name: "MEDIM | WN10-UR-000085 | PATCH | The Deny log on locally user right on workstations must be configured to prevent access from highly privileged domain accounts on domain systems and unauthenticated access on all systems. | Non-Domain systems"
-        win_user_right:
+        ansible.windows.win_user_right:
             name: SeDenyInteractiveLogonRight
             users: Guests
             action: set
@@ -3724,7 +3731,7 @@
 - name: "MEDIUM | WN10-UR-000090 | PATCH | The Deny log on through Remote Desktop Services user right on Windows 10 workstations must at a minimum be configured to prevent access from highly privileged domain accounts and local accounts on domain systems and unauthenticated access on all systems."
   block:
       - name: "MEDIUM | WN10-UR-000090 | PATCH | The Deny log on through Remote Desktop Services user right on Windows 10 workstations must at a minimum be configured to prevent access from highly privileged domain accounts and local accounts on domain systems and unauthenticated access on all systems. | Domain memeber systems"
-        win_user_right:
+        ansible.windows.win_user_right:
             name: SeDenyRemoteInteractiveLogonRight
             action: set
             users:
@@ -3735,7 +3742,7 @@
         when: ansible_windows_domain_member
 
       - name: "MEDIUM | WN10-UR-000090 | PATCH | The Deny log on through Remote Desktop Services user right on Windows 10 workstations must at a minimum be configured to prevent access from highly privileged domain accounts and local accounts on domain systems and unauthenticated access on all systems. | Non-Domain systems"
-        win_user_right:
+        ansible.windows.win_user_right:
             name: SeDenyRemoteInteractiveLogonRight
             users: Guests
             action: set
@@ -3752,7 +3759,7 @@
       - V-220972
 
 - name: "MEDIUM | WN10-UR-000095 | PATCH | The Enable computer and user accounts to be trusted for delegation user right must not be assigned to any groups or accounts."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeEnableDelegationPrivilege
       users: []
   when:
@@ -3766,7 +3773,7 @@
       - V-220973
 
 - name: "MEDIUM | WN10-UR-000100 | PATCH | The Force shutdown from a remote system user right must only be assigned to the Administrators group."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeRemoteShutdownPrivilege
       users: Administrators
       action: set
@@ -3781,7 +3788,7 @@
       - V-220974
 
 - name: "MEDIUM | WN10-UR-000110 | PATCH | The Impersonate a client after authentication user right must only be assigned to Administrators, Service, Local Service, and Network Service."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeImpersonatePrivilege
       action: set
       users:
@@ -3800,7 +3807,7 @@
       - V-220975
 
 - name: "MEDIUM | WN10-UR-000120 | PATCH | The Load and unload device drivers user right must only be assigned to the Administrators group."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeLoadDriverPrivilege
       users: Administrators
       action: set
@@ -3815,7 +3822,7 @@
       - V-220976
 
 - name: "MEDIUM | WN10-UR-000125 | PATCH | The Lock pages in memory user right must not be assigned to any groups or accounts."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeLockMemoryPrivilege
       action: set
       users: []
@@ -3830,7 +3837,7 @@
       - V-220977
 
 - name: "MEDIUM | WN10-UR-000130 | PATCH | The Manage auditing and security log user right must only be assigned to the Administrators group."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeSecurityPrivilege
       users: Administrators
       action: set
@@ -3849,7 +3856,7 @@
       - V-220978
 
 - name: "MEDIUM | WN10-UR-000140 | PATCH | The Modify firmware environment values user right must only be assigned to the Administrators group."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeSystemEnvironmentPrivilege
       users: Administrators
       action: set
@@ -3864,7 +3871,7 @@
       - V-220979
 
 - name: "MEDIUM | WN10-UR-000145 | PATCH | The Perform volume maintenance tasks user right must only be assigned to the Administrators group."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeManageVolumePrivilege
       users: Administrators
       action: set
@@ -3879,7 +3886,7 @@
       - V-220980
 
 - name: "MEDIUM | WN10-UR-000150 | PATCH | The Profile single process user right must only be assigned to the Administrators group."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeProfileSingleProcessPrivilege
       users: Administrators
       action: set
@@ -3894,7 +3901,7 @@
       - V-220981
 
 - name: "MEDIUM | WN10-UR-000160 | PATCH | The Restore files and directories user right must only be assigned to the Administrators group."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeRestorePrivilege
       users: Administrators
       action: set
@@ -3909,7 +3916,7 @@
       - V-220982
 
 - name: "MEDIUM | WN10-UR-000165 | PATCH | The Take ownership of files or other objects user right must only be assigned to the Administrators group."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeTakeOwnershipPrivilege
       users: Administrators
       action: set
@@ -3924,7 +3931,7 @@
       - V-220983
 
 - name: "MEDIUM | WN10-CC-000327 | PATCH | PowerShell Transcription must be enabled on Windows 10."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription
       value: EnableTranscripting
       data: 1

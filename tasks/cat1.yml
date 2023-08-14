@@ -3,7 +3,7 @@
 - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level."
   block:
       - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level. | Warning Meassage."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! Your version of Windows 10 does not conform to STIG standards."
                 - "Please update your current version to a supported build or supported LTSC build."
@@ -12,6 +12,7 @@
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
             warn_control_id: 'WN10-00-000040'
+  # When statement does not follow standard formatting.
   when:
       - wn10_00_000040
       - win10_displayversion.value != '1507' and win10_currentbuild.value != '10240' or
@@ -40,20 +41,20 @@
         register: win10_00_000045_av_sftw_status
 
       - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program | Alert on service not running."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! You do not have any AV software running"
                 - "Please enable defender or a 3rd party AV software like McAfee or Symantec"
-        when: 
-            - win10_00_000045_av_sftw_status.exists == false or 
+        when:
+            - not win10_00_000045_av_sftw_status.exists or
               win10_00_000045_av_sftw_status.services[0].state != "started"
 
       - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program | Warn Count."
         ansible.builtin.import_tasks: warning_facts.yml
         vars:
             warn_control_id: 'WN10-00-000045'
-        when: 
-            - win10_00_000045_av_sftw_status.exists == false or 
+        when:
+            - not win10_00_000045_av_sftw_status.exists or
               win10_00_000045_av_sftw_status.services[0].state != "started"
   when:
       - wn10_00_000045
@@ -68,11 +69,11 @@
 - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS"
   block:
       - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS | Set file system type variable"
-        set_fact:
+        ansible.builtin.set_fact:
             win10_00_000050_c_volume_info: "{{ ansible_facts.disks[0].partitions | json_query('[?drive_letter == `C`] | [0].volumes') | json_query('[?type == `NTFS`] | [0].type') }}"
 
       - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS | Alert on non-NTFS File System"
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "Warning!! You do not have an NTFS file system. Please format the C:\ to NTFS"
         when: win10_00_000050_c_volume_info != "NTFS"
@@ -95,7 +96,7 @@
 - name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system."
   block:
       - name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system. | Show Accounts."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "The following users or groups have Administrator rights on this system."
                 - "Please make sure that these users or groups meet the sites policies to be STIG compliant."
@@ -116,7 +117,7 @@
       - V-220712
 
 - name: "HIGH | WN10-00-000100 | PATCH | Internet Information System (IIS) or its subcomponents must not be installed on a workstation."
-  win_optional_feature:
+  ansible.windows.win_optional_feature:
       name: "{{ item }}"
       state: absent
   with_items:
@@ -136,13 +137,13 @@
 - name: "HIGH | WN10-00-000145 | PATCH | Data Execution Prevention (DEP) must be configured to at least OptOut."
   block:
       - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Status check for idempotency."
-        win_shell: BCDEdit /enum "{current}"
-        register: win10_00_000145_dep_setting_search
+        ansible.windows.win_shell: BCDEdit /enum "{current}"
         changed_when: false
         failed_when: false
+        register: win10_00_000145_dep_setting_search
 
       - name: "HIGH | WN10-00-000145 | PATCH | Data Execution Prevention (DEP) must be configured to at least OptOut. | Make change to match {{ wnstig_dep_value }}."
-        win_shell: BCDEdit /set "{current}" nx {{ wn10stig_dep_value }}
+        ansible.windows.win_shell: BCDEdit /set "{current}" nx {{ wn10stig_dep_value }}
         when: "wn10stig_dep_value not in win10_00_000145_dep_setting_search.stdout | regex_search('nx\\s.*') | trim | regex_replace('nx','') | trim"
   when:
       - wn10_00_000145
@@ -155,7 +156,7 @@
       - V-220726
 
 - name: "HIGH | WN10-00-000150 | PATCH | Structured Exception Handling Overwrite Protection (SEHOP) must be enabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel
       value: DisableExceptionChainValidation
       state: present
@@ -174,7 +175,7 @@
 - name: "HIGH | WN10-00-000240 | AUDIT | Administrative accounts must not be used with applications that access the Internet, such as web browsers, or with potential Internet sources, such as email."
   block:
       - name: "HIGH | WN10-00-000240 | AUDIT | Administrative accounts must not be used with applications that access the Internet, such as web browsers, or with potential Internet sources, such as email. | Show Accounts Warning."
-        debug:
+        ansible.builtin.debug:
             msg:
                 - "The following users or groups have Administrator rights on this system"
                 - "You will need to confirm that none of these accounts have access to the internet, such as web browsers, or with potential Internet soruces, such as email"
@@ -196,7 +197,7 @@
 
 # Use of this flag is not recommended per Microsofts documentation. https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-gpsb/0b40db09-d95d-40a6-8467-32aedec8140c
 - name: "HIGH | WN10-AC-000045 | PATCH | Reversible password encryption must be disabled."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: ClearTextPassword
       value: "0"
@@ -211,7 +212,7 @@
       - V-220747
 
 - name: "HIGH | WN10-CC-000075 | PATCH | Credential Guard must be running on Windows 10 domain-joined systems."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard
       value: "{{ item }}"
       state: present
@@ -234,7 +235,7 @@
       - V-220812
 
 - name: "HIGH | WN10-CC-000155 | PATCH | Solicited Remote Assistance must not be allowed."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
       value: fAllowToGetHelp
       state: present
@@ -251,7 +252,7 @@
       - V-220823
 
 - name: "HIGH | WN10-CC-000180 | PATCH | Autoplay must be turned off for non-volume devices"
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer
       value: NoAutoplayfornonVolume
       state: present
@@ -268,7 +269,7 @@
       - V-220827
 
 - name: "HIGH | WN10-CC-000185 | PATCH | The default autorun behavior must be configured to prevent autorun commands."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
       value: NoAutorun
       state: present
@@ -285,7 +286,7 @@
       - V-220828
 
 - name: "HIGH | WN10-CC-000190 | PATCH | Autoplay must be disabled for all drives."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\policies\Explorer
       value: NoDriveTypeAutoRun
       state: present
@@ -302,7 +303,7 @@
       - V-220829
 
 - name: "HIGH | WN10-CC-000315 | PATCH | The Windows Installer Always install with elevated privileges must be disabled."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer
       value: AlwaysInstallElevated
       state: present
@@ -319,7 +320,7 @@
       - V-220857
 
 - name: "HIGH | WN10-CC-000330 | PATCH | The Windows Remote Management (WinRM) client must not use Basic authentication."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client
       value: AllowBasic
       state: present
@@ -327,6 +328,7 @@
       datatype: dword
   when:
       - wn10_CC_000330
+      - not win_skip_for_test
   tags:
       - WN10-CC-000330
       - CAT1
@@ -336,7 +338,7 @@
       - V-220862
 
 - name: "HIGH | WN10-CC-000345 | PATCH | The Windows Remote Management (WinRM) service must not use Basic authentication."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service
       value: AllowBasic
       state: present
@@ -344,6 +346,7 @@
       datatype: dword
   when:
       - wn10_CC_000345
+      - not win_skip_for_test
   tags:
       - WN10-CC-000345
       - CAT1
@@ -353,7 +356,7 @@
       - V-220865
 
 - name: "HIGH | WN10-SO-000140 | PATCH | Anonymous SID/Name translation must not be allowed."
-  win_security_policy:
+  community.windows.win_security_policy:
       section: System Access
       key: LSAAnonymousNameLookup
       value: 0
@@ -368,7 +371,7 @@
       - V-220928
 
 - name: "HIGH | WN10-SO-000145 | PATCH | Anonymous enumeration of SAM accounts must not be allowed."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
       value: RestrictAnonymousSAM
       state: present
@@ -385,7 +388,7 @@
       - V-220929
 
 - name: "HIGH | WN10-SO-000150 | PATCH | Anonymous enumeration of shares must be restricted."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
       value: RestrictAnonymous
       state: present
@@ -402,7 +405,7 @@
       - V-220930
 
 - name: "HIGH | WN10-SO-000165 | PATCH | Anonymous access to Named Pipes and Shares must be restricted."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Services\LanManServer\Parameters
       value: RestrictNullSessAccess
       state: present
@@ -419,7 +422,7 @@
       - V-220932
 
 - name: "HIGH | WN10-SO-000195 | PATCH | The system must be configured to prevent the storage of the LAN Manager hash of passwords."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
       value: NoLMHash
       state: present
@@ -436,7 +439,7 @@
       - V-220937
 
 - name: "HIGH | WN10-SO-000205 | PATCH | The LanMan authentication level must be set to send NTLMv2 response only, and to refuse LM and NTLM."
-  win_regedit:
+  ansible.windows.win_regedit:
       path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
       value: LmCompatibilityLevel
       state: present
@@ -453,7 +456,7 @@
       - V-220938
 
 - name: "HIGH | WN10-UR-000015 | PATCH | The Act as part of the operating system user right must not be assigned to any groups or accounts."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeTcbPrivilege
       users: []
       action: set
@@ -468,7 +471,7 @@
       - V-220958
 
 - name: "HIGH | WN10-UR-000045 | PATCH | The Create a token object user right must not be assigned to any groups or accounts."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeCreateTokenPrivilege
       users: []
   when:
@@ -482,7 +485,7 @@
       - V-220963
 
 - name: "HIGH | WN10-UR-000065 | PATCH | The Debug programs user right must only be assigned to the Administrators group."
-  win_user_right:
+  ansible.windows.win_user_right:
       name: SeDebugPrivilege
       users: Administrators
       action: set
