@@ -1,6 +1,6 @@
 # Changelog
 
-## Release 1.0.0
+## Release 1.1.0
 
 August 2023 Update
   - Updated Workflows To Central Repo
@@ -15,6 +15,8 @@ May 2023 Update
   - Added Banner
   - Added Skip For Testing to controls that will break in cloud.
   - Added Support for Azure for Controls that break.
+
+## Release 1.0.0
 
 December 2022 Update
   - Updated Readme
