@@ -15,14 +15,14 @@
 ![Ansible Galaxy Quality](https://img.shields.io/ansible/quality/61461?label=Quality&&logo=ansible)
 ![Discord Badge](https://img.shields.io/discord/925818806838919229?logo=discord)
 
-![Release Branch](https://img.shields.io/badge/Release%20Branch-Main-brightgreen) 
+![Release Branch](https://img.shields.io/badge/Release%20Branch-Main-brightgreen)
 ![Release Tag](https://img.shields.io/github/v/tag/ansible-lockdown/Windows-10-STIG?label=Release%20Tag&&color=success)
 ![Main Release Date](https://img.shields.io/github/release-date/ansible-lockdown/Windows-10-STIG?label=Release%20Date)
 
 [![Main Pipeline Validation](https://github.com/ansible-lockdown/Windows-10-STIG/actions/workflows/main_pipeline_validation.yml/badge.svg?)](https://github.com/ansible-lockdown/Windows-10-STIG/actions/workflows/main_pipeline_validation.yml)
 
 [![Devel Pipeline Validation](https://github.com/ansible-lockdown/Windows-10-STIG/actions/workflows/devel_pipeline_validation.yml/badge.svg?)](https://github.com/ansible-lockdown/Windows-10-STIG/actions/workflows/devel_pipeline_validation.yml)
-![Devel Commits](https://img.shields.io/github/commit-activity/m/ansible-lockdown/Windows-10-STIG/devel?color=dark%20green&label=Devel%20Branch%20commits)
+![Devel Commits](https://img.shields.io/github/commit-activity/m/ansible-lockdown/Windows-10-STIG/devel?color=dark%20green&label=Devel%20Branch%20Commits)
 
 ![Issues Open](https://img.shields.io/github/issues-raw/ansible-lockdown/Windows-10-STIG?label=Open%20Issues)
 ![Issues Closed](https://img.shields.io/github/issues-closed-raw/ansible-lockdown/Windows-10-STIG?label=Closed%20Issues&&color=success)
@@ -65,7 +65,7 @@ This is managed using tags:
 - CAT2
 - CAT3
 
-The control found in defaults main also need to reflect true so as this will allow the controls to run when the playbook is launched. 
+The control found in defaults main also need to reflect true so as this will allow the controls to run when the playbook is launched.
 
 ## Coming from a previous release
 
@@ -76,7 +76,7 @@ Further details can be seen in the [Changelog](./ChangeLog.md)
 
 ## Auditing (new)
 
-Currently this release does not have a auditing tool. 
+Currently this release does not have a auditing tool.
 
 ## Documentation
 
