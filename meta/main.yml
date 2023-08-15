@@ -12,7 +12,7 @@ galaxy_info:
     platforms:
         - name: Windows
           versions:
-              - 10
+              # - 10
 
     galaxy_tags:
         - system
