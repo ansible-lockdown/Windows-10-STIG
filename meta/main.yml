@@ -9,9 +9,9 @@ galaxy_info:
     namespace: mindpointgroup
     min_ansible_version: 2.9.0
 
-# The galaxy api currentyl supports only Win 2008R2, 2008x64, 2008x86,
-# 2012, 2012R2, 2016, and 2019 verisons. And using anything else will lower
-# galaxy score.
+# The galaxy api currently supports only Win 2008R2, 2008x64, 2008x86,
+# 2012, 2012R2, 2016, and 2019 versions. And using anything else will lower
+# galaxy score. We have removed the platform and version from meta for scoring.
 
     galaxy_tags:
         - system
