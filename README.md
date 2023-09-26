@@ -2,7 +2,7 @@
 
 ## Configure a Windows 10 system to be [DISA STIG](https://public.cyber.mil/stigs/downloads/) compliant.
 
-### Based on [ Windows DISA STIG Version 2, Rel 7 released on June 27, 2023 ](https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U_MS_Windows_10_V2R7_STIG.zip)
+### Based on [ Windows DISA STIG Version 2, Rel 5 released on Novenber 9th, 2022 ](https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U_MS_Windows_10_V2R5_STIG.zip)
 
 ---
 
