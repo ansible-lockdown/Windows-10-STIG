@@ -977,7 +977,7 @@
 
 - name: |
     "MEDIUM | WN10-AU-000005 | PATCH | The system must be configured to audit Account Logon - Credential Validation failures."
-    "MEDIUM | WN10-AU-000010 | PATCH |  The system must be configured to audit Account Logon - Credential Validation successes."
+    "MEDIUM | WN10-AU-000010 | PATCH | The system must be configured to audit Account Logon - Credential Validation successes."
   community.windows.win_audit_policy_system:
       subcategory: Credential Validation
       audit_type: "{{ (wn10_AU_000005 and not wn10_AU_000010) | ternary ('failure', '') }}{{ (wn10_AU_000010 and not wn10_AU_000005) | ternary ('success', '') }}{{ (wn10_AU_000005 and wn10_AU_000010) | ternary ('success, failure', '') }}"
