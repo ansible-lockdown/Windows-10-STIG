@@ -8,7 +8,6 @@ September 2023 Update
     - WN10-SO-000025
   - Updated and removed controls not needed in win_skip_for_test
   - Updated Ansible-Lint
-  - Updated logic for Domain Roles
 
 August 2023 Update
   - Updated Workflows To Central Repo

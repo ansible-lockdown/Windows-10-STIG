@@ -5,7 +5,7 @@
       - name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version. | Warning."
         ansible.builtin.debug:
             msg:
-                - "Warning!! You need to be on a 64-bit operating system when joined to a domain"
+                - "Warning!! You need to be on a 64-bit operating system when joined to a domain."
                 - "This is a requirement for STIG compliance"
 
       - name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version. | Warn Count."
