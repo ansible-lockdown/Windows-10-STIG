@@ -26,16 +26,9 @@ win10stig_lengthy_search: false
 # may cause breaking changes when running it for testing purposes.  These generally consist of winrm controls
 # that are needed to keep the ansible connection alive.
 # Controls that will be skipped:
-# WN10-CC-000330 - CAT1
-# WN10-CC-000345 - CAT1
-# WN10-CC-000335 - CAT2
-# WN10-CC-000350 - CAT2
-# WN10-CC-000355 - CAT2
-# WN10-CC-000360 - CAT2
-# WN10-SO-000020 - CAT2
-# WN10-SO-000245 - CAT2
-# WN10-SO-000005 - CAT2
-# WN10-SO-000020 - CAT2
+# WN10-CC-000330 - CAT1 - Disables WinRM Allow Client Basic Auth
+# WN10-CC-000345 - CAT1 - Disables WinRM Allow Service Basic Auth
+# WN10-SO-000005 - CAT2 - Disables Built-In Admin Account
 win_skip_for_test: false
 
 # tweak role to run in a non-privileged container
@@ -514,11 +507,11 @@ win10stig_min_pin_length: 6
 
 # WN10-SO-000020
 # win10stig_new_administrator_name is the name the built-in Administrator account will be renamed to
-win10stig_new_administrator_name: newadmin
+win10stig_new_administrator_name: adminchangethis
 
 # WN10-SO-000025
 # win10stig_new_guest_name is the name the built-in Guest account will be renamed to
-win10stig_new_guest_name: newguest
+win10stig_new_guest_name: guestchangethis
 
 # WN10-SO-000070
 # win10stig_inactivity_timeout is the machine inactivity limit in seconds.

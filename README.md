@@ -2,7 +2,7 @@
 
 ## Configure a Windows 10 system to be [DISA STIG](https://public.cyber.mil/stigs/downloads/) compliant.
 
-### Based on [ Windows DISA STIG Version 2, Rel 5 released on Novenber 9th, 2022 ](https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U_MS_Windows_10_V2R5_STIG.zip)
+### Based on [ Windows DISA STIG Version 2, Rel 7 released on June 27, 2023 ](https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U_MS_Windows_10_V2R7_STIG.zip)
 
 ---
 
@@ -12,7 +12,7 @@
 ![followers](https://img.shields.io/github/followers/ansible-lockdown?style=social)
 [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/AnsibleLockdown.svg?style=social&label=Follow%20%40AnsibleLockdown)](https://twitter.com/AnsibleLockdown)
 
-![Ansible Galaxy Quality](https://img.shields.io/ansible/quality/61461?label=Quality&&logo=ansible)
+![Ansible Galaxy Quality](https://img.shields.io/ansible/quality/61846?label=Quality&&logo=ansible)
 ![Discord Badge](https://img.shields.io/discord/925818806838919229?logo=discord)
 
 ![Release Branch](https://img.shields.io/badge/Release%20Branch-Main-brightgreen)
@@ -36,11 +36,11 @@
 
 [Lockdown Enterprise](https://www.lockdownenterprise.com#GH_AL_WINDOWS_10_stig)
 
-[Ansible support](https://www.mindpointgroup.com/cybersecurity-products/ansible-counselor#GH_AL_WINDOWS_10_stig)
+[Ansible Support](https://www.mindpointgroup.com/cybersecurity-products/ansible-counselor#GH_AL_WINDOWS_10_stig)
 
 ### Community
 
-Join us on our [Discord Server](https://discord.io/ansible-lockdown) to ask questions, discuss features, or just chat with other Ansible-Lockdown users.
+Join us on our [Discord Server](https://www.lockdownenterprise.com/discord) to ask questions, discuss features, or just chat with other Ansible-Lockdown users.
 
 ---
 
@@ -69,8 +69,8 @@ The control found in defaults main also need to reflect true so as this will all
 
 ## Coming from a previous release
 
-STIG releases always contain changes, it is highly recommended to review the new references and available variables. This has changed significantly since the initial release of ansible-lockdown.
-This is now compatible with python3 if it is found to be the default interpreter. This does come with pre-requisites which it configures the system accordingly.
+STIG release always contains changes, so it is highly recommended to review the new references and available variables. This have changed significantly since the ansible-lockdown initial release.
+This is now compatible with python3 if it is found to be the default interpreter. This does come with prerequisites that configure the system accordingly.
 
 Further details can be seen in the [Changelog](./ChangeLog.md)
 

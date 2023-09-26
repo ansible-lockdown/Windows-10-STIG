@@ -10,3 +10,9 @@ lockdown_banner: "{{lookup('file', './templates/banner.txt')}}"
 
 # This will be changed to true if discovered.
 win10stig_cloud_based_system: false
+
+# These are default values that will be changed when the prelim
+# runs and finds the correct setting.
+win10stig_is_standalone: false
+win10stig_is_domain_controller: false
+win10stig_is_domain_member: false
