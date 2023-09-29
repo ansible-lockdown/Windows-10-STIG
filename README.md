@@ -69,8 +69,8 @@ The control found in defaults main also need to reflect true so as this will all
 
 ## Coming from a previous release
 
-STIG release always contains changes, so it is highly recommended to review the new references and available variables. This have changed significantly since the ansible-lockdown initial release.
-This is now compatible with python3 if it is found to be the default interpreter. This does come with prerequisites that configure the system accordingly.
+STIG releases always contain changes, it is highly recommended to review the new references and available variables. This has changed significantly since the initial release of ansible-lockdown.
+This is now compatible with python3 if it is found to be the default interpreter. This does come with pre-requisites which it configures the system accordingly.
 
 Further details can be seen in the [Changelog](./ChangeLog.md)
 
