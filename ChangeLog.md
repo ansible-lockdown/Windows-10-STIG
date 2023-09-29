@@ -2,6 +2,13 @@
 
 ## Release 1.1.0
 
+September 2023 Update
+  - Added Additional Variable Checks For Controls
+    - WN10-SO-000020
+    - WN10-SO-000025
+  - Updated and removed controls not needed in win_skip_for_test
+  - Updated Ansible-Lint
+
 August 2023 Update
   - Updated Workflows To Central Repo
     - Renamed them to better run across all repos.

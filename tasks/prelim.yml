@@ -1,22 +1,22 @@
 ---
 
-# - name: "PRELIM | Detect if Trusted Platform Module (TPM) is available"
-#   win_shell: (Get-CimInstance -ClassName Win32_OperatingSystem).ProductType
-#   register: win10stig_tpm_enabled
-#   changed_when: no
-#   failed_when: no
-#   tags:
-#       - always
+- name: "PRELIM | Detect if Trusted Platform Module (TPM) is available"
+  win_shell: (Get-CimInstance -ClassName Win32_OperatingSystem).ProductType
+  register: win10stig_tpm_enabled
+  changed_when: false
+  failed_when: false
+  tags:
+      - always
 
-# - name: "PRELIM | Detect if Remote Desktop Services (RDP) is enabled"
-#   win_reg_stat:
-#       path: HKLM:\System\CurrentControlSet\Control\Terminal Server
-#       name: fDenyTSConnections
-#   register: win10stig_rdp_enabled
-#   changed_when: no
-#   failed_when: no
-#   tags:
-#       - always
+- name: "PRELIM | Detect if Remote Desktop Services (RDP) is enabled"
+  win_reg_stat:
+      path: HKLM:\System\CurrentControlSet\Control\Terminal Server
+      name: fDenyTSConnections
+  register: win10stig_rdp_enabled
+  changed_when: false
+  failed_when: false
+  tags:
+      - always
 
 # hvm is for amazon ami's, Hyper-V we have found for azure, kvm is used for ('QEMU', 'Amazon EC2', 'DigitalOcean', 'Google', 'Scaleway', 'Nutanix', 'KVM', 'KVM Server', 'Bochs', 'AHV')
 # This list is not complete and will be updated as we try on more cloud based services.
@@ -39,6 +39,8 @@
   changed_when: false
   failed_when: false
   register: win10_displayversion
+  tags:
+      - always
 
 - name: "PRELIM | Get OS Build value."
   ansible.windows.win_reg_stat:
@@ -47,6 +49,8 @@
   changed_when: false
   failed_when: false
   register: win10_currentbuild
+  tags:
+      - always
 
 - name: "PRELIM | Get Admin Users and Groups"
   ansible.windows.win_shell: Get-LocalGroupMember -Name 'Administrators'

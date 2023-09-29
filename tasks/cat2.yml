@@ -5,7 +5,7 @@
       - name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version. | Warning."
         ansible.builtin.debug:
             msg:
-                - "Warning!! You need to be on a 64-bit operating system when joined to a domain"
+                - "Warning!! You need to be on a 64-bit operating system when joined to a domain."
                 - "This is a requirement for STIG compliance"
 
       - name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version. | Warn Count."
@@ -977,7 +977,7 @@
 
 - name: |
     "MEDIUM | WN10-AU-000005 | PATCH | The system must be configured to audit Account Logon - Credential Validation failures."
-    "MEDIUM | WN10-AU-000010 | PATCH |  The system must be configured to audit Account Logon - Credential Validation successes."
+    "MEDIUM | WN10-AU-000010 | PATCH | The system must be configured to audit Account Logon - Credential Validation successes."
   community.windows.win_audit_policy_system:
       subcategory: Credential Validation
       audit_type: "{{ (wn10_AU_000005 and not wn10_AU_000010) | ternary ('failure', '') }}{{ (wn10_AU_000010 and not wn10_AU_000005) | ternary ('success', '') }}{{ (wn10_AU_000005 and wn10_AU_000010) | ternary ('success, failure', '') }}"
@@ -2572,7 +2572,6 @@
       type: dword
   when:
       - wn10_CC_000335
-      - not win_skip_for_test
   tags:
       - WN10-CC-000335
       - CAT2
@@ -2590,7 +2589,6 @@
       type: dword
   when:
       - wn10_CC_000350
-      - not win_skip_for_test
   tags:
       - WN10-CC-000350
       - CAT2
@@ -2608,7 +2606,6 @@
       type: dword
   when:
       - wn10_CC_000355
-      - not win_skip_for_test
   tags:
       - WN10-CC-000355
       - CAT2
@@ -2625,7 +2622,6 @@
       type: dword
   when:
       - wn10_CC_000360
-      - not win_skip_for_test
   tags:
       - WN10-CC-000360
       - CAT2
@@ -2944,13 +2940,29 @@
       - V-220910
 
 - name: "MEDIUM | WN10-SO-000020 | PATCH | The built-in administrator account must be renamed."
-  community.windows.win_security_policy:
-      section: System Access
-      key: NewAdministratorName
-      value: "{{ win10stig_new_administrator_name }}"
+  block:
+      - name: "MEDIUM | WN10-SO-000020 | AUDIT | The built-in administrator account must be renamed. | Warning Msg For Default Variable Not Edited."
+        ansible.builtin.debug:
+            msg:
+                - "Warning!! You have not changed the default admin username in win10stig_new_administrator_name please"
+                - "make the necessary change to the variable to be in compliance."
+        when: "'adminchangethis' in win10stig_new_administrator_name"
+
+      - name: "MEDIUM | WN10-SO-000020 | AUDIT | The built-in administrator account must be renamed. | Add Warn Count."
+        ansible.builtin.import_tasks:
+            file: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-SO-000020'
+        when: "'adminchangethis' in win10stig_new_administrator_name"
+
+      - name: "MEDIUM | WN10-SO-000020 | AUDIT | The built-in administrator account must be renamed. | Change Admin Name."
+        community.windows.win_security_policy:
+            section: System Access
+            key: NewAdministratorName
+            value: "{{ win10stig_new_administrator_name }}"
+        when: "'adminchangethis' not in win10stig_new_administrator_name"
   when:
       - wn10_SO_000020
-      - not win_skip_for_test
   tags:
       - WN10-SO-000020
       - CAT2
@@ -2960,10 +2972,27 @@
       - V-220911
 
 - name: "MEDIUM | WN10-SO-000025 | PATCH | The built-in guest account must be renamed."
-  community.windows.win_security_policy:
-      section: System Access
-      key: NewGuestName
-      value: "{{ win10stig_new_guest_name }}"
+  block:
+      - name: "MEDIUM | WN10-SO-000025 | AUDIT | The built-in guest account must be renamed. | Warning Msg For Default Variable Not Edited."
+        ansible.builtin.debug:
+            msg:
+                - "Warning!! You have not changed the default guest name in win10stig_new_guest_name please"
+                - "make the necessary change to the variable to be in compliance."
+        when: "'guestchangethis' in win10stig_new_guest_name"
+
+      - name: "MEDIUM | WN10-SO-000025 | AUDIT | The built-in guest account must be renamed. | Add Warn Count."
+        ansible.builtin.import_tasks:
+            file: warning_facts.yml
+        vars:
+            warn_control_id: 'WN10-SO-000025'
+        when: "'guestchangethis' in win10stig_new_guest_name"
+
+      - name: "MEDIUM | WN10-SO-000025 | AUDIT | The built-in guest account must be renamed. | Change Guest Name."
+        community.windows.win_security_policy:
+            section: System Access
+            key: NewGuestName
+            value: "{{ win10stig_new_guest_name }}"
+        when: "'guestchangethis' not in win10stig_new_guest_name"
   when:
       - wn10_SO_000025
   tags:
@@ -3322,7 +3351,6 @@
       type: dword
   when:
       - wn10_SO_000245
-      - not win_skip_for_test
   tags:
       - WN10-SO-000245
       - CAT2
