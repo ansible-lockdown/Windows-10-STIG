@@ -1,9 +1,8 @@
 ---
 
 - hosts: all  # noqa: name[play]
-
+  gather_facts: true
   vars:
-      is_container: false
-
+    is_container: false
   roles:
-      - role: "{{ playbook_dir }}"
+    - role: "{{ playbook_dir }}"

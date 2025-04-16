@@ -4,43 +4,43 @@ win10stig_cat1_patch: true
 win10stig_cat2_patch: true
 win10stig_cat3_patch: true
 
-win10stig_min_ansible_version: "2.6"
+# Global Variables
 
-# We've defined complexity-high to mean that we cannot automatically remediate
-# the rule in question.  In the future this might mean that the remediation
-# may fail in some cases.
-win10stig_complexity_high: false
-
-# We've defined disruption-high to indicate items that are likely to cause
-# disruption in a normal workflow.  These items can be remediated automatically
-# but are disabled by default to avoid disruption.
-win10stig_disruption_high: false
+win10stig_min_ansible_version: "2.16"
 
 # This parameter disables controls that could have a very lengthy find. For example
 # removing all files of a specific file type that search the entire drive.
 # If there is an action tied to the lengthy search the action task will be disabled as well.
 # WN10-00-000130 - CAT2
-win10stig_lengthy_search: false
+# Default: true
+win10stig_lengthy_search: true
 
 # win_skip_for_test is used in the playbook to skip over certain controls that
-# may cause breaking changes when running it for testing purposes.  These generally consist of winrm controls
+# may cause breaking changes when running it for testing purposes.  These generally consist of winrmvi host controls
 # that are needed to keep the ansible connection alive.
 # Controls that will be skipped:
 # WN10-CC-000330 - CAT1 - Disables WinRM Allow Client Basic Auth
 # WN10-CC-000345 - CAT1 - Disables WinRM Allow Service Basic Auth
+# WN10-CC-000335 - CAT2 - The Windows Remote Management (WinRM) client must not allow unencrypted traffic.
+# WN10-CC-000350 - CAT2 - The Windows Remote Management (WinRM) service must not allow unencrypted traffic.
 # WN10-SO-000005 - CAT2 - Disables Built-In Admin Account
+# WN10-SO-000230 - CAT2 - The system must be configured to use FIPS-compliant algorithms for encryption, hashing, and signing.
+# Default: false
 win_skip_for_test: false
 
-# tweak role to run in a non-privileged container
-win10stig_system_is_container: false
-
-# tweak role to run skip tasks irrelevant for virtualized computers
-win10stig_system_is_vm: true
+# Changes will be made that will require a system reboot.
+# The following option will allow whether or not to skip the reboot.
+# Default: true
+skip_reboot: true
 
 # These variables correspond with the STIG IDs defined in the STIG and allows you to enable/disable specific rules.
 # PLEASE NOTE: These work in coordination with the cat1, cat2, cat3 group variables. You must enable an entire group
 # in order for the variables below to take effect.
+
 # CAT 1 Rules
+wn10_00_000030: true
+wn10_00_000031: true
+wn10_00_000032: true
 wn10_00_000040: true
 wn10_00_000045: true
 wn10_00_000050: true
@@ -49,33 +49,30 @@ wn10_00_000100: true
 wn10_00_000145: true
 wn10_00_000150: true
 wn10_00_000240: true
-wn10_AC_000045: true
-wn10_CC_000075: true
-wn10_CC_000155: true
-wn10_CC_000180: true
-wn10_CC_000185: true
-wn10_CC_000190: true
-wn10_CC_000315: true
-wn10_CC_000330: true
-wn10_CC_000345: true
-wn10_SO_000140: true
-wn10_SO_000145: true
-wn10_SO_000150: true
-wn10_SO_000165: true
-wn10_SO_000195: true
-wn10_SO_000205: true
-wn10_UR_000015: true
-wn10_UR_000045: true
-wn10_UR_000065: true
+wn10_ac_000045: true
+wn10_cc_000075: true
+wn10_cc_000155: true
+wn10_cc_000180: true
+wn10_cc_000185: true
+wn10_cc_000190: true
+wn10_cc_000315: true
+wn10_cc_000330: true
+wn10_cc_000345: true
+wn10_so_000140: true
+wn10_so_000145: true
+wn10_so_000150: true
+wn10_so_000165: true
+wn10_so_000195: true
+wn10_so_000205: true
+wn10_ur_000015: true
+wn10_ur_000045: true
+wn10_ur_000065: true
 
 # CAT 2 Rules
 wn10_00_000005: true
 wn10_00_000010: true
 wn10_00_000015: true
 wn10_00_000025: true
-wn10_00_000030: true
-wn10_00_000031: true
-wn10_00_000032: true
 wn10_00_000035: true
 wn10_00_000055: true
 wn10_00_000060: true
@@ -100,219 +97,225 @@ wn10_00_000210: true
 wn10_00_000220: true
 wn10_00_000230: true
 wn10_00_000250: true
-wn10_AC_000005: true
-wn10_AC_000010: true
-wn10_AC_000015: true
-wn10_AC_000020: true
-wn10_AC_000025: true
-wn10_AC_000030: true
-wn10_AC_000035: true
-wn10_AC_000040: true
-wn10_AU_000005: true
-wn10_AU_000010: true
-wn10_AU_000030: true
-wn10_AU_000035: true
-wn10_AU_000040: true
-wn10_AU_000045: true
-wn10_AU_000050: true
-wn10_AU_000054: true
-wn10_AU_000060: true
-wn10_AU_000065: true
-wn10_AU_000070: true
-wn10_AU_000075: true
-wn10_AU_000080: true
-wn10_AU_000081: true
-wn10_AU_000082: true
-wn10_AU_000083: true
-wn10_AU_000084: true
-wn10_AU_000085: true
-wn10_AU_000090: true
-wn10_AU_000100: true
-wn10_AU_000105: true
-wn10_AU_000107: true
-wn10_AU_000110: true
-wn10_AU_000115: true
-wn10_AU_000120: true
-wn10_AU_000130: true
-wn10_AU_000135: true
-wn10_AU_000140: true
-wn10_AU_000150: true
-wn10_AU_000155: true
-wn10_AU_000160: true
-wn10_AU_000500: true
-wn10_AU_000505: true
-wn10_AU_000510: true
-wn10_AU_000515: true
-wn10_AU_000520: true
-wn10_AU_000525: true
-wn10_AU_000555: true
-wn10_AU_000560: true
-wn10_AU_000565: true
-wn10_AU_000570: true
-wn10_AU_000575: true
-wn10_AU_000580: true
-wn10_CC_000005: true
-wn10_CC_000007: true
-wn10_CC_000010: true
-wn10_CC_000020: true
-wn10_CC_000025: true
-wn10_CC_000037: true
-wn10_CC_000038: true
-wn10_CC_000039: true
-wn10_CC_000040: true
-wn10_CC_000044: true
-wn10_CC_000050: true
-wn10_CC_000052: true
-wn10_CC_000055: true
-wn10_CC_000060: true
-wn10_CC_000065: true
-wn10_CC_000066: true
-wn10_CC_000068: true
-wn10_CC_000085: true
-wn10_CC_000090: true
-wn10_CC_000100: true
-wn10_CC_000105: true
-wn10_CC_000110: true
-wn10_CC_000115: true
-wn10_CC_000120: true
-wn10_CC_000130: true
-wn10_CC_000145: true
-wn10_CC_000150: true
-wn10_CC_000165: true
-wn10_CC_000195: true
-wn10_CC_000200: true
-wn10_CC_000204: true
-wn10_CC_000205: true
-wn10_CC_000210: true
-wn10_CC_000215: true
-wn10_CC_000225: true
-wn10_CC_000230: true
-wn10_CC_000235: true
-wn10_CC_000238: true
-wn10_CC_000245: true
-wn10_CC_000250: true
-wn10_CC_000252: true
-wn10_CC_000255: true
-wn10_CC_000260: true
-wn10_CC_000270: true
-wn10_CC_000275: true
-wn10_CC_000280: true
-wn10_CC_000285: true
-wn10_CC_000290: true
-wn10_CC_000295: true
-wn10_CC_000300: true
-wn10_CC_000305: true
-wn10_CC_000310: true
-wn10_CC_000320: true
-wn10_CC_000325: true
-wn10_CC_000326: true
-wn10_CC_000328: true
-wn10_CC_000335: true
-wn10_CC_000350: true
-wn10_CC_000355: true
-wn10_CC_000360: true
-wn10_CC_000365: true
-wn10_CC_000370: true
-wn10_CC_000385: true
-wn10_EP_000310: true
-wn10_PK_000005: true
-wn10_PK_000010: true
-wn10_PK_000015: true
-wn10_PK_000020: true
-wn10_RG_000005: true
-wn10_SO_000005: true
-wn10_SO_000010: true
-wn10_SO_000015: true
-wn10_SO_000020: true
-wn10_SO_000025: true
-wn10_SO_000030: true
-wn10_SO_000035: true
-wn10_SO_000040: true
-wn10_SO_000045: true
-wn10_SO_000060: true
-wn10_SO_000070: true
-wn10_SO_000075: true
-wn10_SO_000095: true
-wn10_SO_000100: true
-wn10_SO_000110: true
-wn10_SO_000120: true
-wn10_SO_000160: true
-wn10_SO_000167: true
-wn10_SO_000180: true
-wn10_SO_000185: true
-wn10_SO_000190: true
-wn10_SO_000210: true
-wn10_SO_000215: true
-wn10_SO_000220: true
-wn10_SO_000230: true
-wn10_SO_000245: true
-wn10_SO_000250: true
-wn10_SO_000251: true
-wn10_SO_000255: true
-wn10_SO_000260: true
-wn10_SO_000265: true
-wn10_SO_000270: true
-wn10_SO_000275: true
-wn10_SO_000280: true
-wn10_UC_000020: true
-wn10_UR_000005: true
-wn10_UR_000010: true
-wn10_UR_000025: true
-wn10_UR_000030: true
-wn10_UR_000035: true
-wn10_UR_000040: true
-wn10_UR_000050: true
-wn10_UR_000055: true
-wn10_UR_000060: true
-wn10_UR_000070: true
-wn10_UR_000075: true
-wn10_UR_000080: true
-wn10_UR_000085: true
-wn10_UR_000090: true
-wn10_UR_000095: true
-wn10_UR_000100: true
-wn10_UR_000110: true
-wn10_UR_000120: true
-wn10_UR_000125: true
-wn10_UR_000130: true
-wn10_UR_000140: true
-wn10_UR_000145: true
-wn10_UR_000150: true
-wn10_UR_000160: true
-wn10_UR_000165: true
-wn10_CC_000327: true
+wn10_ac_000005: true
+wn10_ac_000010: true
+wn10_ac_000015: true
+wn10_ac_000020: true
+wn10_ac_000025: true
+wn10_ac_000030: true
+wn10_ac_000035: true
+wn10_ac_000040: true
+wn10_au_000005: true
+wn10_au_000010: true
+wn10_au_000030: true
+wn10_au_000035: true
+wn10_au_000040: true
+wn10_au_000045: true
+wn10_au_000050: true
+wn10_au_000054: true
+wn10_au_000060: true
+wn10_au_000065: true
+wn10_au_000070: true
+wn10_au_000075: true
+wn10_au_000080: true
+wn10_au_000081: true
+wn10_au_000082: true
+wn10_au_000083: true
+wn10_au_000084: true
+wn10_au_000085: true
+wn10_au_000090: true
+wn10_au_000100: true
+wn10_au_000105: true
+wn10_au_000107: true
+wn10_au_000110: true
+wn10_au_000115: true
+wn10_au_000120: true
+wn10_au_000130: true
+wn10_au_000135: true
+wn10_au_000140: true
+wn10_au_000150: true
+wn10_au_000155: true
+wn10_au_000160: true
+wn10_au_000500: true
+wn10_au_000505: true
+wn10_au_000510: true
+wn10_au_000515: true
+wn10_au_000520: true
+wn10_au_000525: true
+wn10_au_000555: true
+wn10_au_000560: true
+wn10_au_000565: true
+wn10_au_000570: true
+wn10_au_000575: true
+wn10_au_000580: true
+wn10_cc_000005: true
+wn10_cc_000007: true
+wn10_cc_000010: true
+wn10_cc_000020: true
+wn10_cc_000025: true
+wn10_cc_000037: true
+wn10_cc_000038: true
+wn10_cc_000039: true
+wn10_cc_000040: true
+wn10_cc_000044: true
+wn10_cc_000052: true
+wn10_cc_000055: true
+wn10_cc_000060: true
+wn10_cc_000065: true
+wn10_cc_000066: true
+wn10_cc_000068: true
+wn10_cc_000070: true
+wn10_cc_000085: true
+wn10_cc_000090: true
+wn10_cc_000100: true
+wn10_cc_000105: true
+wn10_cc_000110: true
+wn10_cc_000115: true
+wn10_cc_000120: true
+wn10_cc_000130: true
+wn10_cc_000145: true
+wn10_cc_000150: true
+wn10_cc_000165: true
+wn10_cc_000195: true
+wn10_cc_000200: true
+wn10_cc_000204: true
+wn10_cc_000205: true
+wn10_cc_000210: true
+wn10_cc_000215: true
+wn10_cc_000225: true
+wn10_cc_000230: true
+wn10_cc_000235: true
+wn10_cc_000238: true
+wn10_cc_000245: true
+wn10_cc_000250: true
+wn10_cc_000252: true
+wn10_cc_000255: true
+wn10_cc_000260: true
+wn10_cc_000270: true
+wn10_cc_000275: true
+wn10_cc_000280: true
+wn10_cc_000285: true
+wn10_cc_000290: true
+wn10_cc_000295: true
+wn10_cc_000300: true
+wn10_cc_000305: true
+wn10_cc_000310: true
+wn10_cc_000320: true
+wn10_cc_000325: true
+wn10_cc_000326: true
+wn10_cc_000335: true
+wn10_cc_000350: true
+wn10_cc_000355: true
+wn10_cc_000360: true
+wn10_cc_000365: true
+wn10_cc_000370: true
+wn10_cc_000385: true
+wn10_ep_000310: true
+wn10_pk_000005: true
+wn10_pk_000010: true
+wn10_pk_000015: true
+wn10_pk_000020: true
+wn10_rg_000005: true
+wn10_so_000005: true
+wn10_so_000010: true
+wn10_so_000015: true
+wn10_so_000020: true
+wn10_so_000025: true
+wn10_so_000030: true
+wn10_so_000035: true
+wn10_so_000040: true
+wn10_so_000045: true
+wn10_so_000060: true
+wn10_so_000070: true
+wn10_so_000075: true
+wn10_so_000095: true
+wn10_so_000100: true
+wn10_so_000120: true
+wn10_so_000160: true
+wn10_so_000167: true
+wn10_so_000180: true
+wn10_so_000185: true
+wn10_so_000190: true
+wn10_so_000210: true
+wn10_so_000215: true
+wn10_so_000220: true
+wn10_so_000230: true
+wn10_so_000245: true
+wn10_so_000250: true
+wn10_so_000251: true
+wn10_so_000255: true
+wn10_so_000260: true
+wn10_so_000265: true
+wn10_so_000270: true
+wn10_so_000275: true
+wn10_so_000280: true
+wn10_uc_000020: true
+wn10_ur_000005: true
+wn10_ur_000010: true
+wn10_ur_000025: true
+wn10_ur_000030: true
+wn10_ur_000035: true
+wn10_ur_000040: true
+wn10_ur_000050: true
+wn10_ur_000055: true
+wn10_ur_000060: true
+wn10_ur_000070: true
+wn10_ur_000075: true
+wn10_ur_000080: true
+wn10_ur_000085: true
+wn10_ur_000090: true
+wn10_ur_000095: true
+wn10_ur_000100: true
+wn10_ur_000110: true
+wn10_ur_000120: true
+wn10_ur_000125: true
+wn10_ur_000130: true
+wn10_ur_000140: true
+wn10_ur_000145: true
+wn10_ur_000150: true
+wn10_ur_000160: true
+wn10_ur_000165: true
+wn10_cc_000050: true
+wn10_cc_000327: true
+wn10_cc_000391: true
+wn10_00_000395: true
+wn10_au_000585: true
+wn10_00_000125: true
+wn10_cc_000063: true
 
 # CAT 3 Rules
 wn10_00_000020: true
 wn10_00_000065: true
 wn10_00_000085: true
-wn10_CC_000030: true
-wn10_CC_000035: true
-wn10_CC_000070: true
-wn10_CC_000080: true
-wn10_CC_000170: true
-wn10_CC_000175: true
-wn10_CC_000197: true
-wn10_CC_000206: true
-wn10_CC_000220: true
-wn10_CC_000390: true
-wn10_SO_000050: true
-wn10_SO_000055: true
-wn10_SO_000080: true
-wn10_SO_000085: true
-wn10_SO_000240: true
-wn10_UC_000015: true
+wn10_cc_000030: true
+wn10_cc_000035: true
+wn10_cc_000170: true
+wn10_cc_000175: true
+wn10_cc_000197: true
+wn10_cc_000206: true
+wn10_cc_000220: true
+wn10_cc_000390: true
+wn10_so_000050: true
+wn10_so_000055: true
+wn10_so_000080: true
+wn10_so_000085: true
+wn10_so_000240: true
+wn10_uc_000015: true
+wn10_cc_000080: true
 
-# Variables related to what types of services should be running on Windows 10
-# True means Windows 10 will be running that server/service. For example win10stig_web_server: true means you are running as a web server
-win10stig_web_server: false
-
-# After running this role you should reboot. This control will toggle if you want to manaually reboot the system after applying this role.
-# Value of true will always reboot after the role has run, value of false will prevent system from rebooting after the role has run.
-win10stig_always_reboot: true
-
-# Variables related to individual tasks
 # CAT1
+
+# WN10-00-000031
+# win10stig_bitlocker_network_unlock is the setting that will make the necessary adjustments
+# to the registry for bitlocker unlocking over the network.
+# Default: false
+win10stig_bitlocker_network_unlock: false
+
+# WN10-00-000032
+# win10stig_bitlocker_min_pin_length is the minimum length for the BitLocker PIN
+# This value needs to be 6 or greater
+# Default: 6
+win10stig_bitlocker_min_pin_length: 6
 
 # WN10-00-000045
 # win10stig_av_sftw is the service name of the AV software you are using. This is Service Name, not Display Name
@@ -328,241 +331,340 @@ win10stig_always_reboot: true
 # Kaspersky =
 # Norton =
 # McAfee =
-# To be STIG compliant you need to have either Windows Defender AV enabled/running or a 3rd party AV running (McAfee or Symantec for example)
+# To be STIG compliant you need to have either Windows Defender AV enabled/running or a 3rd party AV running
+# (McAfee or Symantec for example)
+# Default: WinDefend
 win10stig_av_sftw: WinDefend
+
+# WN10-00-000100
+# win10stig_web_server is the variable related to what types of services should be
+# running on Windows 10
+# True means Windows 10 will be running a application that requires IIS.
+# Default: false
+win10stig_web_server: false
 
 # WN10-00-000145
 # wn10stig_dep_value is the value to set DEP to. To comply with STIG standards at least OptOut level needs to be set.
+# AlwaysOn, a more restrictive selection, is also valid but does not allow applications that do not function properly to be opted out of DEP.
 # Value options are AlwaysOn or OptOut. If OptOut is used you will need to manually select what applications to opt out of DEP
-wn10stig_dep_value: AlwaysOn
+# Default: OptOut
+wn10stig_dep_value: OptOut
+# wn10stig_dep_optout_apps is the list of apps to be opted out of DEP. Leaving blank will not configure
+# that list in the registry.
+# Example:
+# wn10stig_dep_included_apps:
+#   - "C:\\Program Files\\App1\\app1.exe"
+#   - "C:\\Users\\User\\AppData\\Local\\App2\\app2.exe"
+#   - "C:\\Program Files (x86)\\App3\\app3.exe"
+# Default: []
+wn10stig_dep_optout_apps: []
+
+# WN10-00-000240
+# wn10stig_internet_based_apps_to_check is a list of apps that can have access to the internet that are commonly found.
+# This list is not all inclusive and can be added to or have items removed.
+# STIG states you must establish and enforce a policy that prohibits administrative accounts from using
+# applications that access the internet, such as web browsers, or with potential internet sources, such as email.
+# Define specific exceptions for local service administration. These exceptions may include HTTP(S)-based tools that are used
+# for the administration of the local system, services, or attached devices.
+wn10stig_internet_based_apps_to_check:
+  - "chrome.exe"
+  - "firefox.exe"
+  - "iexplore.exe"
+  - "edge.exe"
+  - "opera.exe"
+  - "brave.exe"
+  - "vivaldi.exe"
+  - "safari.exe"
+  - "tor.exe"
+  - "outlook.exe"
+  - "thunderbird.exe"
+  - "mail.exe"
+  - "emclient.exe"
+  - "postbox.exe"
+  - "slack.exe"
+  - "discord.exe"
+  - "teams.exe"
+  - "skype.exe"
+  - "zoom.exe"
+  - "whatsapp.exe"
+  - "telegram.exe"
+  - "signal.exe"
+  - "mstsc.exe"
+  - "teamviewer.exe"
+  - "anydesk.exe"
+  - "vncviewer.exe"
+  - "citrix.exe"
+  - "dropbox.exe"
+  - "googledrive.exe"
+  - "onedrive.exe"
+  - "boxsync.exe"
+  - "mega.exe"
+  - "spotify.exe"
+  - "tiktok.exe"
+  - "youtube.exe"
+  - "twitch.exe"
+  - "chromedriver.exe"
 
 # CAT2
 
-# WN10-00-000031
-# win10stig_bitlocker_pin_type sets if you are using TPM PIN's for BitLockder
-# Values are UseTPMPIN or UseTPMKeyPIN
-win10stig_bitlocker_pin_type: UseTPMPIN
-# win10stig_bitlocker_usetpmpin_value is the value set to the UseTPMPIN or UseTPMKeyPIN registry entries
-# Value of 2 is for Network Unlock and value of 1 is not Network Unlock
-win10stig_bitlocker_tpmpin_registry_value: 1
-
-# WN10-00-000032
-# win10stig_bitlocker_min_pin_length is the minimum length for the BitLocker PIN
-# This value needs to be 6 or greater
-win10stig_bitlocker_min_pin_length: 6
+# WN10-00-000025
+# win10stig_ess_software is the name and service that will be running on the machine that is used
+# for continuous network scanning and must be installed and configured to run.
+# NOTE: There are many possible vendors that can be placed here. Some examples are provided below.
+# - name: "McAfee/Trellix HBSS (ePO, ENS)"
+#   services: ["MfeEpoAgent", "McShield", "mfefire"]
+# - name: "Microsoft Defender for Endpoint (MDE)"
+#   services: ["Sense", "WdNisSvc", "WinDefend"]
+# - name: "Tenable ACAS (Nessus Scanner)"
+#   services: ["Tenable Nessus"]
+# - name: "Ivanti Patch for Windows"
+#   services: ["IvantiPatchService"]
+# - name: "BeyondTrust Endpoint Privilege Management"
+#   services: ["BeyondTrustEPM"]
+# - name: "Bitdefender GravityZone"
+#   services: ["bdservicehost"]
+# - name: "Carbon Black Defense"
+#   services: ["CbDefense"]
+# - name: "Symantec Endpoint Protection"
+#   services: ["SepMasterService"]
+# - name: "Trend Micro Apex One"
+#   services: ["ntrtscan"]
+# Leave blank to disable scanning
+# Default:
+# name: ""
+# services: []
+win10stig_ess_software:
+  name: ""
+  services: []
 
 # WN10-00-000035
-# If win10stig_applocker is set to true the task will print the applocker current config to either XML file or stdout.
-# If you decide to use a temp folder make sure it is created or the task will fail and error.
-win10stig_applocker: false
-# win10stig_applocker_output will allow end user to decide if they would like it outoput to XML file for audit purpose
+# win10stig_applocker_output will allow end user to decide if they would like it output to XML file for audit purpose
 # or if the end user would like it displayed in stdout for review.
 # 1 - XML File (Default)
 # 2 - stdout
+# Default: 2
 win10stig_applocker_output: 2
 win10stig_applocker_xml_output: c:\temp\applocker_output.xml
 
-# WN10-00-000135
-# win10stig_firewall_type is the firewall type that is being used on the host
-# The value of defender will search for the Windows Defender Firewall status, any other value will skip that check
-# When using defender please confirm your profiles align with the Defender Firewall STIG
-# When using a different firewall solution, please confirm it aligns with STIG compliance
-# THIS CONTROL DOES NOT SET PROFILE SETTINGS OF ANY KIND!!!
-win10stig_firewall_type: defender
+# WN10-00-000090
+# win10stig_password_expires is the setting that will automatically remediate any local accounts on the
+# system where passwords are set to never expire to now expire. By default this is set to false so that
+# can be reviewed manually first using the warning system.
+# Default: false
+win10stig_password_expires: false
 
-# win10stig_account are all of the related account security settings
+# WN10-00-000130
+# win10stig_certificate_exclusion_paths is the list of paths that will be skipped when searching for  *.p12 and *.pfx files.
+# This does not apply to server-based applications that have a requirement for .p12 certificate files (e.g., Oracle Wallet Manager)
+# or Adobe PreFlight certificate files. Some applications create files with extensions of .p12 that are not certificate
+# installation files. Removal of non-certificate installation files from systems is not required. These must be documented with the ISSO.
+# Below is the default list of extensions to skip based on STIG recommended settings. This list may be expanded as well.
+# Default:
+# - "C:\\Program Files\\Oracle\\WalletManager"
+# - "C:\\Program Files (x86)\\Oracle\\WalletManager"
+# - "C:\\Program Files\\Adobe\\Preflight"
+# - "C:\\Program Files (x86)\\Adobe\\Preflight"
+win10stig_certificate_exclusion_paths:
+  - "C:\\Program Files\\Oracle\\WalletManager"
+  - "C:\\Program Files (x86)\\Oracle\\WalletManager"
+  - "C:\\Program Files\\Adobe\\Preflight"
+  - "C:\\Program Files (x86)\\Adobe\\Preflight"
+# win10stig_auto_remediate_files is the setting that will automatically remove '*.p12', '*.pfx' files that are not in the
+# exclusion list above. By default we have it set to true to remediate per the STIG standards. If set to false there
+# will be a warning message that gets displayed with the files that need to be removed either manually or by setting
+# win10stig_auto_remediate_files: true and the Ansible will have to be run again.
+# Default: true
+win10stig_auto_remediate_files: true
+
+# WN10-00-000140
+# win10stig_authorized_remote_management_hosts is the variable
+# Example of the hosts added below.
+# win10stig_authorized_remote_management_hosts:
+# - "192.168.1.10"
+# - "10.10.10.0/24"
+# Default: []
+win10stig_authorized_remote_management_hosts: []
+# win10stig_remove_unauthorized_hosts is the value that when set to true will remove any hosts that are not listed
+# above in "win10stig_authorized_remote_management_hosts.
+# Default: false
+win10stig_remove_unauthorized_hosts: false
+
+# WN10-00-000250
+# win10stig_non_persistent_max_session_timeout is the setting to apply so that Windows systems that are
+# nonpersistent VM sessions must not exceed 24 hours. Make sure you enter the time in the milliseconds.
+# By default we do not have this set and will give you a warning to review policies. Setting this to a value
+# in milliseconds will remediate the following registry values with the same values.
+# KLM:\SOFTWARE\Policies\Microsoft\Windows\Terminal Services
+# MaxDisconnectionTime
+# MaxIdleTime
+# MaxSessionTime
+# To convert to hours take the number wn10_00_000250_session_timeout_value / 3600000 gives you hours.
+# Note: 24 Hours = 86400000
+# Default: []
+win10stig_non_persistent_max_session_timeout: []
+
 # WN10-AC-000005
-# lockoutduration is the duration in minutes for an account to be locked after a certain number of failed login attempts
-# To conform to STIG standards this value needs to be 15 minutes or greater
-# WN10-AC-000010
-# lockoutbadcount is the number of failed account login attempts before locking the account
-# To conform to STIG standards this value needs to be 3 or less
-# WN10-AC-000015
-# resetlockoutcount is the duration in minutes between failed login attempts for the counter to zero
-# To conform to STIG standards this value needs to be 15 minutes or greater
-# !!!!! Important !!!!!!!
-# The lockoutduration value has to be equal to or greater than resetlockoutcount value.
-# Failure to follow that standard will result in tasks failing since that is out of bounds for those settings in the OS
-# WN10-AC-000020
-# passwordhistory is the number of passwords to cycle through
-# To conform to STIG standards this needs to be set to 24
-# WN10-AC-000025
-# max_pass_age is the maximum age in days a password can be
-# To conform to STIG standards this needs to be 60 days or less
-# WN10-AC-000030
-# min_pass_age is the minimum password age in days
-# To conform to STIG standards this value of 1 or greater
-# WN10-AC-000035
-# min_pass_length is the minimum length in characters that a password can be
-# To conform to STIG standards this value needs to be 14 or greater
-win10stig_account_settings:
-    lockoutduration: 15
-    lockoutbadcount: 3
-    resetlockoutcount: 15
-    passwordhistory: 24
-    max_pass_age: 60
-    min_pass_age: 1
-    min_pass_length: 14
+# win10stig_account_lockout_duration is the  policy setting determines the length of time that
+# must pass before a locked account is unlocked and a user can try to log on again.
+# NOTE: If the value for this policy setting is configured to 0, locked-out accounts will remain locked-out
+# until an administrator manually unlocks them. Configuring this to "0", requiring an administrator to unlock
+# the account, is more restrictive and is not a finding.
+# The recommended state for this setting is: 15 or more minute(s).
+# Default: 15
+win10stig_account_lockout_duration: 15
 
-# win10stig_audit_settings is the group of variables used to enable success/failure loging for various audit logging categories.
-# There will only be variables here for controls that don't have a corresponding success and failure STIG control
-# This gives control to the end user to set the required STIG value but also give flexabilty to add the other setting if needed
-# WN10-AU-000030
-# security_group_mngmnt_include_failure set to false will set Secuirty Group Management to log only successful changes to Security Group Management settings
-# security_group_mngmnt_include_failure set to true will set Security Group Management to log both successful and failed changes to Security Group Management settings
-# WN10-AU-000045
-# pnp_activity_include_failure set to false will set Plug and Play Events logging only to successful connections to external devices
-# pnp_activity_include_failure set to true will set Plug and Play Events loggin to both successful and failed connections to external devices
-# WN10-AU-000050
-# process_creation_include_failure set to false will set Process Creation logging to log only successful process creation
-# process_creation_include_failure set to true will set Process Creation logging to log both successful and failed process creation
-# WN10-AU-000054
-# accnt_lockout_include_success set to false will set Account Lockout logging to log only failed Account Lockout events
-# accnt_lockout_include_success set to true will set Account Lockout logging to log both successful and failed Account Lockout events
-# WN10-AU-000060
-# group_membership_include_failure set to false will set Group Membership logging to log only successful group membership changes
-# group_membership_include_failure set to true will set Group Membership logging to log both successful and failed group membership changes
-# WN10-AU-000065
-# logoff_include_failure set to false will set Logoff logging to log only succesful logoffs
-# logoff_include_failure set to true will set Logoff logging to log both successful and failed logoffs
-# WN10-AU-000080
-# special_logon_include_failure set to false will set Special Logon to log only successful special logons
-# special_logon_include_failure set to true will set Special Logon to log both successful and failed special logons
-# WN10-AU-000100
-# audit_policy_change_include_failure set to false will set Audit Policy Change to log only successful changes to the audit policy
-# audit_policy_change_include_failure set to true will set Audit Policy Change to log both successful and failed changes to the audit policy
-# WN10-AU-000105
-# authentication_policy_change_include_failure set to false will set Authentication Policy Change to log only successful changes to the authentication policy
-# authentication_policy_change_include_failure Set to true will set Authentication Policy Change to log both successful and failed changes to the authentication policy
-# WN10-AU-000107
-# authorization_policy_change_include_failure set to false will set Authorization Policy Change to log only successful changes to the authorization policy
-# authorization_policy_change_include_failure set to true will set Authorization Policy Change to log both successful and failed changes to teh authorization policy
-# WN10-AU-000120
-# ipsec_drive_include_success set to false will set IPSec Driver to log only failed events related to IPSec Driver
-# ipsec_drive_include_success set to true will set IPSec Driver to log both failed and successful events related to IPSec Driver
-# WN10-AU-000140
-# security_state_change_include_failure set to false will set Security State Change to log only successful events related to changes in the security state
-# security_state_change_include_failure set to true will set Security State Change to log both successful and failed events related to changes in the security state
-# WN10-AU-000150
-# security_system_extension_include_failure set to false will set Security System Extension to log only successful events related to extension codes being loaded by the security subsystem
-# security_system_extension_include_failure set to true will set Security System Extension to log both successful and failed events related to extension codes being loaded by the security subsystem
-# WN10-AU-000570
-# detailed_file_share_include_success set to false will set Detailed File Share to log only failed events related to accessing files and folders on a shared folder
-# detailed_file_share_include_success set to true will set Detailed File Share to log both failed and successful events related to accessing files and folders on a shared folder
-win10stig_audit_settings:
-    security_group_mngmnt_include_failure: false
-    pnp_activity_include_failure: false
-    process_creation_include_failure: false
-    accnt_lockout_include_success: false
-    group_membership_include_failure: false
-    logoff_include_failure: false
-    special_logon_include_failure: false
-    audit_policy_change_include_failure: false
-    authentication_policy_change_include_failure: false
-    authorization_policy_change_include_failure: false
-    ipsec_drive_include_success: false
-    security_state_change_include_failure: false
-    security_system_extension_include_failure: false
-    detailed_file_share_include_success: false
+# WN10-AC-000010
+# win10stig_bad_login_lockout_count is the policy setting determines the number of failed logon
+# attempts before the account is locked.
+# The recommended state for this setting is: 3 or fewer invalid logon attempt(s), but not 0.
+# Default: 3
+win10stig_bad_login_lockout_count: 3
+
+# WN10-AC-000015
+# win10stig_account_lockout_counter_reset is the policy setting that determines the length of time before the
+# Account lockout threshold resets to zero. The default value for this policy setting is Not Defined.
+# NOTE: If the Account lockout threshold is defined (win10stig_account_lockout_duration), this reset
+# time must be less than or equal to the value for the Account lockout duration setting.
+# The recommended state for this setting is: 15 minute(s).
+# Default: 15
+win10stig_account_lockout_counter_reset: 15
+
+# WN10-AC-000020
+# win10stig_max_passwords_saved is the variable used to dictate the number of unique passwords
+# that have to be associated with a user account before you can reuse an old password.
+# The recommended state for this setting is 24 Or More passwords.
+# NOTE: As Of the publication if this benchmark, Microsoft has a maximum limit of 24 saved passwords.
+# This may change at a later date but we have left it setup as a variable for that reason.
+# Default: 24
+win10stig_max_passwords_saved: 24
+
+# WN10-AC-000025
+# win10stig_maximum_password_age is the policy setting defines how long a user can use their
+# password before it expires.
+# The recommended state for this setting is: 60 or fewer days, but not 0 (zero).
+# Default: 60
+win10stig_maximum_password_age: 60
+
+# WN10-AC-000030
+# win10stig_minimum_password_age is the policy setting determines the number of days that you
+# must use a password before you can change it. The range of values for this policy setting is
+# between 1 and 999 days.
+# NOTE: The minimum number cannot exceed the maximum days.
+# The recommended state for this setting is: 1 or more day(s)
+# Default: 1
+win10stig_minimum_password_age: 1
+
+# WN10-AC-000035
+# win10stig_minimum_password_length is the policy setting determines the least number of characters
+# that make up a password for a user account.
+# The recommended state for this setting is: 14 or more character(s).
+# Default: 14
+win10stig_minimum_password_length: 14
 
 # WN10-AU-000500
-# win10stig_app_log_max_size is the max size in KB for Event Viewer Application Logs
-# To conform to STIG standards this value needs to be 32768 KB or greater
-win10stig_app_log_max_size: 32768
+# win10stig_application_max_log_file_size is the setting that specifies the maximum size of the log file in kilobytes.
+# The maximum log file size can be configured between 1 megabyte (1,024 kilobytes) and 4 terabytes
+# (4,194,240 kilobytes) in kilobyte increments.
+# The recommended state for this setting is: Enabled: 32,768 or greater.
+# Default: 32768
+win10stig_application_max_log_file_size: 32768
 
 # WN10-AU-000505
-# win10stig_sec_log_max_size is the max size in KB for Event Viewer Security Logs
-# To conform to STIG standards this value needs to be 1024000 or greater
-win10stig_sec_log_max_size: 1024000
+# win10stig_security_max_log_file_size is the setting that specifies the maximum size of the log file in kilobytes.
+# The maximum log file size can be configured between 1 megabyte (1,024 kilobytes) and 4 terabytes
+# (4,194,240 kilobytes) in kilobyte increments.
+# The recommended state for this setting is: Enabled: 1024000 or greater.
+# Default: 1024000
+win10stig_security_max_log_file_size: 1024000
 
 # WN10-AU-000510
-# win10stig_sys_log_max_size is the max size in KB for the Event Viewer System Logs
-# 32768
-win10stig_sys_log_max_size: 32768
+# win10stig_system_max_log_file_size is the setting that specifies the maximum size of the log file in kilobytes.
+# The maximum log file size can be configured between 1 megabyte (1,024 kilobytes) and 4 terabytes (4,194,240 kilobytes) in kilobyte increments.
+# The recommended state for this setting is: Enabled: 32,768 or greater.
+# Default: 32768
+win10stig_system_max_log_file_size: 32768
 
-# WN10-AU-000515
-# WN10-AU-000520
-win10stig_default_log_location: true
+# WN10-CC-000007
+# win10stig_allowed_to_use_camera variable determines whether the use of a camera on a Windows 10
+# system is permitted based on security compliance requirements. If a camera is installed, it
+# must either be disconnected, covered, or disabled in BIOS to meet security standards.
+# This requirement is not applicable in the following cases:
+# The system does not have a camera installed.
+# The device is a mobile device (smartphones or tablets) where camera use is locally authorized.
+# The system is part of a dedicated VTC suite in an approved, centrally managed location.
+# Scenarios:
+# No camera detected - Skips the requirement (No registry change needed).
+# win10stig_allowed_to_use_camera: false - Disables all cameras via registry (Deny).
+# win10stig_allowed_to_use_camera: true & Built-in Camera Found - Disables the built-in camera via registry.
+# win10stig_allowed_to_use_camera: true & USB Camera Found - Issues a warning (but does not disable it).
+# Default: false
+win10stig_allowed_to_use_camera: false
+# Set to true to skip hardening for VTC/Mobile devices or mobile devices (smartphones and tablets)
+# where the use of the camera is a local AO decision.
+# Default: false
+win10stig_ignore_camera_hardening: false
+
+# WN10-CC-000070
+# win10stig_enable_virtualization_based_security is the policy setting specifies whether Virtualization Based Security (VBS) is enabled.
+# VBS uses the Windows Hypervisor to provide support for security services.
+# The recommended state for this setting is: Secure Boot or Secure Boot and DMA Protection.
+# 1 - Secure Boot
+# 3 - Secure Boot and DMA Protection
+# Default: 1
+win10stig_enable_virtualization_based_security: 1
 
 # WN10-CC-000085
-# win10stig_boot_driver_init_policy is the default behavior for Early Launch Antimalware - Boot-Start Driver Initialization plicy
+# win10stig_boot_driver_init_policy is the default behavior for Early Launch Antimalware - Boot-Start Driver Initialization Policy
 # Options are list below, a value of 7 (All) does not conform to STIG standards
 # 1 - Good and unknown
-# 3 - Good, uknown and bad but critical (Windows default)
+# 3 - Good, unknown and bad but critical (Windows default)
 # 8 - Good only
+# Default: 3
 win10stig_boot_driver_init_policy: 3
 
 # WN10-CC-000205
 # win10stig_allow_telemetry_value is the value set to Allow Telemetry registry setting
 # To comply with STIG requirements please use only the settings below
+# NOTE: Full will not be a acceptable input here.  The control states that FULL should not be
+#       set.  If you need full then control WN10-CC-000204 will bring it into compliance per the
+#       stig rules and this control should be set to false.
 # 0 - Security
 # 1 - Basic
-# 2 - Enhanced - This should only be used on Windows 10 v1709 or later
+# Default: 1
 win10stig_allow_telemetry_value: 1
 
 # WN10-CC-000260
 # win10stig_min_pin_length is the minimum PIN length for setting authentication PIN's
 # This value needs to be 6 or greater to conform to STIG standards
+# Default: 6
 win10stig_min_pin_length: 6
 
 # WN10-SO-000020
-# win10stig_new_administrator_name is the name the built-in Administrator account will be renamed to
-win10stig_new_administrator_name: adminchangethis
+# win10stig_admin_username is the name the built-in Administrator account will be renamed to.
+# The built-in local administrator account is a well-known account name that attackers will target. It is
+# recommended to choose another name for this account, and to avoid names that denote administrative or elevated access
+# accounts. Be sure to also change the default description for the local administrator (through the Computer
+# Management console).
+# Default: adminchangethis
+win10stig_admin_username: adminchangethis
 
 # WN10-SO-000025
-# win10stig_new_guest_name is the name the built-in Guest account will be renamed to
-win10stig_new_guest_name: guestchangethis
+# win10stig_guest_username is the name the built-in Guest account will be renamed to
+# The built-in local guest account is another well-known name to attackers. It is recommended to rename this account
+# to something that does not indicate its purpose. Even if you disable this account, which is recommended, ensure
+# that you rename it for added security.
+# Default: guestchangethis
+win10stig_guest_username: guestchangethis
 
 # WN10-SO-000070
-# win10stig_inactivity_timeout is the machine inactivity limit in seconds.
+# win10stig_inactivity_timeout_seconds is the machine inactivity limit in seconds.
 # To conform to STIG this value needs to be 900 seconds or less, excluding 0 which disables the inactivity limit
-win10stig_inactivity_timeout: 900
+# Default: 900
+win10stig_inactivity_timeout_seconds: 900
 
-# WN10-SO-000095
-# win10stig_smartcard_remove_action is the value set to SmartCard removal actions
-# To conform to STIG standards please only use the two options below
-# 1, this will lock the workstation when a SmartCeard is removed
-# 2, this will force logoff when a SmartCard is removed
-win10stig_smartcard_remove_action: 1
-
-# WN10-SO-000280
-# win10stig_max_pass_age is the maximum age in days for the local administrator
-# To conform to STIG this needs to be 60 days or less
-win10stig_max_pass_age: 60
-
-# CAT3
-
-# WN10-CC-000080
-# win10stig_hypervisor_enforce_code_integrity is the variable setting for the registry to select which
-# style of Turn On Virtualization Based Security you would like to choose.
-# The policy settings referenced in the Fix section will configure the following registry value. However due to hardware requirements,
-# the registry value alone does not ensure proper function.
-# "Enabled with UEFI lock" is preferred as more secure; however, it cannot be turned off remotely through a group policy change if there is an issue.
-# These are the only two options to use to be STIG compliant.
-# 1 - Enabled with UEFI lock
-# 2 - Enabled without lock
-win10stig_hypervisor_enforce_code_integrity: 1
-
-# WN10-CC-000206
-# win10stig_dodownloadmod_domain: is the DODownloadMode variable for systems that are a member of a domain.
-# This can be any of the below values, the only available option that is not within STIG standards is Internet value of 3
-# HTTP Only = 0, LAN(1) = 1, Group (2) = 2, Simple (99) = 99, Bypass (100) = 100
-# Documenation on values: https://admx.help/?Category=Windows_11_2022&Policy=Microsoft.Policies.DeliveryOptimization::DownloadMode
-win10stig_dodownloadmod_domain: 0
-# win10stig_dodownloadmod_standalone is the DODownloadMode variable for systems that are in a stand-alone mode, not on a domain.
-# The can be the values below
-# Off (0) = 0 LAN (1) = 1
-win10stig_dodownloadmod_standalone: 0
-
-# WN10-SO-000055
-# win10stig_max_pw_age is the maximum password age set in days.
-# To conform to STIG standards this needs to be set to 30 or less, excluding 0
-win10stig_max_pw_age: 30
-
-# WN10-SO-000075 - CAT2
-# WN10-SO-000080 - CAT3
-# win10stig_legalnotice is the legal banner/notice displayed prior to a logon attempt
-win10stig_legalnotice: |
+# WN10-SO-000075
+# win10stig_legal_notice is the legal banner/notice displayed prior to a logon attempt
+win10stig_legal_notice: |
     You are accessing a U.S. Government (USG) Information System (IS) that is provided for USG-authorized use only.
 
     By using this IS (which includes any device attached to this IS), you consent to the following conditions:
@@ -577,7 +679,106 @@ win10stig_legalnotice: |
 
     -Notwithstanding the above, using this IS does not constitute consent to PM, LE or CI investigative searching or monitoring of the content of privileged communications, or work product, related to personal representation or services by attorneys, psychotherapists, or clergy, and their assistants. Such communications and work product are private and confidential. See User Agreement for details.
 
+# WN10-SO-000095
+# win10stig_sc_remove_option is the value set to SmartCard removal actions
+# To conform to STIG standards please only use the two options below.
+# 1 - This will lock the workstation when a SmartCard is removed
+# 2 - This will force logoff when a SmartCard is removed
+# Default: 1
+win10stig_sc_remove_option: 1
+
+# WN10-SO-000280
+# Windows 10 passwords for enabled local Administrator accounts must be changed at least every 60 days.
+# If the PasswordLastSet date is greater than wn10stig_pass_age_administrator days old, this is a finding.
+# NOTE: This can be set to 60 or less.
+# Default: 60
+wn10stig_pass_age_administrator: 60
+
+# WN10-UR-000010
+# win10stig_additional_network_logon_users_or_groups is the option to add additional groups.
+# If a domain application account such as for a management tool requires this user right, this would not be a finding.
+# Vendor documentation must support the requirement for having the user right.
+# The requirement must be documented with the ISSO.
+# The application account, managed at the domain level, must meet requirements for application account passwords,
+# such as length and frequency of changes as defined in the Windows Server STIGs.
+# Note: Adjusting this will always cause a warning message to be displayed about the above notes.
+# Example:
+# win10stig_additional_network_logon_users_or_groups
+#  - "CustomUser1"
+#  - "CustomGroup1"
+# Default: []
+win10stig_additional_network_logon_users_or_groups: []
+
+# WN10-CC-000391
+# win10stig_remove_internet_explorer_11 is the variable that will allow you to remove the Remove IE11 Windows Feature.
+# By default STIG does not say to remove it but it is optional, but strongly recommended.
+# Default: false
+win10stig_remove_internet_explorer_11: false
+
+# WN10-00-000395
+# Note: If both are set to false this control is a manual audit by a Administrator.
+# win10stig_reset_portproxy is the variable that is set and
+# this removes all portproxy rules in one command — a fast, full cleanup.
+# Use When:
+# You're working with hardened systems, gold images, or systems where portproxy should never be used.
+# You do not need to preserve any rules.
+# You want simplicity and speed over rule-by-rule visibility.
+# Default: true
+win10stig_reset_portproxy: true
+# Use When:
+# You need granular control and traceability.
+# You want to align strictly with the STIG fix text.
+# You want to audit exactly what was removed.
+# You might be running in production where automated bulk changes are risky.
+# Default: false
+win10stig_delete_each_portproxy: false
+
+# CAT3
+
+# WN10-CC-000206
+# win10stig_dodownloadmode: is the DODownloadMode variable for systems that are a member of a domain or standalone.
+# This can be any of the below values, the only available option that is not within STIG standards is Internet value of 3
+# NOTE: The settings will apply one or the other based on if it is a domain member which Ansible will determine in the Prelim.
+# ****************************************************************************************************
+# Domain Based System settings are below.
+# HTTP Only = 0, LAN(1) = 1, Group (2) = 2, Simple (99) = 99, Bypass (100) = 100
+# Documentation on values: https://admx.help/?Category=Windows_11_2022&Policy=Microsoft.Policies.DeliveryOptimization::DownloadMode
+# ****************************************************************************************************
+# Standalone System settings are below.
+# The can be the values below
+# Off (0) = 0 LAN (1) = 1
+# ****************************************************************************************************
+# Default: 0
+win10stig_dodownloadmode: 0
+
+# WN10-SO-000055
+# win10stig_max_pw_age is the maximum password age set in days.
+# To conform to STIG standards this needs to be set to 30 or less, excluding 0
+# Default: 30
+win10stig_max_pw_age: 30
+
+# WN10-SO-000080
+# win10stig_legal_notice_caption is the legal banner/notice caption displayed prior to a logon attempt
+# NOTE: If a site-defined title is used, it can in no case contravene or modify the language of the banner text required in WN10-SO-000075.
+# Examples: DoD Notice and Consent Banner, US Department of Defense Warning Statement
+# Default: US Department of Defense Warning Statement
+win10stig_legal_notice_caption: US Department of Defense Warning Statement
+
 # WN10-SO-000085
-# win10stig_cached_logon_count is the number of logons cached
+# win10stig_cached_logons_count is the number of logons cached
 # To conform to STIG standards this needs to be set to 10 or less
-win10stig_cached_logon_count: 10
+# NOTE: This setting only applies to domain-joined systems, however, it is configured by default on all systems.
+# Default: 10
+win10stig_cached_logons_count: 10
+
+# WN10-CC-000080
+# win10stig_hypervisor_enforce_code_integrity is the variable setting for the registry to select which
+# style of Turn On Virtualization Based Security you would like to choose.
+# The policy settings referenced in the Fix section will configure the following registry value. However due to hardware requirements,
+# the registry value alone does not ensure proper function.
+# "Enabled with UEFI lock" is preferred as more secure; however, it cannot be turned off remotely through a group policy change if there is an issue.
+# These are the only two options to use to be STIG compliant.
+# 1 - Enabled with UEFI lock
+# 2 - Enabled without lock
+# Default: 1
+win10stig_hypervisor_enforce_code_integrity: 1

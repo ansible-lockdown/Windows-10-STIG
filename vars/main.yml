@@ -6,7 +6,115 @@ warn_control_list: ""
 warn_count: 0
 
 # This sets the variable that is created for the banner.
-lockdown_banner: "{{lookup('file', './templates/banner.txt')}}"
+lockdown_banner: "{{ lookup('file', './templates/banner.txt') }}"
+
+# Default setting, this should not be changed
+# and is overridden if a task that changed sets the value if required.
+reboot_host: false
+
+# This variable indicates if the system is an Azure Virtual Desktop (AVD) instance **with no data at rest**.
+# If `true`, certain controls (like BitLocker enforcement) **will not be applied** as per STIG compliance.
+# Conditions that set this to `true`:
+#  - System is detected as running in Azure (`Azure` keyword in system check).
+#  - FSLogix profile management is in use (`Running` in FSLogix check).
+#  - Cloud domain join is detected (`CloudDomainJoin` keyword).
+discovered_avd_no_data_at_rest: false
+
+# This variable indicates if the system is a **Non-Persistent Virtual Desktop Infrastructure (VDI)**.
+# Non-Persistent VDIs **reset or refresh upon user logoff**, meaning no user data is retained.
+# If `true`, certain controls (like BitLocker enforcement) **will not be applied**, as the system is stateless.
+# Conditions that set this to `true`:
+#  - System is a Virtual Machine (`Virtual Machine` keyword in system check).
+#  - The VDI instance is **not marked as persistent**.
+#  - The system drive is an SSD (often used for stateless VDIs).
+discovered_vdi_non_persistent: false
+
+# This variable indicates if the system is a **Persistent Virtual Desktop Infrastructure (VDI)**.
+# Persistent VDIs **retain user data across sessions**, functioning like traditional desktops.
+# If `true`, all applicable security controls **will be enforced**, including BitLocker.
+# Conditions that set this to `true`:
+#  - System is a Virtual Machine (`Virtual Machine` keyword in system check).
+#  - The VDI instance is explicitly **marked as persistent**.
+discovered_vdi_persistent: false
+
+# discovered_domain_joined is a setting built into the playbook for some controls that only applies
+# to standalone or domain joined systems. By default this is set to true.
+discovered_domain_joined: true
 
 # This will be changed to true if discovered.
-win10stig_cloud_based_system: false
+discovered_cloud_based_system: false
+
+# This variable is used in the tracking of only 1 copy of Windows being installed on the machine related.
+win10stig_os_keyword: "Windows"
+win10stig_non_windows_os_keywords:
+  - "Ubuntu"
+  - "Linux"
+  - "Fedora"
+  - "Alma"
+  - "Debian"
+  - "Red Hat"
+  - "Rocky"
+  - "Kali"
+  - "Arch"
+  - "SUSE"
+  - "CentOS"
+  - "Mac OS"
+  - "Apple"
+
+# WN10-RG-000005
+# These are the default permissions that should be on the hives to compare against.
+win10stig_expected_software_acl:
+  - { IdentityReference: "NT AUTHORITY\\SYSTEM", RegistryRights: "FullControl", AccessControlType: "Allow", IsInherited: false, InheritanceFlags: "ContainerInherit", PropagationFlags: "None" }
+  - { IdentityReference: "BUILTIN\\Administrators", RegistryRights: "FullControl", AccessControlType: "Allow", IsInherited: false, InheritanceFlags: "ContainerInherit", PropagationFlags: "None" }
+  - { IdentityReference: "BUILTIN\\Users", RegistryRights: "ReadKey", AccessControlType: "Allow", IsInherited: false, InheritanceFlags: "ContainerInherit", PropagationFlags: "None" }
+  - { IdentityReference: "CREATOR OWNER", RegistryRights: "FullControl", AccessControlType: "Allow", IsInherited: false, InheritanceFlags: "ContainerInherit", PropagationFlags: "None" }
+  - { IdentityReference: "APPLICATION PACKAGE AUTHORITY\\ALL APPLICATION PACKAGES", RegistryRights: "ReadKey", AccessControlType: "Allow", IsInherited: false, InheritanceFlags: "ContainerInherit", PropagationFlags: "None" }
+  - { IdentityReference: "S-1-15-3-1024-1065365936-1281604716-3511738428-1654721687-432734479-3232135806-4053264122-3456934681", RegistryRights: "ReadKey", AccessControlType: "Allow", IsInherited: false, InheritanceFlags: "ContainerInherit", PropagationFlags: "None" }
+win10stig_expected_system_acl:
+  - { IdentityReference: "NT AUTHORITY\\SYSTEM", RegistryRights: "FullControl", AccessControlType: "Allow", IsInherited: false, InheritanceFlags: "ContainerInherit", PropagationFlags: "None" }
+  - { IdentityReference: "BUILTIN\\Administrators", RegistryRights: "FullControl", AccessControlType: "Allow", IsInherited: false, InheritanceFlags: "ContainerInherit", PropagationFlags: "None" }
+  - { IdentityReference: "BUILTIN\\Users", RegistryRights: "ReadKey", AccessControlType: "Allow", IsInherited: false, InheritanceFlags: "ContainerInherit", PropagationFlags: "None" }
+  - { IdentityReference: "CREATOR OWNER", RegistryRights: "FullControl", AccessControlType: "Allow", IsInherited: false, InheritanceFlags: "ContainerInherit", PropagationFlags: "None" }
+  - { IdentityReference: "APPLICATION PACKAGE AUTHORITY\\ALL APPLICATION PACKAGES", RegistryRights: "ReadKey", AccessControlType: "Allow", IsInherited: false, InheritanceFlags: "ContainerInherit", PropagationFlags: "None" }
+  - { IdentityReference: "S-1-15-3-1024-1065365936-1281604716-3511738428-1654721687-432734479-3232135806-4053264122-3456934681", RegistryRights: "ReadKey", AccessControlType: "Allow", IsInherited: false, InheritanceFlags: "ContainerInherit", PropagationFlags: "None" }
+
+# WN10-00-000095
+# These are the default file system permissions to compare against.
+win10stig_expected_c_acl:
+  - { IdentityReference: "S-1-15-3-65536-1888954469-739942743-1668119174-2468466756-4239452838-1296943325-355587736-700089176", Permissions: "(S,RD,X,RA)" }
+  - { IdentityReference: "NT AUTHORITY\\Authenticated Users", Permissions: "(AD)" }
+  - { IdentityReference: "NT AUTHORITY\\Authenticated Users", Permissions: "(OI)(CI)(IO)(M)" }
+  - { IdentityReference: "NT AUTHORITY\\SYSTEM", Permissions: "(OI)(CI)(F)" }
+  - { IdentityReference: "BUILTIN\\Administrators", Permissions: "(OI)(CI)(F)" }
+  - { IdentityReference: "BUILTIN\\Users", Permissions: "(OI)(CI)(RX)" }
+  - { IdentityReference: "Mandatory Label\\High Mandatory Level", Permissions: "(OI)(NP)(IO)(NW)" }
+
+win10stig_expected_programfiles_acl:
+  - { IdentityReference: "NT SERVICE\\TrustedInstaller", Permissions: "(F)" }
+  - { IdentityReference: "NT SERVICE\\TrustedInstaller", Permissions: "(CI)(IO)(F)" }
+  - { IdentityReference: "NT AUTHORITY\\SYSTEM", Permissions: "(M)" }
+  - { IdentityReference: "NT AUTHORITY\\SYSTEM", Permissions: "(OI)(CI)(IO)(F)" }
+  - { IdentityReference: "BUILTIN\\Administrators", Permissions: "(M)" }
+  - { IdentityReference: "BUILTIN\\Administrators", Permissions: "(OI)(CI)(IO)(F)" }
+  - { IdentityReference: "BUILTIN\\Users", Permissions: "(RX)" }
+  - { IdentityReference: "BUILTIN\\Users", Permissions: "(OI)(CI)(IO)(GR,GE)" }
+  - { IdentityReference: "CREATOR OWNER", Permissions: "(OI)(CI)(IO)(F)" }
+  - { IdentityReference: "APPLICATION PACKAGE AUTHORITY\\ALL APPLICATION PACKAGES", Permissions: "(RX)" }
+  - { IdentityReference: "APPLICATION PACKAGE AUTHORITY\\ALL APPLICATION PACKAGES", Permissions: "(OI)(CI)(IO)(GR,GE)" }
+  - { IdentityReference: "APPLICATION PACKAGE AUTHORITY\\ALL RESTRICTED APPLICATION PACKAGES", Permissions: "(RX)" }
+  - { IdentityReference: "APPLICATION PACKAGE AUTHORITY\\ALL RESTRICTED APPLICATION PACKAGES", Permissions: "(OI)(CI)(IO)(GR,GE)" }
+
+win10stig_expected_windows_acl:
+  - { IdentityReference: "NT SERVICE\\TrustedInstaller", Permissions: "(F)" }
+  - { IdentityReference: "NT SERVICE\\TrustedInstaller", Permissions: "(CI)(IO)(F)" }
+  - { IdentityReference: "NT AUTHORITY\\SYSTEM", Permissions: "(M)" }
+  - { IdentityReference: "NT AUTHORITY\\SYSTEM", Permissions: "(OI)(CI)(IO)(F)" }
+  - { IdentityReference: "BUILTIN\\Administrators", Permissions: "(M)" }
+  - { IdentityReference: "BUILTIN\\Administrators", Permissions: "(OI)(CI)(IO)(F)" }
+  - { IdentityReference: "BUILTIN\\Users", Permissions: "(RX)" }
+  - { IdentityReference: "BUILTIN\\Users", Permissions: "(OI)(CI)(IO)(GR,GE)" }
+  - { IdentityReference: "CREATOR OWNER", Permissions: "(OI)(CI)(IO)(F)" }
+  - { IdentityReference: "APPLICATION PACKAGE AUTHORITY\\ALL APPLICATION PACKAGES", Permissions: "(RX)" }
+  - { IdentityReference: "APPLICATION PACKAGE AUTHORITY\\ALL APPLICATION PACKAGES", Permissions: "(OI)(CI)(IO)(GR,GE)" }
+  - { IdentityReference: "APPLICATION PACKAGE AUTHORITY\\ALL RESTRICTED APPLICATION PACKAGES", Permissions: "(RX)" }
+  - { IdentityReference: "APPLICATION PACKAGE AUTHORITY\\ALL RESTRICTED APPLICATION PACKAGES", Permissions: "(OI)(CI)(IO)(GR,GE)" }

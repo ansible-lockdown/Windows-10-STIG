@@ -1,500 +1,852 @@
 ---
 
-- name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level."
-  block:
-      - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level. | Warning Meassage."
-        ansible.builtin.debug:
-            msg:
-                - "Warning!! Your version of Windows 10 does not conform to STIG standards."
-                - "Please update your current version to a supported build or supported LTSC build."
-
-      - name: "HIGH | WN10-00-000040 | AUDIT | Systems must be maintained at a supported servicing level. | Warn Count."
-        ansible.builtin.import_tasks: warning_facts.yml
-        vars:
-            warn_control_id: 'WN10-00-000040'
-  # When statement does not follow standard formatting.
+- name: "HIGH | WN10-00-000030 | PATCH | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest."
   when:
-      - wn10_00_000040
-      - win10_displayversion.value != '1507' and win10_currentbuild.value != '10240' or
-        win10_displayversion.value != '1607' and win10_currentbuild.value != '14393' or
-        win10_displayversion.value != '1809' and win10_currentbuild.value != '17763' or
-        win10_displayversion.value != '21H2' and win10_currentbuild.value != '19044' or
-        win10_displayversion.value != '20H2' and win10_currentbuild.value >= '19000'
+    - wn10_00_000030
+    - not (discovered_vdi_non_persistent or discovered_avd_no_data_at_rest)
   tags:
-      - WN10-00-000040
-      - CAT1
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220706r857183_rule
-      - V-220706
+    - WN10-00-000030
+    - CAT1
+    - CCI-001199
+    - CCI-002475
+    - CCI-002476
+    - SRG-OS-000185-GPOS-00079
+    - SV-220702r958552_rule
+    - V-220702
+    - NIST800-53_SC-28
+    - NIST800-53A_SC-28.1
+    - NIST800-53R4_SC-28
+    - NIST800-53R4_SC-28_1
+  block:
+    - name: "HIGH | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest. | Get Current Bitlocker Status"
+      ansible.windows.win_shell: |
+        $drives = Get-BitLockerVolume | Where-Object { $_.MountPoint -match "^[A-Z]:" }
+        $unencrypted = $drives | Where-Object { $_.ProtectionStatus -ne "On" }
+        $unencrypted | Select-Object -ExpandProperty MountPoint | ConvertTo-Json -Compress
+      changed_when: false
+      failed_when: false
+      register: wn10_00_000030_bitlocker_status
+
+    - name: "HIGH | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest. | Warning if BitLocker is not enabled and enforcement is off"
+      when: (wn10_00_000030_bitlocker_status.stdout | from_json) | length > 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! The following drives are not encrypted with BitLocker:"
+          - "{{ wn10_00_000030_bitlocker_status.stdout | from_json }}"
+
+    - name: "HIGH | WN10-00-000030 | AUDIT | Windows 10 information systems must use BitLocker to encrypt all disks to protect the confidentiality and integrity of all information at rest. | Warn Count"
+      when: (wn10_00_000030_bitlocker_status.stdout | from_json) | length > 0
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000030'
+
+- name: "HIGH | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication."
+  when: wn10_00_000031
+  tags:
+    - WN10-00-000031
+    - CAT1
+    - CCI-001199
+    - CCI-002475
+    - CCI-002476
+    - SRG-OS-000185-GPOS-00079
+    - SV-220703r958552_rule
+    - V-220703
+    - NIST800-53_SC-28
+    - NIST800-53A_SC-28.1
+    - NIST800-53R4_SC-28
+    - NIST800-53R4_SC-28_1
+  block:
+    - name: "HIGH | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication. | Set UseTPMPIN value"
+      when: not (discovered_vdi_non_persistent or discovered_avd_no_data_at_rest)
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\FVE
+        name: UseAdvancedStartup
+        data: 1
+        type: dword
+
+    - name: "HIGH | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication. | Set Advanced Startup value"
+      when: not win10stig_bitlocker_network_unlock
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\FVE
+        name: UseTPMPIN
+        data: 1
+        type: dword
+
+    - name: "HIGH | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication. | Set Advanced Startup value"
+      when: not win10stig_bitlocker_network_unlock
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\FVE
+        name: UseTPMKeyPIN
+        data: 1
+        type: dword
+
+    - name: "HIGH | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication. | Set Advanced Startup value"
+      when: win10stig_bitlocker_network_unlock
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\FVE
+        name: UseTPMPIN
+        data: 2
+        type: dword
+
+    - name: "HIGH | WN10-00-000031 | PATCH | Windows 10 systems must use a BitLocker PIN for pre-boot authentication. | Set Advanced Startup value"
+      when: win10stig_bitlocker_network_unlock
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\FVE
+        name: UseTPMKeyPIN
+        data: 2
+        type: dword
+
+- name: HIGH | WN10-00-000032 | PATCH | Windows 10 systems must use a BitLocker PIN with a minimum length of 6 digits for pre-boot authentication."
+  when:
+    - wn10_00_000032
+    - not (discovered_vdi_non_persistent or discovered_avd_no_data_at_rest)
+  tags:
+    - WN10-00-000032
+    - CAT2
+    - CCI-001199
+    - CCI-002475
+    - CCI-002476
+    - SRG-OS-000185-GPOS-00079
+    - SV-220704r958552_rule
+    - V-220704
+    - NIST800-53_SC-28
+    - NIST800-53A_SC-28.1
+    - NIST800-53R4_SC-28
+    - NIST800-53R4_SC-28_1
+  block:
+    - name: "HIGH | WN10-00-000032 | PATCH | Windows 10 systems must use a BitLocker PIN with a minimum length of 6 digits for pre-boot authentication. | Apply Pin Length"
+      when: win10stig_bitlocker_min_pin_length >= 6
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\FVE
+        name: MinimumPIN
+        data: "{{ win10stig_bitlocker_min_pin_length }}"
+        type: dword
+
+    - name: "HIGH | WN10-00-000032 | AUDIT | Windows 10 systems must use a BitLocker PIN with a minimum length of 6 digits for pre-boot authentication. | Warning Message."
+      when: win10stig_bitlocker_min_pin_length < 6
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid setting for win10stig_bitlocker_min_pin_length. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "HIGH | WN10-00-000032 | AUDIT | Windows 10 systems must use a BitLocker PIN with a minimum length of 6 digits for pre-boot authentication. | Warn Count."
+      when: win10stig_bitlocker_min_pin_length < 6
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000032'
+
+- name: "HIGH | WN10-00-000040 | AUDIT | Windows 10 systems must be maintained at a supported servicing level."
+  when:
+    - wn10_00_000040
+    - discovered_displayversion.value is version('20H2', '<') or discovered_currentbuild.value is version('19000', '<')
+  tags:
+    - WN10-00-000040
+    - CAT1
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220706r1050597_rule
+    - V-220706
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "HIGH | WN10-00-000040 | AUDIT | Windows 10 systems must be maintained at a supported servicing level | Warning Message."
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Your version of Windows 10 does not conform to STIG standards."
+          - "Update systems on the Semi-Annual Channel to Microsoft Windows Version 20H2 (OS Build 190xx.x) or greater."
+          - "It is recommended systems be upgraded to the most recently released version."
+          - "Special-purpose systems using the LTSC\\B may be at the following versions:"
+          - "v1507 (Build 10240)"
+          - "v1607 (Build 14393)"
+          - "v1809 (Build 17763)"
+          - "v21H2 (Build 19044)"
+
+    - name: "HIGH | WN10-00-000040 | AUDIT | Windows 10 systems must be maintained at a supported servicing level | Warn Count."
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000040'
 
 # Using ansible.windows.win_service_info because there is a bug in win_service with permissions
 # Below is the link to the most recent thing I can find on the issue. There are a few others that are the same but a bit older
 # https://githubmemory.com/repo/ansible-collections/ansible.windows/issues/269
 - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program."
-  block:
-      - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program | Get AV service status"
-        ansible.windows.win_service_info:
-            name: "{{ win10stig_av_sftw }}"
-        changed_when: false
-        failed_when: false
-        register: win10_00_000045_av_sftw_status
-
-      - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program | Alert on service not running."
-        ansible.builtin.debug:
-            msg:
-                - "Warning!! You do not have any AV software running"
-                - "Please enable defender or a 3rd party AV software like McAfee or Symantec"
-        when:
-            - not win10_00_000045_av_sftw_status.exists or
-              win10_00_000045_av_sftw_status.services[0].state != "started"
-
-      - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program | Warn Count."
-        ansible.builtin.import_tasks: warning_facts.yml
-        vars:
-            warn_control_id: 'WN10-00-000045'
-        when:
-            - not win10_00_000045_av_sftw_status.exists or
-              win10_00_000045_av_sftw_status.services[0].state != "started"
-  when:
-      - wn10_00_000045
+  when: wn10_00_000045
   tags:
-      - WIN10-00-000045
-      - CAT1
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220707r793194_rule
-      - V-220707
-
-- name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS"
+    - WIN10-00-000045
+    - CAT1
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220707r1016358_rule
+    - V-220707
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
   block:
-      - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS | Set file system type variable"
-        ansible.builtin.set_fact:
-            win10_00_000050_c_volume_info: "{{ ansible_facts.disks[0].partitions | json_query('[?drive_letter == `C`] | [0].volumes') | json_query('[?type == `NTFS`] | [0].type') }}"
+    - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program. | Get AV service status"
+      ansible.windows.win_service_info:
+        name: "{{ win10stig_av_sftw }}"
+      changed_when: false
+      failed_when: false
+      register: wn10_00_000045_av_sftw_status
 
-      - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS | Alert on non-NTFS File System"
-        ansible.builtin.debug:
-            msg:
-                - "Warning!! You do not have an NTFS file system. Please format the C:\ to NTFS"
-        when: win10_00_000050_c_volume_info != "NTFS"
+    - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program. | Alert on service not running."
+      when: not wn10_00_000045_av_sftw_status.exists or wn10_00_000045_av_sftw_status.services[0].state != "started"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You do not have any AV software running."
+          - "Please enable Microsoft Defender or a 3rd party antivirus solution."
 
-      - name: "HIGH | WN10-00-000050 | AUDIT | Local volumes must be formatted using NTFS | Warn Count."
-        ansible.builtin.import_tasks: warning_facts.yml
-        vars:
-            warn_control_id: 'WN10-00-000050'
-        when: win10_00_000050_c_volume_info != "NTFS"
-  when:
-      - wn10_00_000050
+    - name: "HIGH | WN10-00-000045 | AUDIT | The Windows 10 system must use an anti-virus program. | Warn Count."
+      when: not wn10_00_000045_av_sftw_status.exists or wn10_00_000045_av_sftw_status.services[0].state != "started"
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000045'
+
+- name: "HIGH | WN10-00-000050 | PATCH | Local volumes must be formatted using NTFS"
+  when: wn10_00_000050
   tags:
-      - WN10-00-000050
-      - CAT1
-      - CCI-000213
-      - SRG-OS-000080-GPOS-00048
-      - SV-220708r569187_rule
-      - V-220708
+    - WN10-00-000050
+    - CAT1
+    - CCI-000213
+    - SRG-OS-000080-GPOS-00048
+    - SV-220708r958472_rule
+    - V-220708
+    - NIST800-53_AC-3
+    - NIST800-53A_AC-3.1
+    - NIST800-53R4_AC-3
+  block:
+    - name: "HIGH | WN10-00-000050 | PATCH | Local volumes must be formatted using NTFS | List All Non-NTFS Drives"
+      ansible.windows.win_shell: |
+        $volumes = Get-Volume | Where-Object { $_.DriveLetter -match "^[A-Z]$" }
+        $partitions = Get-Partition | Where-Object { $_.GptType -notin @("EBD0A0A2-B9E5-4433-87C0-68B6B72699C7", "DE94BBA4-06D1-4D40-A16A-BFD50179D6AC", "C12A7328-F81F-11D2-BA4B-00A0C93EC93B") }
+
+        $non_ntfs = $volumes | Where-Object {
+          $_.FileSystem -ne "NTFS" -and
+          $_.DriveLetter -in $partitions.DriveLetter
+        }
+
+        if ($non_ntfs) {
+          $non_ntfs_list = $non_ntfs | Select-Object -ExpandProperty DriveLetter -Unique | ConvertTo-Json -Compress
+          Write-Output $non_ntfs_list
+        } else {
+          Write-Output "[]"
+        }
+      changed_when: false
+      failed_when: false
+      register: wn10_00_000050_volume_info
+
+    - name: "HIGH | WN10-00-000050 | PATCH | Local volumes must be formatted using NTFS | Show non-NTFS volumes"
+      when: (wn10_00_000050_volume_info.stdout | from_json) | length > 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! The following volumes are not formatted NTFS."
+          - "STIG requirements are to format all local volumes to use NTFS."
+          - "This does not apply to system partitions such the Recovery and EFI System Partition."
+          - "{{ wn10_00_000050_volume_info.stdout | from_json }}"
+
+    - name: "HIGH | WN10-00-000050 | PATCH | Local volumes must be formatted using NTFS | Warn Count."
+      when: (wn10_00_000050_volume_info.stdout | from_json) | length > 0
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000050'
 
 - name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system."
-  block:
-      - name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system. | Show Accounts."
-        ansible.builtin.debug:
-            msg:
-                - "The following users or groups have Administrator rights on this system."
-                - "Please make sure that these users or groups meet the sites policies to be STIG compliant."
-                - "{{ wn10stig_admin_users_groups.stdout_lines }}"
-
-      - name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system. | Warn Count."
-        ansible.builtin.import_tasks: warning_facts.yml
-        vars:
-            warn_control_id: 'WN10-00-000070'
-  when:
-      - wn10_00_000070
+  when: wn10_00_000070
   tags:
-      - WN10-00-000070
-      - CAT1
-      - CCI-002235
-      - SRG-OS-000324-GPOS-00125
-      - SV-220712r569187_rule
-      - V-220712
+    - WN10-00-000070
+    - CAT1
+    - CCI-002235
+    - SRG-OS-000324-GPOS-00125
+    - SV-220712r958726_rule
+    - V-220712
+    - NIST800-53R4_AC-6_10
+  block:
+    - name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system. | Show Accounts."
+      ansible.builtin.debug:
+        msg:
+          - "The following users or groups have Administrator rights on this system."
+          - "Please make sure that these users or groups meet the sites policies to be STIG compliant."
+          - "{{ discovered_admin_users_groups.stdout_lines }}"
+
+    - name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system. | Check for presence of Domain Admins"
+      ansible.builtin.set_fact:
+        wn10_00_000070_domain_admins_found: "{{ 'Domain Admins' in discovered_admin_users_groups.stdout }}"
+
+    - name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system. | Warning"
+      when: wn10_00_000070_domain_admins_found
+      ansible.builtin.debug:
+        msg: "Warning!! Domain Admins are currently listed as local administrators. Replace them with a delegated workstation admin group."
+
+    - name: "HIGH | WN10-00-000070 | AUDIT | Only accounts responsible for the administration of a system must have Administrator rights on the system. | Warn Count."
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000070'
 
 - name: "HIGH | WN10-00-000100 | PATCH | Internet Information System (IIS) or its subcomponents must not be installed on a workstation."
-  ansible.windows.win_optional_feature:
-      name: "{{ item }}"
-      state: absent
-  with_items:
-      - IIS-WebServer
-      - IIS-HostableWebCore
   when:
-      - wn10_00_000100
-      - not win10stig_web_server
+    - wn10_00_000100
+    - not win10stig_web_server
   tags:
-      - WN10-00-000100
-      - CAT1
-      - CCI-000381
-      - SRG-OS-000095-GPOS-00049
-      - SV-220718r569187_rule
-      - V-220718
+    - WN10-00-000100
+    - CAT1
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220718r958478_rule
+    - V-220718
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_optional_feature:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - IIS-WebServer
+    - IIS-HostableWebCore
 
 - name: "HIGH | WN10-00-000145 | PATCH | Data Execution Prevention (DEP) must be configured to at least OptOut."
-  block:
-      - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Status check for idempotency."
-        ansible.windows.win_shell: BCDEdit /enum "{current}"
-        changed_when: false
-        failed_when: false
-        register: win10_00_000145_dep_setting_search
-
-      - name: "HIGH | WN10-00-000145 | PATCH | Data Execution Prevention (DEP) must be configured to at least OptOut. | Make change to match {{ wnstig_dep_value }}."
-        ansible.windows.win_shell: BCDEdit /set "{current}" nx {{ wn10stig_dep_value }}
-        when: "wn10stig_dep_value not in win10_00_000145_dep_setting_search.stdout | regex_search('nx\\s.*') | trim | regex_replace('nx','') | trim"
-  when:
-      - wn10_00_000145
+  when: wn10_00_000145
   tags:
-      - WN10-00-000145
-      - CAT1
-      - CCI-002824
-      - SRG-OS-000433-GPOS-00192
-      - SV-220726r569187_rule
-      - V-220726
+    - WN10-00-000145
+    - CAT1
+    - CCI-002824
+    - SRG-OS-000433-GPOS-00193
+    - SV-220726r958928_rule
+    - V-220726
+    - NIST800-53R4_SI-16
+  block:
+    - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Detect OS Drive."
+      ansible.windows.win_shell: $env:SystemDrive -replace ':',''
+      changed_when: false
+      failed_when: false
+      register: wn10_00_000145_os_drive
+
+    - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Show Detected OS Drive"
+      ansible.builtin.debug:
+        msg: "The OS drive is {{ wn10_00_000145_os_drive.stdout | trim }}:"
+
+    - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Check if BitLocker is enabled on OS Drive"
+      ansible.windows.win_shell: (Get-BitLockerVolume -MountPoint "{{ wn10_00_000145_os_drive.stdout | trim }}:").ProtectionStatus
+      changed_when: false
+      failed_when: false
+      register: wn10_00_000145_bitlocker_status
+
+    - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Show BitLocker Status"
+      ansible.builtin.debug:
+        msg: "BitLocker Protection Status: {{ wn10_00_000145_bitlocker_status.stdout | trim }} (1 = Enabled, 0 = Disabled, 'No BitLocker Found' if missing)"
+
+    - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Suspend BitLocker if enabled"
+      when: wn10_00_000145_bitlocker_status.stdout | trim == "1"
+      ansible.windows.win_shell: Suspend-BitLocker -MountPoint "{{ wn10_00_000145_os_drive.stdout | trim }}:" -RebootCount 1
+
+    - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | No BitLocker Found Skipping Suspension"
+      when: wn10_00_000145_bitlocker_status.stdout | trim == "No BitLocker Found"
+      ansible.builtin.debug:
+        msg: "BitLocker is not installed. Skipping suspension step."
+
+    - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Status check for idempotency."
+      ansible.windows.win_shell: BCDEdit /enum "{current}"
+      changed_when: false
+      failed_when: false
+      register: wn10_00_000145_dep_setting_search
+
+    - name: "HIGH | WN10-00-000145 | PATCH | Data Execution Prevention (DEP) must be configured to at least OptOut. | Make change to match {{ wn10stig_dep_value }}."
+      when: wn10stig_dep_value not in wn10_00_000145_dep_setting_search.stdout | regex_search('nx\\s.*') | trim | regex_replace('nx','') | trim
+      ansible.windows.win_shell: BCDEdit /set "{current}" nx {{ wn10stig_dep_value }}
+
+    - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Retrieve Existing DEP Opt-Out Applications"
+      when: wn10stig_dep_optout_apps | length > 0
+      ansible.windows.win_shell: |
+        $exceptions = Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows\AppCompatFlags\Layers" -ErrorAction SilentlyContinue
+        if ($exceptions) {
+          $apps = $exceptions.PSObject.Properties | Where-Object { $_.Value -match "DisableNX" } | Select-Object -ExpandProperty Name
+          $apps | ConvertTo-Json -Compress
+        } else {
+          Write-Output "[]"
+        }
+      changed_when: false
+      failed_when: false
+      register: wn10_00_000145_existing_dep_exceptions
+
+    - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Store Existing DEP Opt-Out Applications"
+      when:
+        - (wn10_00_000145_existing_dep_exceptions.stdout | default('[]') | from_json | length) == 0
+        - wn10stig_dep_optout_apps | length > 0
+      ansible.builtin.set_fact:
+        wn10_00_000145_existing_dep_apps: "{{ wn10_00_000145_existing_dep_exceptions.stdout | from_json }}"
+
+    - name: "HIGH | WN10-00-000145 | AUDIT | Data Execution Prevention (DEP) must be configured to at least OptOut. | Applications to Remove (Not in Approved List)"
+      when:
+        - (wn10_00_000145_existing_dep_exceptions.stdout | default('[]') | from_json | length) == 0
+        - wn10stig_dep_optout_apps | length > 0
+      ansible.builtin.set_fact:
+        wn10_00_000145_dep_apps_to_remove: "{{ wn10_00_000145_existing_dep_apps | difference(wn10stig_dep_optout_apps) }}"
+
+    - name: "HIGH | WN10-00-000145 | PATCH | Data Execution Prevention (DEP) must be configured to at least OptOut. | Delete Unapproved DEP Opt-Out Entries"
+      when:
+        - (wn10_00_000145_existing_dep_exceptions.stdout | default('[]') | from_json | length) == 0
+        - wn10stig_dep_optout_apps | length > 0
+      ansible.windows.win_regedit:
+        path: "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\AppCompatFlags\\Layers"
+        name: "{{ item }}"
+        state: absent
+      loop: "{{ wn10_00_000145_dep_apps_to_remove }}"
+
+    - name: "HIGH | WN10-00-000145 | PATCH | Data Execution Prevention (DEP) must be configured to at least OptOut. | Insert Approved DEP Opt-Out Applications into Registry"
+      when: wn10stig_dep_optout_apps | length > 0
+      ansible.windows.win_regedit:
+        path: "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\AppCompatFlags\\Layers"
+        name: "{{ item }}"
+        data: "DisableNX"
+        type: string
+      loop: "{{ wn10stig_dep_optout_apps }}"
 
 - name: "HIGH | WN10-00-000150 | PATCH | Structured Exception Handling Overwrite Protection (SEHOP) must be enabled."
-  ansible.windows.win_regedit:
-      path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel
-      value: DisableExceptionChainValidation
-      state: present
-      data: 0
-      datatype: dword
-  when:
-      - wn10_00_000150
+  when: wn10_00_000150
   tags:
-      - WN10-00-000150
-      - CAT1
-      - CCI-002824
-      - SRG-OS-000433-GPOS-00192
-      - SV-220727r569187_rule
-      - V-220727
+    - WN10-00-000150
+    - CAT1
+    - CCI-002824
+    - SRG-OS-000433-GPOS-00192
+    - SV-220727r958928_rule
+    - V-220727
+    - NIST800-53R4_SI-16
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel
+    name: DisableExceptionChainValidation
+    data: 0
+    type: dword
 
 - name: "HIGH | WN10-00-000240 | AUDIT | Administrative accounts must not be used with applications that access the Internet, such as web browsers, or with potential Internet sources, such as email."
+  when: wn10_00_000240
+  tags:
+    - WN10-00-000240
+    - CAT1
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220737r991589_rule
+    - V-220737
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
   block:
-      - name: "HIGH | WN10-00-000240 | AUDIT | Administrative accounts must not be used with applications that access the Internet, such as web browsers, or with potential Internet sources, such as email. | Show Accounts Warning."
-        ansible.builtin.debug:
-            msg:
-                - "The following users or groups have Administrator rights on this system"
-                - "You will need to confirm that none of these accounts have access to the internet, such as web browsers, or with potential Internet soruces, such as email"
-                - "{{ wn10stig_admin_users_groups.stdout_lines }}"
+    - name: "HIGH | WN10-00-000240 | AUDIT | Administrative accounts must not be used with applications that access the Internet, such as web browsers, or with potential Internet sources, such as email | Check if AppLocker rules are defined for Executables"
+      ansible.windows.win_shell: |
+        $policy = Get-AppLockerPolicy -Effective -ErrorAction SilentlyContinue
+        if ($policy.RuleCollections.Exe) {
+          $policy.RuleCollections.Exe | ConvertTo-Json -Depth 10
+        }
+      changed_when: false
+      failed_when: false
+      register: wn10_00_000240_applocker_rules_raw
 
-      - name: "HIGH | WN10-00-000240 | AUDIT | Administrative accounts must not be used with applications that access the Internet, such as web browsers, or with potential Internet sources, such as email. | Warn Count."
-        ansible.builtin.import_tasks: warning_facts.yml
-        vars:
-            warn_control_id: 'WN10-00-000240'
-  when:
-      - wn10_00_000240
-  tags:
-      - WN10-00-000240
-      - CAT1
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220737r569187_rule
-      - V-220737
+    - name: "HIGH | WN10-00-000240 | AUDIT | Administrative accounts must not be used with applications that access the Internet, such as web browsers, or with potential Internet sources, such as email | Determine if any Deny rules for Admin group match app list"
+      ansible.windows.win_shell: |
+        $apps = @({% for app in wn10stig_internet_based_apps_to_check %}"{{ app }}",{% endfor %})
+        $policy = Get-AppLockerPolicy -Effective
+        $denyRules = $policy.RuleCollections.Exe |
+          Where-Object { $_.Action -eq "Deny" -and $_.UserOrGroupSid -eq "S-1-5-32-544" }
 
-# Use of this flag is not recommended per Microsofts documentation. https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-gpsb/0b40db09-d95d-40a6-8467-32aedec8140c
+        $denyHits = @()
+        foreach ($rule in $denyRules) {
+          foreach ($app in $apps) {
+            if ($rule.Conditions.FilePathCondition.Path -like "*$app") {
+              $denyHits += $app
+            }
+          }
+        }
+
+        $denyHits | Sort-Object | Get-Unique
+      changed_when: false
+      failed_when: false
+      register: wn10_00_000240_applocker_admin_denies
+
+    - name: "HIGH | WN10-00-000240 | AUDIT | Administrative accounts must not be used with applications that access the Internet, such as web browsers, or with potential Internet sources, such as email | Display results and compliance status"
+      ansible.builtin.debug:
+        msg: >-
+          [
+            "═══════════════════════════════════════════════════════════════════════════════",
+            "             Admin Access to Internet-Based Apps (AppLocker Audit)             ",
+            "═══════════════════════════════════════════════════════════════════════════════",
+            "Apps Denied for Admins:",
+            {% if wn10_00_000240_applocker_admin_denies.stdout_lines | length > 0 %}
+              {% for app in wn10_00_000240_applocker_admin_denies.stdout_lines %}
+            "  Rule In Place For: {{ app }}",
+              {% endfor %}
+            "───────────────────────────────────────────────────────────────────────────────",
+            "COMPLIANCE STATUS: COMPLIANT — AppLocker blocks apps for Admins"
+            {% else %}
+            "No AppLocker Deny rules found for any listed apps.",
+            "───────────────────────────────────────────────────────────────────────────────",
+            "COMPLIANCE STATUS: Warning!!",
+            "The system is NOT COMPLIANT — Admins can access internet-based apps."
+            {% endif %},
+            "═══════════════════════════════════════════════════════════════════════════════"
+          ]
+
+    - name: "HIGH | WN10-00-000240 | AUDIT | Administrative accounts must not be used with applications that access the Internet, such as web browsers, or with potential Internet sources, such as email | Warn Count."
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000240'
+
+# Use of this flag is not recommended per Microsoft's documentation. https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-gpsb/0b40db09-d95d-40a6-8467-32aedec8140c
 - name: "HIGH | WN10-AC-000045 | PATCH | Reversible password encryption must be disabled."
-  community.windows.win_security_policy:
-      section: System Access
-      key: ClearTextPassword
-      value: "0"
-  when:
-      - wn10_AC_000045
+  when: wn10_ac_000045
   tags:
-      - WN10-AC-000045
-      - CAT1
-      - CCI-000196
-      - SRG-OS-000073-GPOS-00041
-      - SV-220747r569187_rule
-      - V-220747
+    - WN10-AC-000045
+    - CAT1
+    - CCI-000196
+    - SRG-OS-000073-GPOS-00041
+    - SV-220747r1016409_rule
+    - V-220747
+    - NIST800-53_IA-5_1_c
+    - NIST800-53A_IA-5_1.1_v
+    - NIST800-53R4_IA-5_1_c
+  community.windows.win_security_policy:
+    section: System Access
+    key: ClearTextPassword
+    value: "0"
 
 - name: "HIGH | WN10-CC-000075 | PATCH | Credential Guard must be running on Windows 10 domain-joined systems."
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard
-      value: "{{ item }}"
-      state: present
-      data: 1
-      datatype: dword
-  with_items:
-      - EnableVirtualizationBasedSecurity
-      - RequirePlatformSecurityFeatures
-      - HypervisorEnforcedCodeIntegrity
-      - HVCIMATRequired
-      - LsaCfgFlags
   when:
-      - wn10_CC_000075
+    - wn10_cc_000075
+    - discovered_domain_joined
+    - not discovered_vdi_non_persistent
   tags:
-      - WN10-CC-000075
-      - CAT1
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220812r569187_rule
-      - V-220812
+    - WN10-CC-000075
+    - CAT1
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220812r991589_rule
+    - V-220812
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "HIGH | WN10-CC-000075 | PATCH | Credential Guard must be running on Windows 10 domain-joined systems. | Patch Registry."
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard
+        name: LsaCfgFlags
+        data: 1
+        type: dword
+
+    - name: "HIGH | WN10-CC-000075 | AUDIT | Credential Guard must be running on Windows 10 domain-joined systems. | Check if Credential Guard is running via DeviceGuard"
+      ansible.windows.win_shell: Get-CimInstance -ClassName Win32_DeviceGuard -Namespace root\Microsoft\Windows\DeviceGuard | Select-Object -ExpandProperty SecurityServicesRunning
+      register: wn10_cc_000075_credential_guard_status
+      changed_when: false
+      ignore_errors: true
+
+    - name: "HIGH | WN10-CC-000075 | AUDIT | Credential Guard must be running on Windows 10 domain-joined systems. | Check if Credential Guard is listed in System Information"
+      ansible.windows.win_shell: systeminfo | findstr /C:"Credential Guard"
+      register: wn10_cc_000075_systeminfo_status
+      changed_when: false
+      ignore_errors: true
+
+    - name: "HIGH | WN10-CC-000075 | AUDIT | Credential Guard must be running on Windows 10 domain-joined systems. | Check if Secure Boot is enabled"
+      ansible.windows.win_shell: Confirm-SecureBootUEFI
+      register: wn10_cc_000075_secure_boot_status
+      changed_when: false
+      ignore_errors: true
+
+    - name: "HIGH | WN10-CC-000075 | AUDIT | Credential Guard must be running on Windows 10 domain-joined systems. | Check if TPM is enabled"
+      ansible.windows.win_shell: "(Get-WmiObject -Namespace 'Root\\CIMv2\\Security\\MicrosoftTpm' -Class Win32_Tpm).Enabled"
+      register: wn10_cc_000075_tpm_status
+      changed_when: false
+      ignore_errors: true
+
+    - name: "HIGH | WN10-CC-000075 | AUDIT | Credential Guard must be running on Windows 10 domain-joined systems. | Check if Hyper-V is enabled"
+      ansible.windows.win_shell: systeminfo | findstr /C:"Hyper-V Requirements"
+      register: wn10_cc_000075_hyper_v_status
+      changed_when: false
+      ignore_errors: true
+
+    - name: "HIGH | WN10-CC-000075 | AUDIT | Credential Guard must be running on Windows 10 domain-joined systems. | Credential Guard and System Security Check Summary."
+      ansible.builtin.debug:
+        msg:
+          - "==== Credential Guard Audit Summary ===="
+          - "Credential Guard (DeviceGuard Check): {{ 'Running' if '1' in wn10_cc_000075_credential_guard_status.stdout else 'NOT Running (Finding)' }}"
+          - "Credential Guard (System Information Check): {{ wn10_cc_000075_systeminfo_status.stdout_lines if wn10_cc_000075_systeminfo_status.stdout_lines else 'Credential Guard NOT found (Finding)' }}"
+          - "Secure Boot: {{ 'Enabled' if wn10_cc_000075_secure_boot_status.stdout == 'True' else 'NOT Enabled (Finding)' }}"
+          - "TPM: {{ 'Enabled' if wn10_cc_000075_tpm_status.stdout == 'True' else 'NOT Enabled (Finding)' }}"
+          - "Hyper-V: {{ wn10_cc_000075_hyper_v_status.stdout_lines if wn10_cc_000075_hyper_v_status.stdout_lines else 'Hyper-V NOT supported or enabled (Finding)' }}"
+          - "====================================="
+          - "If any of the above checks indicate (Finding), remediation is required."
+
+    - name: "HIGH | WN10-CC-000075 | AUDIT | Credential Guard must be running on Windows 10 domain-joined systems. | Warn Count."
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-CC-000075'
 
 - name: "HIGH | WN10-CC-000155 | PATCH | Solicited Remote Assistance must not be allowed."
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
-      value: fAllowToGetHelp
-      state: present
-      data: 0
-      datatype: dword
-  when:
-      - wn10_CC_000155
+  when: wn10_cc_000155
   tags:
-      - WN10-CC-000155
-      - CAT1
-      - CCI-001090
-      - SRG-OS-000138-GPOS-00069
-      - SV-220823r569187_rule
-      - V-220823
+    - WN10-CC-000155
+    - CAT1
+    - CCI-001090
+    - SRG-OS-000138-GPOS-00069
+    - SV-220823r569187_rule
+    - V-220823
+    - NIST800-53_SC-4
+    - NIST800-53A_SC-4.1
+    - NIST800-53R4_SC-4
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+    name: fAllowToGetHelp
+    data: 0
+    type: dword
 
 - name: "HIGH | WN10-CC-000180 | PATCH | Autoplay must be turned off for non-volume devices"
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer
-      value: NoAutoplayfornonVolume
-      state: present
-      data: 1
-      datatype: dword
-  when:
-      - wn10_CC_000180
+  when: wn10_cc_000180
   tags:
-      - WN10-CC-000180
-      - CAT1
-      - CCI-001764
-      - SRG-OS-000368-GPOS-00154
-      - SV-220827r569187_rule
-      - V-220827
+    - WN10-CC-000180
+    - CAT1
+    - CCI-001764
+    - SRG-OS-000368-GPOS-00154
+    - SV-220827r958804_rule
+    - V-220827
+    - NIST800-53R4_CM-7_2
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer
+    name: NoAutoplayfornonVolume
+    data: 1
+    type: dword
 
 - name: "HIGH | WN10-CC-000185 | PATCH | The default autorun behavior must be configured to prevent autorun commands."
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
-      value: NoAutorun
-      state: present
-      data: 1
-      datatype: dword
-  when:
-      - wn10_CC_000185
+  when: wn10_cc_000185
   tags:
-      - WN10-CC-000185
-      - CAT1
-      - CCI-001764
-      - SRG-OS-000368-GPOS-00154
-      - SV-220828r569187_rule
-      - V-220828
+    - WN10-CC-000185
+    - CAT1
+    - CCI-001764
+    - SRG-OS-000368-GPOS-00154
+    - SV-220828r958804_rule
+    - V-220828
+    - NIST800-53R4_CM-7_2
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
+    name: NoAutorun
+    data: 1
+    type: dword
 
 - name: "HIGH | WN10-CC-000190 | PATCH | Autoplay must be disabled for all drives."
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\policies\Explorer
-      value: NoDriveTypeAutoRun
-      state: present
-      data: 255
-      datatype: dword
-  when:
-      - wn10_CC_000190
+  when: wn10_cc_000190
   tags:
-      - WN10-CC-000190
-      - CAT1
-      - CCI-001764
-      - SRG-OS-000368-GPOS-00154
-      - SV-220829r569187_rule
-      - V-220829
+    - WN10-CC-000190
+    - CAT1
+    - CCI-001764
+    - SRG-OS-000368-GPOS-00154
+    - SV-220829r958804_rule
+    - V-220829
+    - NIST800-53R4_CM-7_2
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\policies\Explorer
+    name: NoDriveTypeAutoRun
+    data: 255
+    type: dword
 
 - name: "HIGH | WN10-CC-000315 | PATCH | The Windows Installer Always install with elevated privileges must be disabled."
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer
-      value: AlwaysInstallElevated
-      state: present
-      data: 0
-      datatype: dword
-  when:
-      - wn10_CC_000315
+  when: wn10_cc_000315
   tags:
-      - WN10-CC-000315
-      - CAT1
-      - CCI-001812
-      - SRG-OS-000362-GPOS-00149
-      - SV-220857r569187_rule
-      - V-220857
+    - WN10-CC-000315
+    - CAT1
+    - CCI-001812
+    - SRG-OS-000362-GPOS-00149
+    - SV-220857r1016417_rule
+    - V-220857
+    - NIST800-53R4_CM-11_2
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer
+    name: AlwaysInstallElevated
+    data: 0
+    type: dword
 
 - name: "HIGH | WN10-CC-000330 | PATCH | The Windows Remote Management (WinRM) client must not use Basic authentication."
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client
-      value: AllowBasic
-      state: present
-      data: 0
-      datatype: dword
   when:
-      - wn10_CC_000330
-      - not win_skip_for_test
+    - wn10_cc_000330
+    - not win_skip_for_test
   tags:
-      - WN10-CC-000330
-      - CAT1
-      - CCI-000877
-      - SRG-OS-000125-GPOS-00065
-      - SV-220862r569187_rule
-      - V-220862
+    - WN10-CC-000330
+    - CAT1
+    - CCI-000877
+    - SRG-OS-000125-GPOS-00065
+    - SV-220862r958510_rule
+    - V-220862
+    - NIST800-53_MA-4_c
+    - NIST800-53A_MA-4.1_iv
+    - NIST800-53R4_MA-4_c
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client
+    name: AllowBasic
+    data: 0
+    type: dword
 
 - name: "HIGH | WN10-CC-000345 | PATCH | The Windows Remote Management (WinRM) service must not use Basic authentication."
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service
-      value: AllowBasic
-      state: present
-      data: 0
-      datatype: dword
   when:
-      - wn10_CC_000345
-      - not win_skip_for_test
+    - wn10_cc_000345
+    - not win_skip_for_test
   tags:
-      - WN10-CC-000345
-      - CAT1
-      - CCI-000877
-      - SRG-OS-000125-GPOS-00065
-      - SV-220865r654974_rule
-      - V-220865
+    - WN10-CC-000345
+    - CAT1
+    - CCI-000877
+    - SRG-OS-000125-GPOS-00065
+    - SV-220865r958510_rule
+    - V-220865
+    - NIST800-53_MA-4_c
+    - NIST800-53A_MA-4.1_iv
+    - NIST800-53R4_MA-4_c
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service
+    name: AllowBasic
+    data: 0
+    type: dword
 
 - name: "HIGH | WN10-SO-000140 | PATCH | Anonymous SID/Name translation must not be allowed."
-  community.windows.win_security_policy:
-      section: System Access
-      key: LSAAnonymousNameLookup
-      value: 0
-  when:
-      - wn10_SO_000140
+  when: wn10_so_000140
   tags:
-      - WN10-SO-000140
-      - CAT1
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220928r569187_rule
-      - V-220928
+    - WN10-SO-000140
+    - CAT1
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220928r991589_rule
+    - V-220928
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  community.windows.win_security_policy:
+    section: System Access
+    key: LSAAnonymousNameLookup
+    value: 0
 
 - name: "HIGH | WN10-SO-000145 | PATCH | Anonymous enumeration of SAM accounts must not be allowed."
-  ansible.windows.win_regedit:
-      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
-      value: RestrictAnonymousSAM
-      state: present
-      data: 1
-      datatype: dword
-  when:
-      - wn10_SO_000145
+  when: wn10_so_000145
   tags:
-      - WN10-SO-000145
-      - CAT1
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - V-220929r569187_rule
-      - V-220929
+    - WN10-SO-000145
+    - CAT1
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220929r991589_rule
+    - V-220929
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+    name: RestrictAnonymousSAM
+    data: 1
+    type: dword
 
 - name: "HIGH | WN10-SO-000150 | PATCH | Anonymous enumeration of shares must be restricted."
-  ansible.windows.win_regedit:
-      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
-      value: RestrictAnonymous
-      state: present
-      data: 1
-      datatype: dword
-  when:
-      - wn10_SO_000150
+  when: wn10_so_000150
   tags:
-      - WN10-SO-000150
-      - CAT1
-      - CCI-001090
-      - SRG-OS-000138-GPOS-00069
-      - SV-220930r569187_rule
-      - V-220930
+    - WN10-SO-000150
+    - CAT1
+    - CCI-001090
+    - SRG-OS-000138-GPOS-00069
+    - SV-220930r958524_rule
+    - V-220930
+    - NIST800-53_SC-4
+    - NIST800-53A_SC-4.1
+    - NIST800-53R4_SC-4
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+    name: RestrictAnonymous
+    data: 1
+    type: dword
 
 - name: "HIGH | WN10-SO-000165 | PATCH | Anonymous access to Named Pipes and Shares must be restricted."
-  ansible.windows.win_regedit:
-      path: HKLM:\SYSTEM\CurrentControlSet\Services\LanManServer\Parameters
-      value: RestrictNullSessAccess
-      state: present
-      data: 1
-      datatype: dword
-  when:
-      - wn10_SO_000165
+  when: wn10_so_000165
   tags:
-      - WN10-SO-000165
-      - CAT1
-      - CCI-001090
-      - SRG-OS-000138-GPOS-00069
-      - SV-220932r569187_rule
-      - V-220932
+    - WN10-SO-000165
+    - CAT1
+    - CCI-001090
+    - SRG-OS-000138-GPOS-00069
+    - SV-220932r958524_rule
+    - V-220932
+    - NIST800-53_SC-4
+    - NIST800-53A_SC-4.1
+    - NIST800-53R4_SC-4
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\LanManServer\Parameters
+    name: RestrictNullSessAccess
+    data: 1
+    type: dword
 
 - name: "HIGH | WN10-SO-000195 | PATCH | The system must be configured to prevent the storage of the LAN Manager hash of passwords."
-  ansible.windows.win_regedit:
-      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
-      value: NoLMHash
-      state: present
-      data: 1
-      datatype: dword
-  when:
-      - wn10_SO_000195
+  when: wn10_so_000195
   tags:
-      - WN10-SO-000195
-      - CAT1
-      - CCI-000196
-      - SRG-OS-000073-GPOS-00041
-      - SV-220937r569187_rule
-      - V-220937
+    - WN10-SO-000195
+    - CAT1
+    - CCI-000196
+    - SRG-OS-000073-GPOS-00041
+    - SV-220937r1016419_rule
+    - V-220937
+    - NIST800-53_IA-5_1_c
+    - NIST800-53A_IA-5_1.1_v
+    - NIST800-53R4_IA-5_1_c
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+    name: NoLMHash
+    data: 1
+    type: dword
 
 - name: "HIGH | WN10-SO-000205 | PATCH | The LanMan authentication level must be set to send NTLMv2 response only, and to refuse LM and NTLM."
-  ansible.windows.win_regedit:
-      path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
-      value: LmCompatibilityLevel
-      state: present
-      data: 5
-      datatype: dword
-  when:
-      - wn10_SO_000205
+  when: wn10_so_000205
   tags:
-      - WN10-SO-000205
-      - CAT1
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220938r569187_rule
-      - V-220938
+    - WN10-SO-000205
+    - CAT1
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220938r991589_rule
+    - V-220938
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+    name: LmCompatibilityLevel
+    data: 5
+    type: dword
 
 - name: "HIGH | WN10-UR-000015 | PATCH | The Act as part of the operating system user right must not be assigned to any groups or accounts."
-  ansible.windows.win_user_right:
-      name: SeTcbPrivilege
-      users: []
-      action: set
-  when:
-      - wn10_UR_000015
+  when: wn10_ur_000015
   tags:
-      - WN10-UR-000015
-      - CAT1
-      - CCI-002235
-      - SRG-OS-000324-GPOS-00125
-      - SV-220958r569187_rule
-      - V-220958
+    - WN10-UR-000015
+    - CAT1
+    - CCI-002235
+    - SRG-OS-000324-GPOS-00125
+    - SV-220958r958726_rule
+    - V-220958
+    - NIST800-53R4_AC-6_10
+  ansible.windows.win_user_right:
+    name: SeTcbPrivilege
+    users: []
+    action: set
 
 - name: "HIGH | WN10-UR-000045 | PATCH | The Create a token object user right must not be assigned to any groups or accounts."
-  ansible.windows.win_user_right:
-      name: SeCreateTokenPrivilege
-      users: []
-  when:
-      - wn10_UR_000045
+  when: wn10_ur_000045
   tags:
-      - WN10-UR-000045
-      - CAT1
-      - CCI-002235
-      - SRG-OS-000324-GPOS-00125
-      - SV-220963r569187_rule
-      - V-220963
+    - WN10-UR-000045
+    - CAT1
+    - CCI-002235
+    - SRG-OS-000324-GPOS-00125
+    - SV-220963r958726_rule
+    - V-220963
+    - NIST800-53R4_AC-6_10
+  ansible.windows.win_user_right:
+    name: SeCreateTokenPrivilege
+    users: []
+    action: set
 
 - name: "HIGH | WN10-UR-000065 | PATCH | The Debug programs user right must only be assigned to the Administrators group."
-  ansible.windows.win_user_right:
-      name: SeDebugPrivilege
-      users: Administrators
-      action: set
-  when:
-      - wn10_UR_000065
+  when: wn10_ur_000065
   tags:
-      - WN10-UR-000065
-      - CAT1
-      - CCI-002235
-      - SRG-OS-000324-GPOS-00125
-      - SV-220967r569187_rule
-      - V-220967
+    - WN10-UR-000065
+    - CAT1
+    - CCI-002235
+    - SRG-OS-000324-GPOS-00125
+    - SV-220967r958726_rule
+    - V-220967
+    - NIST800-53R4_AC-6_10
+  ansible.windows.win_user_right:
+    name: SeDebugPrivilege
+    users: Administrators
+    action: set
