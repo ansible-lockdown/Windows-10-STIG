@@ -1,418 +1,583 @@
 ---
 
 - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems."
-  block:
-      - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Check secure boot."
-        ansible.windows.win_shell: Confirm-SecureBootUEFI
-        changed_when: false
-        failed_when: false
-        register: wn10_00_000020_secure_boot_audit
-
-      - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Virtual System Check."
-        ansible.builtin.debug:
-            msg:
-                - "Warning!! Your running a virtual system that does not support Secure Boot."
-                - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
-        when: "'undefined' in wn10_00_000020_secure_boot_audit.stderr | string"
-
-      - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Hardware Not supported Check."
-        ansible.builtin.debug:
-            msg:
-                - "Warning!! Your computers hardware does not support Secure Boot."
-                - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
-        when: "'CMdlet' in wn10_00_000020_secure_boot_audit.stderr | string"
-
-      - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Secure Boot Set To Disabled."
-        ansible.builtin.debug:
-            msg:
-                - "Warning!! Secure Boot is set to DISABLED."
-                - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
-        when: "'False' in wn10_00_000020_secure_boot_audit.stdout | string"
-
-      - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Warn Count."
-        ansible.builtin.import_tasks: warning_facts.yml
-        vars:
-            warn_control_id: 'WN10-00-000020'
-        when:
-            - "'undefined' in wn10_00_000020_secure_boot_audit.stderr | string or
-              'CMdlet' in wn10_00_000020_secure_boot_audit.stderr | string or
-              'False' in wn10_00_000020_secure_boot_audit.stdout | string"
   when:
-      - wn10_00_000020
+    - wn10_00_000020
+    - not discovered_vdi_non_persistent
   tags:
-      - WN10-00-000020
-      - CAT3
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220700r569187_rule
-      - V-220700
+    - WN10-00-000020
+    - CAT3
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220700r991589_rule
+    - V-220700
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Check secure boot."
+      ansible.windows.win_shell: Confirm-SecureBootUEFI
+      changed_when: false
+      failed_when: false
+      register: wn10_00_000020_secure_boot_audit
+
+    - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Virtual System Check."
+      when: "'undefined' in wn10_00_000020_secure_boot_audit.stderr | string"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Your running a virtual system that does not support Secure Boot."
+          - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
+
+    - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Hardware Not supported Check."
+      when: "'CMdlet' in wn10_00_000020_secure_boot_audit.stderr | string"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Your computers hardware does not support Secure Boot."
+          - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
+
+    - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Secure Boot Set To Disabled."
+      when: "'False' in wn10_00_000020_secure_boot_audit.stdout | string"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Secure Boot is set to DISABLED."
+          - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
+
+    - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Warn Count."
+      when: "('undefined' in wn10_00_000020_secure_boot_audit.stderr | string) or ('CMdlet' in wn10_00_000020_secure_boot_audit.stderr | string) or ('False' in wn10_00_000020_secure_boot_audit.stdout | string)"
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000020'
 
 - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity."
-  block:
-      - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Powershell To Get Accounts."
-        ansible.windows.win_shell: Get-LocalUser | Where-Object {$_.Lastlogon -le (Get-Date).AddDays(-35)} | Select-Object Name, Enabled, Lastlogon | Format-Table -AutoSize
-        changed_when: false
-        failed_when: false
-        register: wn10_00_000065_user_local_accounts
-
-      - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Print Results."
-        ansible.builtin.debug:
-            msg:
-                - "Warning!! Review the list below and make sure it meets site policies."
-                - "The list below includes all accounts that have not been logged into for the last 35 days, those unused accounts"
-                - "must be disabled or removed from the system after 35 days of inactivity per STIG."
-                - "Inactive accounts that have been reviewed and deemed to be required must be documented with the ISSO.."
-                - "{{ wn10_00_000065_user_local_accounts.stdout_lines }}"
-
-      - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Warn Count."
-        ansible.builtin.import_tasks: warning_facts.yml
-        vars:
-            warn_control_id: 'WN10-00-000065'
-  when:
-      - wn10_00_000065
+  when: wn10_00_000065
   tags:
-      - WN10-00-000065
-      - CAT3
-      - CCI-000795
-      - SRG-OS-000118-GPOS-00060
-      - SV-220711r569187_rule
-      - V-220711
+    - WN10-00-000065
+    - CAT3
+    - CCI-000795
+    - SRG-OS-000118-GPOS-00060
+    - SV-220711r1016403_rule
+    - V-220711
+    - NIST800-53_IA-4_e
+    - NIST800-53A_IA-4.1_iii
+    - NIST800-53R4_IA-4_e
+  block:
+    - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Powershell To Get Accounts."
+      ansible.windows.win_shell: Get-LocalUser | Where-Object {$_.Lastlogon -le (Get-Date).AddDays(-35)} | Select-Object Name, Enabled, Lastlogon | Format-Table -AutoSize
+      changed_when: false
+      failed_when: false
+      register: wn10_00_000065_user_local_accounts
+
+    - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Print Results."
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Review the list below and make sure it meets site policies."
+          - "The list below includes all accounts that have not been logged into for the last 35 days, those unused accounts"
+          - "must be disabled or removed from the system after 35 days of inactivity per STIG."
+          - "Inactive accounts that have been reviewed and deemed to be required must be documented with the ISSO.."
+          - "{{ wn10_00_000065_user_local_accounts.stdout_lines }}"
+
+    - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Warn Count."
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000065'
 
 - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain."
-  block:
-      - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Get Local Users list"
-        ansible.windows.win_shell: get-localuser | Where-Object -Property Enabled -eq True | Select-Object -Property Name | format-table -hidetableheaders
-        changed_when: false
-        failed_when: false
-        register: wn10_00_000085_local_users
-
-      - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Show Local Users list"
-        ansible.builtin.debug:
-            msg:
-                - "Warning!! Below are the local users that are not built in accounts and enabled."
-                - "Please review and remove these local accounts, only AD logins should be occuring."
-                - "{{ wn10_00_000085_local_users.stdout_lines }}"
-
-      - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Warn Count."
-        ansible.builtin.import_tasks: warning_facts.yml
-        vars:
-            warn_control_id: 'WN10-00-000085'
   when:
-      - wn10_00_000085
-      - ansible_windows_domain_member
+    - wn10_00_000085
+    - discovered_domain_joined
   tags:
-      - WN10-00-000085
-      - CAT3
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220715r569187_rule
-      - V-220715
+    - WN10-00-000085
+    - CAT3
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220715r991589_rule
+    - V-220715
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Verify allowed built-in accounts are disabled"
+      ansible.windows.win_shell: |
+        $allowedBuiltIn = @("Administrator", "Guest", "DefaultAccount", "defaultuser0", "WDAGUtilityAccount")
+        $results = @()
+        foreach ($acct in $allowedBuiltIn) {
+          $user = Get-LocalUser -Name $acct -ErrorAction SilentlyContinue
+          if ($user) {
+            if (-not $user.Disabled) {
+              $results += [pscustomobject]@{
+                Name    = $acct
+                Issue   = "Built-in account is enabled"
+                Enabled = $true
+              }
+            }
+            else {
+              $results += [pscustomobject]@{
+                Name    = $acct
+                Issue   = "Built-in account is disabled"
+                Enabled = $false
+              }
+            }
+          }
+          else {
+            $results += [pscustomobject]@{
+              Name    = $acct
+              Issue   = "Account not found"
+              Enabled = $null
+            }
+          }
+        }
+        $results | ConvertTo-Json
+      register: wn10_00_000085_built_in_check
+
+    - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Set fact for built-in accounts check results."
+      ansible.builtin.set_fact:
+        wn10_00_000085_built_in_accounts: "{{ wn10_00_000085_built_in_check.stdout | from_json }}"
+
+    - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Find non-allowed local accounts."
+      ansible.windows.win_shell: |
+        $allowedBuiltIn = @("Administrator", "Guest", "DefaultAccount", "defaultuser0", "WDAGUtilityAccount")
+        $localAdmins = Get-LocalGroupMember -Group "Administrators" |
+                       Where-Object { $_.objectClass -eq "User" } |
+                       Select-Object -ExpandProperty Name
+        $results = @()
+        $allUsers = Get-LocalUser
+        foreach ($user in $allUsers) {
+          if (($allowedBuiltIn -notcontains $user.Name) -and ($localAdmins -notcontains $user.Name)) {
+             $results += [pscustomobject]@{
+                Name    = $user.Name
+                Issue   = "Account is not allowed"
+                Enabled = -not $user.Disabled
+             }
+          }
+        }
+        $results | ConvertTo-Json
+      register: wn10_00_000085_disallowed_check
+
+    - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Set fact for disallowed accounts check results."
+      ansible.builtin.set_fact:
+        wn10_00_000085_non_allowed_accounts: "{{ wn10_00_000085_disallowed_check.stdout | from_json }}"
+
+    - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Set compliance status fact based on local accounts checks."
+      ansible.builtin.set_fact:
+        wn10_00_000085_local_accounts_compliant: >-
+          {{
+            (wn10_00_000085_built_in_accounts | selectattr('Issue', 'equalto', 'Built-in account is disabled') | list | length == wn10_00_000085_built_in_accounts | length)
+            and
+            (
+              (wn10_00_000085_non_allowed_accounts is mapping and wn10_00_000085_non_allowed_accounts | length == 0)
+              or
+              (wn10_00_000085_non_allowed_accounts is sequence and wn10_00_000085_non_allowed_accounts | length == 0)
+            )
+          }}
+
+    - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Verify local account compliance and display results"
+      when: not wn10_00_000085_local_accounts_compliant
+      ansible.builtin.debug:
+        msg: >-
+          [
+            "═══════════════════════════════════════════════════════════════════════════════════",
+            "                 Local Account Compliance Check - Domain Connected                 ",
+            "═══════════════════════════════════════════════════════════════════════════════════",
+            "",
+            "Built-in Accounts Status:",
+            "",
+            {% for acct in wn10_00_000085_built_in_accounts %}
+            "  {{ acct.Name }} - {{ acct.Issue }} (Enabled: {{ acct.Enabled }})",
+            {% endfor %}
+            "───────────────────────────────────────────────────────────────────────────────────",
+            "",
+            "Disallowed Accounts:",
+            "",
+            {% if wn10_00_000085_non_allowed_accounts is mapping %}
+            "  {{ wn10_00_000085_non_allowed_accounts.Name }} - {{ wn10_00_000085_non_allowed_accounts.Issue }} (Enabled: {{ wn10_00_000085_non_allowed_accounts.Enabled }})",
+            {% elif wn10_00_000085_non_allowed_accounts | length > 0 %}
+              {% for acct in wn10_00_000085_non_allowed_accounts %}
+            "  {{ acct.Name }} - {{ acct.Issue }} (Enabled: {{ acct.Enabled }})",
+              {% endfor %}
+            {% else %}
+            "  No disallowed accounts found.",
+            {% endif %}
+            "",
+            "───────────────────────────────────────────────────────────────────────────────────",
+            "",
+            {% if (wn10_00_000085_built_in_accounts | selectattr('Issue', 'equalto', 'Built-in account is disabled') | list | length == wn10_00_000085_built_in_accounts | length) and ((wn10_00_000085_non_allowed_accounts is mapping and wn10_00_000085_non_allowed_accounts | length == 0) or (wn10_00_000085_non_allowed_accounts is sequence and wn10_00_000085_non_allowed_accounts | length == 0)) %}
+            "COMPLIANCE STATUS: COMPLIANT — All built-in accounts are disabled and no disallowed accounts found.",
+            {% else %}
+            "COMPLIANCE STATUS: Warning!! NON-COMPLIANT — Issues detected with local accounts.",
+            {% endif %}
+            "",
+            "═══════════════════════════════════════════════════════════════════════════════════"
+          ]
+
+    - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Warn Count."
+      when: not wn10_00_000085_local_accounts_compliant
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000085'
 
 - name: "LOW | WN10-CC-000030 | PATCH | The system must be configured to prevent Internet Control Message Protocol (ICMP) redirects from overriding Open Shortest Path First (OSPF) generated routes."
-  ansible.windows.win_regedit:
-      path: HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters
-      value: EnableICMPRedirect
-      state: present
-      data: 0
-      datatype: dword
-  when:
-      - wn10_CC_000030
+  when: wn10_cc_000030
   tags:
-      - WN10-CC-000030
-      - CAT3
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220797r569187_rule
-      - V-220797
+    - WN10-CC-000030
+    - CAT3
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220797r991589_rule
+    - V-220797
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters
+    name: EnableICMPRedirect
+    data: 0
+    type: dword
 
 - name: "LOW | WN10-CC-000035 | PATCH | The system must be configured to ignore NetBIOS name release requests except from WINS servers."
-  ansible.windows.win_regedit:
-      path: HKLM:\SYSTEM\CurrentControlSet\Services\Netbt\Parameters
-      value: NoNameReleaseOnDemand
-      state: present
-      data: 1
-      datatype: dword
-  when:
-      - wn10_CC_000035
+  when: wn10_cc_000035
   tags:
-      - WN10-CC-000035
-      - CAT3
-      - CCI-002385
-      - SRG-OS-000420-GPOS-00186
-      - SV-220798r569187_rule
-      - V-220798
-
-- name: "LOW | WN10-CC-000070 | PATCH | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection"
+    - WN10-CC-000035
+    - CAT3
+    - CCI-002385
+    - SRG-OS-000420-GPOS-00186
+    - SV-220798r958902_rule
+    - V-220798
+    - NIST800-53R4_SC-5
   ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard
-      value: "{{ item }}"
-      state: present
-      data: 1
-      datatype: dword
-  with_items:
-      - EnableVirtualizationBasedSecurity
-      - RequirePlatformSecurityFeatures
-  when:
-      - wn10_CC_000070
-  tags:
-      - WN10-CC-000070
-      - CAT3
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220811r569187_rule
-      - V-220811
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\Netbt\Parameters
+    name: NoNameReleaseOnDemand
+    data: 1
+    type: dword
 
 - name: "LOW | WN10-CC-000170 | PATCH | The setting to allow Microsoft accounts to be optional for modern style apps must be enabled"
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
-      value: MSAOptional
-      state: present
-      data: 1
-      datatype: dword
-  when:
-      - wn10_CC_000170
+  when: wn10_cc_000170
   tags:
-      - WN10-CC-000170
-      - CAT3
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220825r569187_rule
-      - V-220825
+    - WN10-CC-000170
+    - CAT3
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220825r991589_rule
+    - V-220825
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: MSAOptional
+    data: 1
+    type: dword
 
 - name: "LOW | WN10-CC-000175 | PATCH | The Application Compatibility Program Inventory must be prevented from collecting data and sending the information to Microsoft."
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\AppCompat
-      value: DisableInventory
-      state: present
-      data: 1
-      datatype: dword
-  when:
-      - wn10_CC_000175
+  when: wn10_cc_000175
   tags:
-      - WN10-CC-000175
-      - CAT3
-      - CCI-000381
-      - SRG-OS-000095-GPOS-00049
-      - SV-220826r569187_rule
-      - V-220826
+    - WN10-CC-000175
+    - CAT3
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220826r958478_rule
+    - V-220826
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\AppCompat
+    name: DisableInventory
+    data: 1
+    type: dword
 
 - name: "LOW | WN10-CC-000197 | PATCH | Microsoft consumer experiences must be turned off."
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent
-      value: DisableWindowsConsumerFeatures
-      state: present
-      data: 1
-      datatype: dword
-  when:
-      - wn10_CC_000197
+  when: wn10_cc_000197
   tags:
-      - WN10-CC-000197
-      - CAT3
-      - CCI-000381
-      - SRG-OS-000095-GPOS-00049
-      - SV-220831r569187_rule
-      - V-220831
+    - WN10-CC-000197
+    - CAT3
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220831r958478_rule
+    - V-220831
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent
+    name: DisableWindowsConsumerFeatures
+    data: 1
+    type: dword
 
 - name: "LOW | WN10-CC-000206 | PATCH | Windows Update must not obtain updates from other PCs on the Internet."
-  block:
-      - name: "LOW | WN10-CC-000206 | PATCH | Windows Update must not obtain updates from other PCs on the Internet. | On a domain"
-        ansible.windows.win_regedit:
-            path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization
-            value: DODownloadMode
-            state: present
-            data: "{{ win10stig_dodownloadmod_domain }}"
-            datatype: dword
-        when: ansible_windows_domain_member
-
-      - name: "LOW | WN10-CC-000206 | AUDIT | Windows Update must not obtain updates from other PCs on the Internet. | Warning For Domain Based System v1507 LTSB."
-        ansible.builtin.debug:
-            msg: "Warning!! You Are Version v1507 LTSB which only is STIG compliant when you use use 0 or 1 in the win10stig_dodownloadmod_domain setting."
-        when:
-            - ansible_windows_domain_member
-            - win10stig_dodownloadmod_domain != 0 or win10stig_dodownloadmod_domain != 1
-            - win10_displayversion.value == '1507'
-
-      - name: "LOW | WN10-CC-000206 | AUDIT | Windows Update must not obtain updates from other PCs on the Internet. | Warn Count."
-        ansible.builtin.import_tasks: warning_facts.yml
-        vars:
-            warn_control_id: 'WN10-CC-000206'
-        when:
-            - ansible_windows_domain_member
-            - win10stig_dodownloadmod_domain != 0 or
-              win10stig_dodownloadmod_domain != 1
-            - win10_displayversion.value == '1507'
-
-      - name: "LOW | WN10-CC-000206 | PATCH | Windows Update must not obtain updates from other PCs on the Internet. | Stand-alone"
-        ansible.windows.win_regedit:
-            path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization
-            value: DODownloadMode
-            state: present
-            data: "{{ win10stig_dodownloadmod_standalone }}"
-            datatype: dword
-        when: not ansible_windows_domain_member
-  when:
-      - wn10_CC_000206
+  when: wn10_cc_000206
   tags:
-      - WN10-CC-000206
-      - CAT3
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220835r857197_rule
-      - V-220835
+    - WN10-CC-000206
+    - CAT3
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220835r991589_rule
+    - V-220835
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "LOW | WN10-CC-000206 | PATCH | Windows Update must not obtain updates from other PCs on the Internet. | On a domain"
+      when:
+        - discovered_domain_joined
+        - win10stig_dodownloadmode | int in [0, 1, 2, 99, 100]
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization
+        name: DODownloadMode
+        data: "{{ win10stig_dodownloadmode }}"
+        type: dword
+
+    - name: "LOW | WN10-CC-000206 | PATCH | Windows Update must not obtain updates from other PCs on the Internet. | Stand-alone"
+      when:
+        - not discovered_domain_joined
+        - win10stig_dodownloadmode | int in [0, 1]
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization
+        name: DODownloadMode
+        data: "{{ win10stig_dodownloadmode }}"
+        type: dword
+
+    - name: "LOW | WN10-CC-000206 | AUDIT | Windows Update must not obtain updates from other PCs on the Internet. | Warning Message."
+      when:
+        - (not discovered_domain_joined and win10stig_dodownloadmode | int not in [0, 1]) or
+          (discovered_domain_joined and win10stig_dodownloadmode | int not in [0, 1, 2, 99, 100])
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid setting for win10stig_dodownloadmode. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "LOW | WN10-CC-000206 | AUDIT | Windows Update must not obtain updates from other PCs on the Internet. | Warn Count."
+      when:
+        - (not discovered_domain_joined and win10stig_dodownloadmode | int not in [0, 1]) or
+          (discovered_domain_joined and win10stig_dodownloadmode | int not in [0, 1, 2, 99, 100])
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-CC-000206'
 
 - name: "LOW | WN10-CC-000220 | PATCH | Turning off File Explorer heap termination on corruption must be disabled."
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer
-      value: NoHeapTerminationOnCorruption
-      state: present
-      data: 0
-      datatype: dword
-  when:
-      - wn10_CC_000220
+  when: wn10_cc_000220
   tags:
-      - WN10-CC-000220
-      - CAT3
-      - CCI-002385
-      - SRG-OS-000420-GPOS-00186
-      - SV-220838r569187_rule
-      - V-220838
+    - WN10-CC-000220
+    - CAT3
+    - CCI-002385
+    - SRG-OS-000420-GPOS-00186
+    - SV-220838r958902_rule
+    - V-220838
+    - NIST800-53R4_SC-5
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer
+    name: NoHeapTerminationOnCorruption
+    data: 0
+    type: dword
 
 - name: "LOW | WN10-CC-000390 | PATCH | Windows 10 should be configured to prevent users from receiving suggestions for third-party or additional applications."
-  ansible.windows.win_regedit:
-      path: HKCU:\SOFTWARE\Policies\Microsoft\Windows\CloudContent
-      value: DisableThirdPartySuggestions
-      state: present
-      data: 1
-      datatype: dword
-  when:
-      - wn10_CC_000390
+  when: wn10_cc_000390
   tags:
-      - WN10-CC-000390
-      - CAT3
-      - CCI-000381
-      - SRG-OS-000095-GPOS-00049
-      - SV-220872r569187_rule
-      - V-220872
+    - WN10-CC-000390
+    - CAT3
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220872r958478_rule
+    - V-220872
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKCU:\SOFTWARE\Policies\Microsoft\Windows\CloudContent
+    name: DisableThirdPartySuggestions
+    data: 1
+    type: dword
 
 - name: "LOW | WN10-SO-000050 | PATCH | The computer account password must not be prevented from being reset."
-  ansible.windows.win_regedit:
-      path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
-      value: DisablePasswordChange
-      state: present
-      data: 0
-      datatype: dword
-  when:
-      - wn10_SO_000050
+  when: wn10_so_000050
   tags:
-      - WN10-SO-000050
-      - CAT3
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220917r569187_rule
-      - V-220917
+    - WN10-SO-000050
+    - CAT3
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220917r991589_rule
+    - V-220917
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
+    name: DisablePasswordChange
+    data: 0
+    type: dword
 
 - name: "LOW | WN10-SO-000055 | PATCH | The maximum age for machine account passwords must be configured to 30 days or less."
-  ansible.windows.win_regedit:
-      path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
-      value: MaximumPasswordAge
-      state: present
-      data: "{{ win10stig_max_pw_age }}"
-      datatype: dword
-  when:
-      - wn10_SO_000055
+  when: wn10_so_000055
   tags:
-      - WN10-SO-000055
-      - CAT3
-      - CCI-000366
-      - SV-220918r569187_rule
-      - V-220918
+    - WN10-SO-000055
+    - CAT3
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220918r991589_rule
+    - V-220918
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "LOW | WN10-SO-000055 | PATCH | The maximum age for machine account passwords must be configured to 30 days or less."
+      when:
+        - win10stig_max_pw_age <= 30
+        - win10stig_max_pw_age >= 1
+      ansible.windows.win_regedit:
+        path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
+        name: MaximumPasswordAge
+        data: "{{ win10stig_max_pw_age }}"
+        type: dword
+
+    - name: "LOW | WN10-SO-000055 | AUDIT | The maximum age for machine account passwords must be configured to 30 days or less. | Warning Message."
+      when: win10stig_max_pw_age > 30 or win10stig_max_pw_age == 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid setting for win10stig_max_pw_age. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "LOW | WN10-SO-000055 | PATCH | The maximum age for machine account passwords must be configured to 30 days or less. | Warn Count."
+      when: win10stig_max_pw_age > 30 or win10stig_max_pw_age == 0
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-SO-000055'
 
 - name: "LOW | WN10-SO-000080 | PATCH | The Windows dialog box title for the legal banner must be configured."
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
-      value: LegalNoticeCaption
-      state: present
-      data: "{{ win10stig_legalnotice }}"
-      datatype: string
-  when:
-      - wn10_SO_000080
+  when: wn10_so_000080
   tags:
-      - WN10-SO-000080
-      - CAT3
-      - CCI-000048
-      - CCI-001384
-      - CCI-001385
-      - CCI-001386
-      - CCI-001387
-      - CCI-001388
-      - SRG-OS-000023-GPOS-00006
-      - SV-220922r569187_rule
-      - V-220922
+    - WN10-SO-000080
+    - CAT3
+    - CCI-000048
+    - CCI-001384
+    - CCI-001385
+    - CCI-001386
+    - CCI-001387
+    - CCI-001388
+    - SRG-OS-000228-GPOS-00088
+    - SV-220922r958390_rule
+    - V-220922
+    - NIST800-53_AC-8_a
+    - NIST800-53_AC-8_c
+    - NIST800-53A_AC-8.1_ii
+    - NIST800-53A_AC-8.2_i
+    - NIST800-53A_AC-8.2_ii
+    - NIST800-53A_AC-8.2_iii
+    - NIST800-53R4_AC-8_a
+    - NIST800-53R4_AC-8_c_1
+    - NIST800-53R4_AC-8_c_2
+    - NIST800-53R4_AC-8_c_3
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: LegalNoticeCaption
+    data: "{{ win10stig_legal_notice_caption }}"
+    type: string
 
 - name: "LOW | WN10-SO-000085 | PATCH | Caching of logon credentials must be limited."
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon
-      value: CachedLogonsCount
-      state: present
-      data: "{{ win10stig_cached_logon_count }}"
-      datatype: string
-  when:
-      - wn10_SO_000085
+  when: wn10_so_000085
   tags:
-      - WN10-SO-000085
-      - CAT3
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220923r569187_rule
-      - V-220923
+    - WN10-SO-000085
+    - CAT3
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220923r991589_rule
+    - V-220923
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "LOW | WN10-SO-000085 | PATCH | Caching of logon credentials must be limited. | Set Variable"
+      when: win10stig_cached_logons_count <= 10
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon
+        name: CachedLogonsCount
+        data: "{{ win10stig_cached_logons_count }}"
+        type: string
+
+    - name: "LOW | WN10-SO-000085 | AUDIT | Caching of logon credentials must be limited. | Warning Message."
+      when: win10stig_cached_logons_count > 10
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid setting for win10stig_cached_logons_count. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "LOW | WN10-SO-000085 | AUDIT | Caching of logon credentials must be limited. | Warn Count."
+      when: win10stig_cached_logons_count > 10
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-SO-000085'
 
 - name: "LOW | WN10-SO-000240 | PATCH | The default permissions of global system objects must be increased."
-  ansible.windows.win_regedit:
-      path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager
-      value: ProtectionMode
-      state: present
-      data: 1
-      datatype: dword
-  when:
-      - wn10_SO_000240
+  when: wn10_so_000240
   tags:
-      - WN10-SO-000240
-      - CAT3
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-220943r569187_rule
-      - V-220943
+    - WN10-SO-000240
+    - CAT3
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220943r991589_rule
+    - V-220943
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager
+    name: ProtectionMode
+    data: 1
+    type: dword
 
 - name: "LOW | WN10-UC-000015 | PATCH | Toast notifications to the lock screen must be turned off."
-  ansible.windows.win_regedit:
-      path: HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications
-      value: NoToastApplicationNotificationOnLockScreen
-      state: present
-      data: 1
-      datatype: dword
-  when:
-      - wn10_UC_000015
+  when: wn10_uc_000015
   tags:
-      - WN10-UC-000015
-      - CAT3
-      - CCI-000381
-      - SRG-OS-000095-GPOS-00049
-      - SV-220954r569187_rule
-      - V-220954
+    - WN10-UC-000015
+    - CAT3
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220954r958478_rule
+    - V-220954
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications
+    name: NoToastApplicationNotificationOnLockScreen
+    data: 1
+    type: dword
 
-- name: "LOW | WN10-CC-000080 | PATCH | Virtualization-based protection of code integrity must be enabled.."
-  ansible.windows.win_regedit:
-      path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard\
-      value: HypervisorEnforcedCodeIntegrity
-      state: present
-      data: "{{ win10stig_hypervisor_enforce_code_integrity }}"
-      datatype: dword
+- name: "MEDIUM | WN10-CC-000080 | PATCH | Virtualization-based protection of code integrity must be enabled."
   when:
-      - wn10_CC_000080
+    - wn10_cc_000080
+    - not discovered_vdi_non_persistent
   tags:
-      - WN10-CC-000080
-      - CAT3
-      - CCI-000366
-      - SRG-OS-000480-GPOS-00227
-      - SV-252903r822503_rule
-      - V-252903
+    - WN10-CC-000080
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-252903r991589_rule
+    - V-252903
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-CC-000080 | PATCH | Virtualization-based protection of code integrity must be enabled. | Set registry settings."
+      when: win10stig_hypervisor_enforce_code_integrity == 1 or win10stig_hypervisor_enforce_code_integrity == 2
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard\
+        name: HypervisorEnforcedCodeIntegrity
+        data: "{{ win10stig_hypervisor_enforce_code_integrity }}"
+        type: dword
+
+    - name: "MEDIUM | WN10-CC-000080 | AUDIT | Virtualization-based protection of code integrity must be enabled. | Warning Check For Variable Standards."
+      when:
+        - win10stig_hypervisor_enforce_code_integrity != 1
+        - win10stig_hypervisor_enforce_code_integrity != 2
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid setting for win10stig_hypervisor_enforce_code_integrity. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-CC-000080 | AUDIT | Virtualization-based protection of code integrity must be enabled. | Warning Count."
+      when:
+        - win10stig_hypervisor_enforce_code_integrity != 1
+        - win10stig_hypervisor_enforce_code_integrity != 2
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-CC-000080'

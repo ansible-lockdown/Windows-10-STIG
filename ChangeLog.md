@@ -1,24 +1,33 @@
 # Changelog
 
+## Release 2.3.0
+
+#### March 2025
+General Updates
+  - First Release for V3R3 STIG
+  - Removed state: present from all win_regedit modules.
+  - Added NIST Tagging
+  - Added New Workflows
+
 ## Release 1.1.0
 
-August 2023 Update
+#### August 2023
   - Updated Workflows To Central Repo
     - Renamed them to better run across all repos.
-  - Removed Templates & PR Temmplate from repo and adjusted to Org level.
+  - Removed Templates & PR Template from repo and adjusted to Org level.
   - Updated Readme Layout to add new pipeline badges.
   - Cat2_Cloud moved from tasks/main and renamed to cat2_cloud_lockout_order and in cat2.yml workflow.
   - Updated Tags in tasks/main.
 
-May 2023 Update
-  - Updated Pieplines For Testing
+#### May 2023
+  - Updated Pipelines For Testing
   - Added Banner
   - Added Skip For Testing to controls that will break in cloud.
   - Added Support for Azure for Controls that break.
 
 ## Release 1.0.0
 
-December 2022 Update
+#### December 2022
   - Updated Readme
   - Added Changelog.md and updated.
   - Added Version 2 Release 3 changes during this update.

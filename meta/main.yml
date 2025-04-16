@@ -1,32 +1,55 @@
 ---
 
 galaxy_info:
-    author: "Sam Doran, Josh Springer, Daniel Shepherd, James Cassell, Mike Renfro, DFed, George Nalen, Mark Bolwell"
-    description: "Apply the DISA Windows 10 STIG"
-    company: "MindPoint Group"
-    license: MIT
-    role_name: windows10_stig
-    namespace: mindpointgroup
-    min_ansible_version: 2.9.0
-
-# The galaxy api currently supports only Win 2008R2, 2008x64, 2008x86,
-# 2012, 2012R2, 2016, and 2019 versions. And using anything else will lower
-# galaxy score. We have removed the platform and version from meta for scoring.
-
-    galaxy_tags:
-        - system
-        - security
-        - stig
-        - hardening
-        - benchmark
-        - microsoft
-        - windows
-        - complianceascode
-        - compliance
-
-    collections:
-        - ansible.windows
-        - community.windows
-        - community.general
-
-    dependencies: []
+  author: "MindPoint Group"
+  description: "Ansible Role to Apply The Windows 10 Enterprise STIG Benchmark"
+  company: "MindPoint Group"
+  license: MIT
+  role_name: windows10_stig
+  namespace: mindpointgroup
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Windows
+      versions:
+        - "all"
+  galaxy_tags:
+    - auditpolicy
+    - automation
+    - azure
+    - benchmark
+    - stig
+    - stigbenchmark
+    - stigcompliance
+    - cloudhardening
+    - compliance
+    - compliancehardening
+    - complianceascode
+    - configurationmanagement
+    - encryption
+    - eventlogging
+    - hardening
+    - infrastructureascode
+    - logging
+    - microsoft
+    - monitoring
+    - oshardening
+    - patchmanagement
+    - patching
+    - policymanagement
+    - privilegedaccess
+    - remediation
+    - security
+    - system
+    - systemintegrity
+    - vulnerabilitymanagement
+    - windows
+    - win10
+    - windowssecurity
+    - windowsworkstation
+    - workstation
+    - windows10
+collections:
+  - ansible.windows
+  - community.windows
+  - community.general
+dependencies: []

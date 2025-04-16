@@ -1,58 +1,192 @@
 ---
 
-# - name: "PRELIM | Detect if Trusted Platform Module (TPM) is available"
-#   win_shell: (Get-CimInstance -ClassName Win32_OperatingSystem).ProductType
-#   register: win10stig_tpm_enabled
-#   changed_when: no
-#   failed_when: no
-#   tags:
-#       - always
+- name: "PRELIM | Get Display Version value."
+  tags:
+    - always
+  ansible.windows.win_reg_stat:
+    path: HKLM:\Software\Microsoft\Windows NT\CurrentVersion
+    name: DisplayVersion
+  changed_when: false
+  failed_when: false
+  register: discovered_displayversion
 
-# - name: "PRELIM | Detect if Remote Desktop Services (RDP) is enabled"
-#   win_reg_stat:
-#       path: HKLM:\System\CurrentControlSet\Control\Terminal Server
-#       name: fDenyTSConnections
-#   register: win10stig_rdp_enabled
-#   changed_when: no
-#   failed_when: no
-#   tags:
-#       - always
+- name: "PRELIM | Get OS Build value."
+  tags:
+    - always
+  ansible.windows.win_reg_stat:
+    path: HKLM:\Software\Microsoft\Windows NT\CurrentVersion
+    name: CurrentBuild
+  changed_when: false
+  failed_when: false
+  register: discovered_currentbuild
+
+- name: "PRELIM | Detect if Trusted Platform Module (TPM) is Available"
+  tags:
+    - always
+  block:
+    - name: "PRELIM | Retrieve TPM information"
+      ansible.windows.win_shell: Get-Tpm | ConvertTo-Json
+      changed_when: false
+      failed_when: false
+      register: discovered_tpm_info
+
+    - name: "PRELIM | Set fact for TPM presence"
+      ansible.builtin.set_fact:
+        discovered_tpm_present: "{{ (discovered_tpm_info.stdout | from_json).TpmPresent }}"
+
+- name: "PRELIM | Detect if Remote Desktop Services (RDP) is enabled"
+  tags:
+    - always
+  ansible.windows.win_reg_stat:
+    path: HKLM:\System\CurrentControlSet\Control\Terminal Server
+    name: fDenyTSConnections
+  changed_when: false
+  failed_when: false
+  register: discovered_rdp_enabled
+
+- name: "PRELIM | Set Fact If Domain Joined."
+  when: ansible_windows_domain_member is defined
+  tags:
+    - always
+  ansible.builtin.set_fact:
+    discovered_domain_joined: "{{ ansible_windows_domain_member }}"
+
+### DETECT IF SYSTEM IS VDI OR AVD ###
+- name: "PRELIM | Determine if system is a Virtual Machine (VDI)"
+  tags:
+    - always
+  ansible.windows.win_shell: (Get-WmiObject Win32_ComputerSystem).Model
+  changed_when: false
+  failed_when: false
+  register: discovered_vm_check
+
+- name: "PRELIM | Determine if system is using FSLogix (Roaming Profile Storage)"
+  tags:
+    - always
+  ansible.windows.win_shell: Get-Service FSLogixApps -ErrorAction SilentlyContinue
+  changed_when: false
+  failed_when: false
+  ignore_errors: true
+  register: discovered_fslogix_check
+
+- name: "PRELIM | Determine if OS disk is Ephemeral (No Data at Rest)"
+  tags:
+    - always
+  ansible.windows.win_shell: Get-PhysicalDisk | Select-Object MediaType, OperationalStatus | Format-List
+  changed_when: false
+  failed_when: false
+  ignore_errors: true
+  register: discovered_disk_check
+
+- name: "PRELIM | Determine if system is Azure Virtual Desktop (AVD)"
+  tags:
+    - always
+  ansible.windows.win_shell: Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\CloudDomainJoin\*"
+  changed_when: false
+  failed_when: false
+  ignore_errors: true
+  register: discovered_avd_check
+
+- name: "PRELIM | Show VDI, AVD, FSLogix, and Disk Info"
+  tags:
+    - always
+  ansible.builtin.debug:
+    msg:
+      - "VM Model: {{ discovered_vm_check.stdout }}"
+      - "FSLogix Status: {{ discovered_fslogix_check.stdout | default('FSLogix not installed') }}"
+      - "Disk Info: {{ discovered_disk_check.stdout_lines }}"
+      - "AVD Check: {{ discovered_avd_check.stdout | default('Not an AVD system') }}"
+
+### SET FACT IF SYSTEM IS AVD WITH NO DATA AT REST ###
+- name: "PRELIM | Mark system as AVD with no data at rest"
+  when: ("Azure" in discovered_vm_check.stdout) or ("CloudDomainJoin" in discovered_avd_check.stdout | default('')) or ("Running" in discovered_fslogix_check.stdout | default(''))
+  tags:
+    - always
+  ansible.builtin.set_fact:
+    discovered_avd_no_data_at_rest: true
+
+### SET FACT IF SYSTEM IS A NON-PERSISTENT VDI ###
+- name: "PRELIM | Mark system as Non-Persistent VDI"
+  when:
+    - ("Virtual Machine" in discovered_vm_check.stdout)
+    - ("SSD" in discovered_disk_check.stdout | default(''))
+    - not ("Persistent" in discovered_vdi_persistence.stdout | default(''))
+  tags:
+    - always
+  ansible.builtin.set_fact:
+    discovered_vdi_non_persistent: true
+
+### SET FACT IF SYSTEM IS A PERSISTENT VDI ###
+- name: "PRELIM | Mark system as Persistent VDI"
+  when:
+    - ("Virtual Machine" in discovered_vm_check.stdout)
+    - ("Persistent" in discovered_vdi_persistence.stdout | default(''))
+  tags:
+    - always
+  ansible.builtin.set_fact:
+    discovered_vdi_persistent: true
+
+### DISPLAY MESSAGE IF SYSTEM IS AVD WITH NO DATA AT REST ###
+- name: "PRELIM | System is an AVD instance with NO data at rest - Certain Controls Will Be Skipped"
+  when: discovered_avd_no_data_at_rest
+  tags:
+    - always
+  ansible.builtin.debug:
+    msg: "This system is an AVD instance with NO DATA AT REST. Certain controls will not be applied."
+
+### DISPLAY MESSAGE IF SYSTEM IS A NON-PERSISTENT VDI ###
+- name: "PRELIM | System is a Non-Persistent VDI - Certain Controls Will Be Skipped"
+  when: discovered_vdi_persistent
+  tags:
+    - always
+  ansible.builtin.debug:
+    msg: "This system is a Non-Persistent VDI, meaning it is deleted or refreshed upon logoff. Certain controls will not be applied."
+
+### DISPLAY MESSAGE IF SYSTEM IS A PERSISTENT VDI ###
+- name: "PRELIM | System is a Persistent VDI - All Relevant Controls Will Be Applied"
+  when: discovered_vdi_non_persistent
+  tags:
+    - always
+  ansible.builtin.debug:
+    msg: "This system is a Persistent VDI, meaning data is retained across logins. All applicable controls will be enforced."
+
+### DISPLAY MESSAGE IF SYSTEM IS NOT A VDI/AVD ###
+- name: "PRELIM | System is Not a VDI or AVD - All Controls Will Apply"
+  when:
+    - not discovered_avd_no_data_at_rest
+    - not discovered_vdi_non_persistent
+    - not discovered_vdi_persistent
+  tags:
+    - always
+  ansible.builtin.debug:
+    msg: "This system is not a VDI or AVD and will have all applicable security controls enforced."
 
 # hvm is for amazon ami's, Hyper-V we have found for azure, kvm is used for ('QEMU', 'Amazon EC2', 'DigitalOcean', 'Google', 'Scaleway', 'Nutanix', 'KVM', 'KVM Server', 'Bochs', 'AHV')
 # This list is not complete and will be updated as we try on more cloud based services.
-# As of now testing is working in azure using Hyper-V. We are curently using this for reference:
+# As of now testing is working in azure using Hyper-V. We are currently using this for reference:
 # https://github.com/ansible/ansible/blob/905131fc76a07cf89dbc8d33e7a4910da3f10a16/lib/ansible/module_utils/facts/virtual/linux.py#L205
-- name: Set Fact If Cloud Based System.
-  ansible.builtin.set_fact:
-      win10stig_cloud_based_system: true
+- name: "PRELIM | Set Fact If Cloud Based System."
   when:
-      - ansible_virtualization_type == 'Hyper-V' or
-        ansible_virtualization_type == 'hvm' or
-        ansible_virtualization_type == 'kvm'
+    - not ansible_virtualization_type == 'VMware' or
+      (ansible_system_vendor == 'Microsoft Corporation' and
+      ansible_virtualization_type in ['Hyper-V', 'hvm', 'kvm'])
   tags:
-      - always
-
-- name: "PRELIM | Get Display Version value."
-  ansible.windows.win_reg_stat:
-      path: HKLM:\Software\Microsoft\Windows NT\CurrentVersion
-      name: DisplayVersion
-  changed_when: false
-  failed_when: false
-  register: win10_displayversion
-
-- name: "PRELIM | Get OS Build value."
-  ansible.windows.win_reg_stat:
-      path: HKLM:\Software\Microsoft\Windows NT\CurrentVersion
-      name: CurrentBuild
-  changed_when: false
-  failed_when: false
-  register: win10_currentbuild
+    - always
+  ansible.builtin.set_fact:
+    discovered_cloud_based_system: true
 
 - name: "PRELIM | Get Admin Users and Groups"
+  tags:
+    - always
   ansible.windows.win_shell: Get-LocalGroupMember -Name 'Administrators'
   changed_when: false
   failed_when: false
-  register: wn10stig_admin_users_groups
-  when:
-      - wn10_00_000070 or
-        wn10_00_000240
+  register: discovered_admin_users_groups
+
+- name: "PRELIM | Get List of All Administrative Accounts"
+  tags:
+    - always
+  ansible.windows.win_shell: Get-LocalGroupMember -Name 'Administrators' | Select-Object -ExpandProperty Name | ConvertTo-Json -Compress
+  changed_when: false
+  failed_when: false
+  register: discovered_admin_accounts
