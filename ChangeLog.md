@@ -1,6 +1,6 @@
 # Changelog
 
-## Release 2.3.0
+## Release 2.0.0
 
 #### March 2025
 General Updates
@@ -52,7 +52,7 @@ General Updates
   - Checked All Cat I, II, III Controls.
   - Removed WN10-EP Controls From Nov 1st 2021 Update
   - Added Version 2 Release 5 changes during this update.
-  - WN10-00-000005, WN10-CC-000050 - Changed wording in the Check text from “standalone” to “standalone or nondomain- joined”.
+  - WN10-00-000005, WN10-CC-000050 - Changed wording in the Check text from “standalone” to “standalone or nondomain-joined”.
   - WN10-00-000010, WN10-CC-000115, WN10-CC-000130, WN10-CC-000206, WN10-UR-000075, WN10-UR-000080 - Changed wording in the Check and Fix text
     from “standalone” to “standalone or nondomain-joined”.
   - WN10-00-000030, WN10-00-000031, WN10-00-000032, WN10-PK-000005, WN10- PK-000015 - Corrected CCIs.
