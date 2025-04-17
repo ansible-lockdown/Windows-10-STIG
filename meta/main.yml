@@ -1,0 +1,55 @@
+---
+
+galaxy_info:
+  author: "MindPoint Group"
+  description: "Ansible Role to Apply The Windows 10 Enterprise STIG Benchmark"
+  company: "MindPoint Group"
+  license: MIT
+  role_name: windows10_stig
+  namespace: mindpointgroup
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Windows
+      versions:
+        - "all"
+  galaxy_tags:
+    - auditpolicy
+    - automation
+    - azure
+    - benchmark
+    - stig
+    - stigbenchmark
+    - stigcompliance
+    - cloudhardening
+    - compliance
+    - compliancehardening
+    - complianceascode
+    - configurationmanagement
+    - encryption
+    - eventlogging
+    - hardening
+    - infrastructureascode
+    - logging
+    - microsoft
+    - monitoring
+    - oshardening
+    - patchmanagement
+    - patching
+    - policymanagement
+    - privilegedaccess
+    - remediation
+    - security
+    - system
+    - systemintegrity
+    - vulnerabilitymanagement
+    - windows
+    - win10
+    - windowssecurity
+    - windowsworkstation
+    - workstation
+    - windows10
+collections:
+  - ansible.windows
+  - community.windows
+  - community.general
+dependencies: []

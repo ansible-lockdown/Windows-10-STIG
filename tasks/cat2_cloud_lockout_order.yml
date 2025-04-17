@@ -1,0 +1,111 @@
+---
+
+# THE FOLLOWING 3 CONTROLS WILL FAIL UNLESS THEY ARE IN THE FOLLOWING ORDER FOR CLOUD BASED SYSTEMS
+# CONTROL WN10-AC-000010, CONTROL WN10-AC-000005, CONTROL WN10-AC-000015
+# Needs to go before WN10-AC-000005 since the Lockout Duration could be disabled if the Lockout Policy is set to 0 causing the task to fail.
+- name: "MEDIUM | WN10-AC-000010 | PATCH | The number of allowed bad logon attempts must be configured to 3 or less."
+  when: wn10_ac_000010
+  tags:
+    - WN10-AC-000010
+    - CAT2
+    - CCI-000044
+    - SRG-OS-000021-GPOS-00005
+    - SV-220740r958388_rule
+    - V-220740
+    - NIST800-53_AC-7_a
+    - NIST800-53A_AC-7.1_ii
+    - NIST800-53R4_AC-7_a
+  block:
+    - name: "MEDIUM | WN10-AC-000010 | PATCH | The number of allowed bad logon attempts must be configured to 3 or less. | Set Variable"
+      when:
+        - win10stig_bad_login_lockout_count <= 3
+        - win10stig_bad_login_lockout_count > 0
+      community.windows.win_security_policy:
+        section: System Access
+        key: LockoutBadCount
+        value: "{{ win10stig_bad_login_lockout_count }}"
+
+    - name: "MEDIUM | WN10-AC-000010 | AUDIT | The number of allowed bad logon attempts must be configured to 3 or less. | Verify Variable Not 0 or more then 3 warning."
+      when: win10stig_bad_login_lockout_count > 3 or win10stig_bad_login_lockout_count == 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid number of attempts set for win10stig_bad_login_lockout_count. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-AC-000010 | AUDIT | The number of allowed bad logon attempts must be configured to 3 or less. | Set warning count."
+      when: win10stig_bad_login_lockout_count > 3 or win10stig_bad_login_lockout_count == 0
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AC-000010'
+
+- name: "MEDIUM | WN10-AC-000005 | PATCH | Windows 10 account lockout duration must be configured to 15 minutes or greater."
+  when: wn10_ac_000005
+  tags:
+    - WN10-AC-000005
+    - CAT2
+    - CCI-002238
+    - SRG-OS-000329-GPOS-00128
+    - SV-220739r958736_rule
+    - V-220739
+    - NIST800-53_AC-7_b
+  block:
+    - name: "MEDIUM | WN10-AC-000005 | PATCH | Windows 10 account lockout duration must be configured to 15 minutes or greater."
+      when: win10stig_account_lockout_duration >= 15 or win10stig_account_lockout_duration == 0
+      community.windows.win_security_policy:
+        section: System Access
+        key: LockoutDuration
+        value: "{{ win10stig_account_lockout_duration }}"
+
+    - name: "MEDIUM | WN10-AC-000005 | AUDIT | Windows 10 account lockout duration must be configured to 15 minutes or greater. | Verify variable set to 15 or more minutes warning."
+      when: win10stig_account_lockout_duration < 15 and win10stig_account_lockout_duration != 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid number of minutes set for win10stig_account_lockout_duration please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-AC-000005 | AUDIT | Windows 10 account lockout duration must be configured to 15 minutes or greater. | Set warning count."
+      when: win10stig_account_lockout_duration < 15 and win10stig_account_lockout_duration != 0
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AC-000005'
+
+- name: "MEDIUM | WN10-AC-000015 | PATCH | The period of time before the bad logon counter is reset must be configured to 15 minutes."
+  when: wn10_ac_000015
+  tags:
+    - WN10-AC-000015
+    - CAT2
+    - CCI-000044
+    - CCI-002238
+    - SRG-OS-000021-GPOS-00005
+    - SV-220741r958388_rule
+    - V-220741
+    - NIST800-53_AC-7_a
+    - NIST800-53A_AC-7.1_ii
+    - NIST800-53R4_AC-7_a
+    - NIST800-53R4_AC-7_b
+  # The Lockout Duration must be greater or equal to the Reset Account Lockout counter.
+  block:
+    - name: "MEDIUM | WN10-AC-000015 | PATCH | The period of time before the bad logon counter is reset must be configured to 15 minutes."
+      when:
+        - win10stig_account_lockout_counter_reset >= 15
+        - win10stig_account_lockout_counter_reset <= win10stig_account_lockout_duration
+      community.windows.win_security_policy:
+        section: System Access
+        key: ResetLockoutCount
+        value: "{{ win10stig_account_lockout_counter_reset }}"
+
+    - name: "MEDIUM | WN10-AC-000015 | AUDIT | The period of time before the bad logon counter is reset must be configured to 15 minutes. | Verify variable set to 15 or more minutes warning."
+      when: win10stig_account_lockout_counter_reset > win10stig_account_lockout_duration or win10stig_account_lockout_counter_reset < 15
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid number of minutes set for win10stig_account_lockout_counter_reset. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-AC-000015 | AUDIT | The period of time before the bad logon counter is reset must be configured to 15 minutes. | Set warning count."
+      when: win10stig_account_lockout_counter_reset > win10stig_account_lockout_duration or win10stig_account_lockout_counter_reset < 15
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AC-000015'

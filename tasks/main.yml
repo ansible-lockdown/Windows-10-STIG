@@ -1,0 +1,80 @@
+---
+
+- name: "MAIN | Display Banner"
+  tags:
+    - always
+  ansible.builtin.debug:
+    msg: "{{ lockdown_banner.split('\n') }}"
+
+- name: "MAIN | Gather distribution info"
+  when: ansible_distribution is not defined
+  tags:
+    - always
+  ansible.builtin.setup:
+    gather_subset: distribution,!all,!min
+
+- name: "MAIN | Check OS version and family"
+  tags:
+    - always
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == 'Windows'
+      - ansible_distribution | regex_search('(Microsoft Windows 10)')
+    success_msg: "{{ ansible_distribution }} {{ ansible_distribution_major_version }} is the detected operating system."
+    fail_msg: "This role can only be run against Windows 10 Editions. {{ ansible_distribution }} {{ ansible_distribution_major_version }} is not supported."
+
+- name: "MAIN | Get Disk Facts"
+  when: wn10_00_000050 or wn10_00_000130
+  community.windows.win_disk_facts:
+
+- name: "MAIN | Check ansible version"
+  tags:
+    - always
+  ansible.builtin.assert:
+    that: ansible_version.full is version_compare(win10stig_min_ansible_version, '>=')
+    msg: You must use Ansible {{ win10stig_min_ansible_version }} or greater
+
+- name: "MAIN | Include the Preliminary tasks"
+  tags:
+    - prelim_tasks
+  ansible.builtin.import_tasks:
+    file: prelim.yml
+
+- name: "MAIN | Execute CAT 1 Controls Tasks"
+  when: win10stig_cat1_patch | bool
+  tags:
+    - cat1
+    - high
+  ansible.builtin.import_tasks:
+    file: cat1.yml
+
+- name: "MAIN | Execute CAT 2 Controls Tasks"
+  when: win10stig_cat2_patch | bool
+  tags:
+    - cat2
+    - medium
+  ansible.builtin.import_tasks:
+    file: cat2.yml
+
+- name: "MAIN | Execute CAT 3 Controls Tasks"
+  when: win10stig_cat3_patch | bool
+  tags:
+    - cat3
+    - low
+  ansible.builtin.import_tasks:
+    file: cat3.yml
+
+- name: "MAIN | Run Post Tasks"
+  tags:
+    - always
+  ansible.builtin.import_tasks:
+    file: post.yml
+
+- name: "MAIN | If Warnings found Output count and control IDs affected"
+  when: warn_count != 0
+  tags:
+    - always
+  ansible.builtin.debug:
+    msg:
+      - "You have {{ warn_count }} Warning(s) that require investigation(s). Their ID’s are listed below:"
+      - "{{ warn_control_list }}"
