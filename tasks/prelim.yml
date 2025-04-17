@@ -1,6 +1,6 @@
 ---
 
-- name: "PRELIM | Get Display Version value."
+- name: "PRELIM | Get Display version value."
   tags:
     - always
   ansible.windows.win_reg_stat:
