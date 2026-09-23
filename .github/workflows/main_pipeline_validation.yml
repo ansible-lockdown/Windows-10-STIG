@@ -6,7 +6,7 @@ name: Ansible Remediate Main Pipeline Validation
 
 # Controls when the action will run.
 # Triggers the workflow on push or pull request
-# events but only for the devel branch
+# events for the main branch and the latest release branch
 on:  # yamllint disable-line rule:truthy
   pull_request_target:
     types: [opened, reopened, synchronize]
@@ -19,6 +19,8 @@ on:  # yamllint disable-line rule:truthy
       - '**.j2'
       - '**.ps1'
       - '**.cfg'
+  # Allow manual running of workflow
+  workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 # This section contains all the jobs below that are running in the workflow.
@@ -26,7 +28,18 @@ jobs:
     # This workflow will run OpenTofu to load an instance in Azure to test the playbook against a live cloud-based instance.
   build-azure-windows:
     # Use the AWS self-hosted runner
+    # Only run for pull requests raised from a branch in this repository.
+    # pull_request_target exposes repository secrets, so a fork PR must never
+    # reach the steps below, which check out PR head and execute it.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: self-hosted
+
+    # Least privilege for the job that holds the cloud credentials.
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: read
+
     env:
       # Imported as a variable by OpenTofu.
       ARM_CLIENT_ID: ${{ secrets.AZURE_AD_CLIENT_ID }}
@@ -49,14 +62,14 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it.
       - name: Clone ${{ github.event.repository.name }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: If a variable for IAC_BRANCH is set use that branch
         working-directory: .github/workflows
         run: |
-          if [ ${{ vars.IAC_BRANCH }} != '' ]; then
+          if [ -n "${{ vars.IAC_BRANCH }}" ]; then
               echo "IAC_BRANCH=${{ vars.IAC_BRANCH }}" >> $GITHUB_ENV
               echo "Pipeline using the following IAC branch ${{ vars.IAC_BRANCH }}"
           else
@@ -65,7 +78,7 @@ jobs:
 
       # Pull In OpenTofu Code For Windows Azure
       - name: Clone IaC Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ansible-lockdown/github_windows_IaC
           path: .github/workflows/github_windows_IaC
@@ -81,7 +94,7 @@ jobs:
         if: env.ENABLE_DEBUG == 'true'
         run: |
           echo "OSVAR = $OSVAR"
-          echo "benchmark_type = $benchmark_type"
+          echo "benchmark_type = $TF_VAR_benchmark_type"
           pwd
           ls
         env:
@@ -133,7 +146,7 @@ jobs:
 
       # Destroy The Azure Test System
       - name: Tofu Destroy
-        if: always() && env.ENABLE_DEBUG == 'false'
+        if: always() && env.ENABLE_DEBUG != 'true'
         env:
           # Imported from GitHub variables this is used to load the relevant OS.tfvars file
           OSVAR: ${{ vars.OSVAR }}
