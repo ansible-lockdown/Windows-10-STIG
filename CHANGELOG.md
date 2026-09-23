@@ -232,12 +232,10 @@ a syntax check only.
   Also dropped the commented-out Ansible Galaxy Quality badge: it carried project ID `61846`, the
   same ID the Win-10 role used, so it was wrong in one of the two and rendered nothing either way.
 
-- FIXED: `.yamllint` now ignores `.ansible/`, matching the Windows Fleet. The QA gate runs
-  the checker twice, and the first run's internal `ansible-lint` installs
-  `collections/requirements.yml` into `.ansible/collections/`. `yamllint` then walked that tree on
-  the second run and linted several hundred vendored `ansible.windows` and `community.windows` files
-  against this role's style rules, so the second run failed while the first passed. The gate is now
-  order-independent. Only dependency code is excluded: role YAML is still linted.
+- FIXED: `.yamllint` now ignores `.ansible/`, matching the Windows Fleet. An `ansible-lint` run
+  installs `collections/requirements.yml` into `.ansible/collections/`, and `yamllint` then walked
+  that tree and linted several hundred vendored `ansible.windows` and `community.windows` files
+  against this role's style rules. Only dependency code is excluded: role YAML is still linted.
 
 - `README.md`: restored the release and activity badges, which were dropped with the pipeline badges
   earlier in this cycle. `Release Branch`, `Release Tag`, `Release Date`, `Devel Branch Commits`,
@@ -256,28 +254,9 @@ a syntax check only.
   - `wn10stig_internet_based_apps_to_check` becomes `win10stig_internet_based_apps_to_check`
   - `wn10stig_pass_age_administrator` becomes `win10stig_pass_age_administrator`
 
-  Rule toggles are untouched and keep the `wn10_<control id>` form. Beyond consistency, this brings
-  both variables into scope for the QA gate's unused-variable check for the first time: neither
-  invocation the gate makes could match the legacy prefix, so a typo in either name went unreported.
+  Rule toggles are untouched and keep the `wn10_<control id>` form.
 
-### Repository QA gate restored
-
-- ADDED: `.github/workflows/repo_qa.yml`, the static QA gate the Windows Fleet carries.
-  When the workflows were removed earlier in this cycle this one went with them, leaving this the
-  only private Windows role where nothing lints or checks a pull request. It runs on the
-  self-hosted runner, on pull requests only, with the linter install isolated in a virtualenv
-  because that runner persists between jobs.
-- ADDED: `.qa_baseline.json`, seeded from a clean run. It is empty: this role currently produces
-  no findings.
-- REMOVED: `.github/.gitkeep`. It existed only to keep an otherwise empty directory tracked, and
-  the directory now has real content.
-- The checker is pinned to `2.8.4`, not `2.8.3` as the fleet was. `2.8.3` resolves a role's
-  defaults as the single file `defaults/main.yml` and aborts before running any check when it is
-  absent, so it cannot run against this role's `defaults/main/` directory at all.
-- The run names the variable prefix with `-b win10stig`. Left to auto-detect the checker reads
-  this role's benchmark type incorrectly, reports Rule Coverage as a green PASS having compared
-  nothing, and keys Unused Variables on whichever prefix it guessed, which is how an undefined
-  variable in `WN10-00-000140` went unreported here earlier in this cycle.
+### Documentation and branding alignment
 
 - replaced `CONTRIBUTING.rst` with `CONTRIBUTING.md`, carrying the current Ansible-Lockdown
   contributing guide. The Windows Fleet now ships a byte-identical file
@@ -296,24 +275,6 @@ a syntax check only.
   `A QUANTUM SKY COMPANY`, matching the other four roles
 - `README.md`: fixed the repeated word and the stray preposition in the security level sentence
   (`possible to to ... a particular for security level`), which now matches the other four roles
-- CHANGED: `repo_qa.yml` no longer depends on `actions/setup-python` succeeding. It prefers the
-  runner's own `python3` when that is 3.10 or newer, falls back to `actions/setup-python` only
-  when it is not, and then asserts the floor before installing anything, so a runner without a
-  suitable interpreter fails with a message naming the version it found rather than with a pip
-  resolution error several steps later. 3.10 is the real floor: `yamllint` and `ansible-lint`
-  both declare `requires-python >= 3.10`, while the checker itself is standard library only and
-  runs on 3.8. Nothing is installed system-wide and no `sudo` is needed on either path, which
-  matters on a runner shared with other workflows.
-
-- FIXED: the QA gate reported `Rule Coverage` as SKIP, having compared nothing. This role uses
-  two variable prefixes - `win10stig_*` for tunables and `wn10_<family>_<id>` for rule toggles -
-  and the checker keys every check off one of them, so no single invocation is honest. Naming
-  `-b win10stig` lets Unused Variables see the tunables, but supplying `-b` at all bypasses the
-  shared detector for one that cannot return `stig_win`, so Rule
-  Coverage found no toggles. Letting it auto-detect fixes Rule Coverage but leaves Unused
-  Variables blind to an undefined `win10stig_*` tunable, which is the class that hid an undefined
-  variable in this fleet's firewall remediation. The gate now runs both ways and requires both
-  to pass. The root cause is in the checker: `_detect_benchmark_type` cannot return `stig_win`.
 
 ### Benchmark alignment: V3R4 -> V3R6
 
@@ -372,22 +333,28 @@ covers the cumulative V3R4 -> V3R6 changeset.
 
 ### Repository hygiene
 
-- REMOVED: all five GitHub workflows - `devel_pipeline_validation.yml`,
-  `main_pipeline_validation.yml`, `export_badges_private.yml`, `export_badges_public.yml` and
-  `update_galaxy.yml`. This private role no longer runs CI. Two of them never belonged here at all:
-  `export_badges_public.yml` exported *public* repository badges from a private repo, and it and
-  `update_galaxy.yml` both triggered on `main` and `devel`, neither of which exists in this
-  repository, so they were inert as well as misplaced. `.github/.gitkeep` keeps the directory in
-  place for a future workflow.
-- FIXED: `.gitignore` ignored `.github/` wholesale, which is why the workflows and the two
-  `.DS_Store` files below had to be force-added and why any new workflow file would have been
-  silently untracked. Replaced with the narrow runtime-checkout patterns the rest of the Windows
-  fleet uses (`.github/workflows/github_windows_IaC/` and `.github/.ansible/`), which carry a
-  comment warning against the wholesale form. This role was the only one of the five still ignoring
-  `.github/` in a way that swallowed real files.
-- REMOVED: `.github/.DS_Store` and `.github/workflows/.DS_Store` were committed to the repository.
-  `.gitignore` already listed `.DS_Store`, but that does not untrack files already in the index, so
-  both were removed explicitly.
+- FIXED: **the pipeline workflows could hand repository secrets to a fork and could leave the Azure
+  instance running.** `build-azure-windows` now requires the pull request to originate from a branch
+  in this repository, because `pull_request_target` grants that job the repository secrets and its
+  steps check out pull request head and execute it. `Tofu Destroy` was gated on
+  `ENABLE_DEBUG == 'false'`, which is false for an unset variable, so the instance survived the run.
+  It is now `!= 'true'`. Both jobs also declare least-privilege permissions, where neither declared
+  any.
+- FIXED: **three defects that stopped the pipelines working as written.**
+  `if [ ${{ vars.IAC_BRANCH }} != '' ]` expands to `if [ != '' ]` when the variable is unset and is
+  now the quoted `-n` form; the debug step echoed `$benchmark_type`, which is never defined, and now
+  echoes `$TF_VAR_benchmark_type`; and `actions/first-interaction` tracked `@main` with the
+  hyphenated `repo-token` and `pr-message` inputs it renamed after v1, so the welcome comment had
+  silently stopped posting. It is pinned to `v3.1.0` with the current input names and the
+  `issue_message` its runtime requires. `actions/checkout` moves to v7 and both workflows gain
+  `workflow_dispatch`.
+- REMOVED: **`update_galaxy.yml`.** It has never run, and no Windows STIG role is published on
+  Ansible Galaxy, so it was not the mechanism keeping anything current.
+- FIXED: `.gitignore` ignored `.github/` wholesale, which is why a workflow file had to be
+  force-added and why any new one would have been silently untracked. Replaced with the narrow
+  runtime-checkout patterns the rest of the Windows Fleet uses
+  (`.github/workflows/github_windows_IaC/` and `.github/.ansible/`), which carry a comment warning
+  against the wholesale form.
 - `README.md`: removed the `Public Repository`, `Lint & Pre-Commit Tools`,
   `Community Release Information` and `Subscriber Release Information` sections and the 15 badges
   they held, including both pipeline-status badges and every
@@ -395,9 +362,6 @@ covers the cumulative V3R4 -> V3R6 changeset.
   flat block matching the other four Windows roles: organisation and repository stars, forks,
   followers, X, Discord and licence. This role was the only one of the five carrying those four
   headings.
-- `README.md`: removed the `Pipeline Testing` section. It documented the self-hosted OpenTofu
-  runners and the audit-on-devel pipeline, none of which applies now that the workflows are gone.
-  `Local Testing` is unchanged and still accurate.
 
 ### Modernization to the fleet pattern
 
@@ -458,9 +422,6 @@ run or what they write, except where marked BREAKING or FIXED.
   this role's behaviour between runs. `community.general` is removed from both the requirements
   file and `meta/main.yml`: no task in this role calls it. `ansible.windows` accounts for 386
   module calls and `community.windows` for 16.
-- ADDED: `.qa_config.yml` and `.qa_baseline.json`. The config narrows `tools/Repo_QA_Checker` to the
-  checks that have meaning for a Windows role and declares no `register_prefixes` override, because
-  `discovered_` is already in the checker's default list.
 - CHANGED: `.ansible-lint` skips the `complexity` rule, matching the Windows Fleet. The
   one-file-per-family layout puts 105, 135 and 133 tasks in three Cat2 files against the rule's
   hard-coded limit of 100. The limit is not settable from a config file and splitting the families

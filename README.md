@@ -227,6 +227,16 @@ Pull requests are accepted from approved contributors only, and issues are welco
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the onboarding process, the rules, and the commit signing
 requirements (GPG signature and Signed-off-by on every commit).
 
+## Pipeline Testing
+
+- Pull requests into `devel` or a `benchmark*` branch run the devel pipeline; pull requests into
+  `main` or `latest` run the main pipeline
+- OpenTofu builds a Windows instance in Azure on a self-hosted runner, the role is applied to it
+  with `site.yml`, and the instance is destroyed when the run ends
+- ansible-core is the version pinned in the runner's virtualenv
+- The job runs only for pull requests raised from a branch in this repository, because it carries
+  the cloud credentials
+
 ## Local Testing
 
 - Ansible
