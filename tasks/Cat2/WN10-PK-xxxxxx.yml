@@ -1,0 +1,254 @@
+---
+
+- name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store."
+  when: wn10_pk_000005 | bool
+  tags:
+    - WN10-PK-000005
+    - CAT2
+    - CCI-000185
+    - CCI-002470
+    - SRG-OS-000066-GPOS-00034
+    - SV-220903r958448_rule
+    - V-220903
+    - NIST800-53_IA-5_2
+    - NIST800-53A_IA-5_2.1
+    - NIST800-53R4_IA-5_2_a
+    - NIST800-53R4_SC-23_5
+  block:
+    - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 3."
+      ansible.windows.win_shell: |
+        $cert = Get-ChildItem -Path Cert:LocalMachine\root |
+        Where-Object { $_.Subject -eq "CN=DoD Root CA 3, OU=PKI, OU=DoD, O=U.S. Government, C=US" -and
+                        $_.Thumbprint -eq "D73CA91102A2204A36459ED32213B467D7CE97FB" -and
+                        $_.NotAfter -eq (Get-Date "12/30/2029") }
+
+        if ($cert) {
+            Write-Output "Found: $($cert.Subject) | Thumbprint: $($cert.Thumbprint) | Expiration: $($cert.NotAfter)"
+        } else {
+            Write-Output "Missing or Incorrect Certificate: DoD Root CA 3"
+            exit 1
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_pk_000005_root_3_check
+
+    - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 4."
+      ansible.windows.win_shell: |
+        $cert = Get-ChildItem -Path Cert:LocalMachine\root |
+        Where-Object { $_.Subject -eq "CN=DoD Root CA 4, OU=PKI, OU=DoD, O=U.S. Government, C=US" -and
+                        $_.Thumbprint -eq "B8269F25DBD937ECAFD4C35A9838571723F2D026" -and
+                        $_.NotAfter -eq (Get-Date "07/25/2032") }
+
+        if ($cert) {
+            Write-Output "Found: $($cert.Subject) | Thumbprint: $($cert.Thumbprint) | Expiration: $($cert.NotAfter)"
+        } else {
+            Write-Output "Missing or Incorrect Certificate: DoD Root CA 4"
+            exit 1
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_pk_000005_root_4_check
+
+    - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 5."
+      ansible.windows.win_shell: |
+        $cert = Get-ChildItem -Path Cert:LocalMachine\root |
+        Where-Object { $_.Subject -eq "CN=DoD Root CA 5, OU=PKI, OU=DoD, O=U.S. Government, C=US" -and
+                        $_.Thumbprint -eq "4ECB5CC3095670454DA1CBD410FC921F46B8564B" -and
+                        $_.NotAfter -eq (Get-Date "06/14/2041") }
+
+        if ($cert) {
+            Write-Output "Found: $($cert.Subject) | Thumbprint: $($cert.Thumbprint) | Expiration: $($cert.NotAfter)"
+        } else {
+            Write-Output "Missing or Incorrect Certificate: DoD Root CA 5"
+            exit 1
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_pk_000005_root_5_check
+
+    - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Check For DOD Root CA 6."
+      ansible.windows.win_shell: |
+        $cert = Get-ChildItem -Path Cert:LocalMachine\root |
+        Where-Object { $_.Subject -eq "CN=DoD Root CA 6, OU=PKI, OU=DoD, O=U.S. Government, C=US" -and
+                        $_.Thumbprint -eq "D37ECF61C0B4ED88681EF3630C4E2FC787B37AEF" -and
+                        $_.NotAfter -eq (Get-Date "01/24/2053") }
+
+        if ($cert) {
+            Write-Output "Found: $($cert.Subject) | Thumbprint: $($cert.Thumbprint) | Expiration: $($cert.NotAfter)"
+        } else {
+            Write-Output "Missing or Incorrect Certificate: DoD Root CA 6"
+            exit 1
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_pk_000005_root_6_check
+
+    - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Display results and warnings"
+      ansible.builtin.debug:
+        msg:
+          - "═══════════════════════════════════════════════════════"
+          - "        DoD Root CA Certificates Check Results         "
+          - "═══════════════════════════════════════════════════════"
+          - "DoD Root CA 3   : {{ 'Valid' if discovered_pk_000005_root_3_check.rc == 0 else 'Not Valid (Finding)' }}"
+          - "DoD Root CA 4   : {{ 'Valid' if discovered_pk_000005_root_4_check.rc == 0 else 'Not Valid (Finding)' }}"
+          - "DoD Root CA 5   : {{ 'Valid' if discovered_pk_000005_root_5_check.rc == 0 else 'Not Valid (Finding)' }}"
+          - "DoD Root CA 6   : {{ 'Valid' if discovered_pk_000005_root_6_check.rc == 0 else 'Not Valid (Finding)' }}"
+          - "═══════════════════════════════════════════════════════"
+
+    - name: "MEDIUM | WN10-PK-000005 | AUDIT | The DoD Root CA certificates must be installed in the Trusted Root Store. | Warn Count."
+      when:
+        - discovered_pk_000005_root_3_check.rc != 0 or
+          discovered_pk_000005_root_4_check.rc != 0 or
+          discovered_pk_000005_root_5_check.rc != 0 or
+          discovered_pk_000005_root_6_check.rc != 0
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-PK-000005'
+
+- name: "MEDIUM | WN10-PK-000010 | AUDIT | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems."
+  when: wn10_pk_000010 | bool
+  tags:
+    - WN10-PK-000010
+    - CAT2
+    - CCI-000185
+    - SRG-OS-000066-GPOS-00034
+    - SV-220904r958448_rule
+    - V-220904
+    - NIST800-53_IA-5_2
+    - NIST800-53A_IA-5_2.1
+    - NIST800-53R4_IA-5_2_a
+  block:
+    - name: "MEDIUM | WN10-PK-000010 | AUDIT | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Check For ECA Root CA 4."
+      ansible.windows.win_shell: |
+        $cert = Get-ChildItem -Path Cert:LocalMachine\root |
+        Where-Object { $_.Subject -eq "CN=ECA Root CA 4, OU=ECA, O=U.S. Government, C=US" -and
+                        $_.Thumbprint -eq "73E8BB08E337D6A5A6AEF90CFFDD97D9176CB582" -and
+                        $_.NotAfter -eq (Get-Date "12/30/2029") }
+
+        if ($cert) {
+            Write-Output "Found: $($cert.Subject) | Thumbprint: $($cert.Thumbprint) | Expiration: $($cert.NotAfter)"
+        } else {
+            Write-Output "Missing or Incorrect Certificate: ECA Root CA 4"
+            exit 1
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_pk_000010_eca_root_4_check
+
+    - name: "MEDIUM | WN10-PK-000010 | AUDIT | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Display results and warnings"
+      ansible.builtin.debug:
+        msg:
+          - "═══════════════════════════════════════════════════════"
+          - "          ECA Root CA Certificates Check Result        "
+          - "═══════════════════════════════════════════════════════"
+          - "ECA Root CA 4   : {{ 'Valid' if discovered_pk_000010_eca_root_4_check.rc == 0 else 'Not Valid (Finding)' }}"
+          - "═══════════════════════════════════════════════════════"
+
+    - name: "MEDIUM | WN10-PK-000010 | AUDIT | The External Root CA certificates must be installed in the Trusted Root Store on unclassified systems. | Warn Count."
+      when: discovered_pk_000010_eca_root_4_check.rc != 0
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-PK-000010'
+
+- name: "MEDIUM | WN10-PK-000015 | PATCH | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems."
+  when: wn10_pk_000015 | bool
+  tags:
+    - WN10-PK-000015
+    - CAT2
+    - CCI-000185
+    - CCI-002470
+    - SRG-OS-000066-GPOS-00034
+    - SV-220905r958448_rule
+    - V-220905
+    - NIST800-53_IA-5_2
+    - NIST800-53A_IA-5_2.1
+    - NIST800-53R4_IA-5_2_a
+    - NIST800-53R4_SC-25_5
+  block:
+    - name: "MEDIUM | WN10-PK-000015 | AUDIT | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Check For DoD Root CA 3 (Expiring 11/16/2024)."
+      ansible.windows.win_shell: |
+        $cert = Get-ChildItem -Path Cert:Localmachine\disallowed |
+        Where-Object { $_.Subject -eq "CN=DoD Root CA 3, OU=PKI, OU=DoD, O=U.S. Government, C=US" -and
+                        $_.Issuer -eq "CN=DoD Interoperability Root CA 2, OU=PKI, OU=DoD, O=U.S. Government, C=US" -and
+                        $_.Thumbprint -eq "49CBE933151872E17C8EAE7F0ABA97FB610F6477" -and
+                        $_.NotAfter -eq (Get-Date "11/16/2024") }
+
+        if ($cert) {
+            Write-Output "Found: $($cert.Subject) | Issuer: $($cert.Issuer) | Thumbprint: $($cert.Thumbprint) | Expiration: $($cert.NotAfter)"
+        } else {
+            Write-Output "Missing or Incorrect Certificate: DoD Root CA 3 (Expiring 11/16/2024)"
+            exit 1
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_pk_000015_dod_root_3_2024_check
+
+    - name: "MEDIUM | WN10-PK-000015 | AUDIT | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Display results and warnings"
+      ansible.builtin.debug:
+        msg:
+          - "═══════════════════════════════════════════════════════"
+          - "        DoD Root CA 3 Certificates Check Results       "
+          - "═══════════════════════════════════════════════════════"
+          - "DoD Root CA 3 (Expiring 11/16/2024) : {{ 'Valid' if discovered_pk_000015_dod_root_3_2024_check.rc == 0 else 'Not Valid (Finding)' }}"
+          - "═══════════════════════════════════════════════════════"
+
+    - name: "MEDIUM | WN10-PK-000015 | AUDIT | The DoD Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warn Count."
+      when: discovered_pk_000015_dod_root_3_2024_check.rc != 0
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-PK-000015'
+
+- name: "MEDIUM | WN10-PK-000020 | AUDIT | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems."
+  when: wn10_pk_000020 | bool
+  tags:
+    - WN10-PK-000020
+    - CAT2
+    - CCI-000185
+    - CCI-002470
+    - SRG-OS-000066-GPOS-00034
+    - SV-220906r1081051_rule
+    - V-220906
+    - NIST800-53_IA-5_2
+    - NIST800-53A_IA-5_2.1
+    - NIST800-53R4_IA-5_2_a
+    - NIST800-53R4_SC-25_5
+  block:
+    - name: "MEDIUM | WN10-PK-000020 | AUDIT | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Check For DoD Root CA 3 (Expiring 07/18/2025)."
+      ansible.windows.win_shell: |
+        $cert = Get-ChildItem -Path Cert:LocalMachine\disallowed |
+        Where-Object { $_.Subject -eq "CN=DoD Root CA 3, OU=PKI, OU=DoD, O=U.S. Government, C=US" -and
+                        $_.Issuer -eq "CN=US DoD CCEB Interoperability Root CA 2, OU=PKI, OU=DoD, O=U.S. Government, C=US" -and
+                        $_.Thumbprint -eq "9B74964506C7ED9138070D08D5F8B969866560C8" -and
+                        $_.NotAfter -eq (Get-Date "07/18/2025 09:56:22 AM") }
+
+        if ($cert) {
+            Write-Output "Found: $($cert.Subject) | Issuer: $($cert.Issuer) | Thumbprint: $($cert.Thumbprint) | Expiration: $($cert.NotAfter)"
+        } else {
+            Write-Output "Missing or Incorrect Certificate: US DoD CCEB Interoperability Root CA Cross-Certificate"
+            exit 1
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_pk_000020_dod_cceb_root_ca_check
+
+    - name: "MEDIUM | WN10-PK-000020 | AUDIT | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Display results and warnings"
+      ansible.builtin.debug:
+        msg:
+          - "═════════════════════════════════════════════════════════════════════════"
+          - "         US DoD CCEB Interoperability Root CA Cross-Cert Check           "
+          - "═════════════════════════════════════════════════════════════════════════"
+          - "US DoD CCEB Interoperability Root CA 2 : {{ 'Valid' if discovered_pk_000020_dod_cceb_root_ca_check.rc == 0 else 'Not Valid (Finding)' }}"
+          - "═════════════════════════════════════════════════════════════════════════"
+
+    - name: "MEDIUM | WN10-PK-000020 | AUDIT | The US DoD CCEB Interoperability Root CA cross-certificates must be installed in the Untrusted Certificates Store on unclassified systems. | Warn Count."
+      when: discovered_pk_000020_dod_cceb_root_ca_check.rc != 0
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-PK-000020'

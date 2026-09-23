@@ -1,0 +1,19 @@
+---
+
+- name: "MEDIUM | WN10-UC-000020 | PATCH | Zone information must be preserved when saving attachments."
+  when: wn10_uc_000020 | bool
+  tags:
+    - WN10-UC-000020
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220955r991589_rule
+    - V-220955
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Attachments
+    name: SaveZoneInformation
+    data: 2
+    type: dword

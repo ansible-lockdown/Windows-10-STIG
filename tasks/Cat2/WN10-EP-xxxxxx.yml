@@ -1,0 +1,19 @@
+---
+
+- name: "MEDIUM | WN10-EP-000310 | PATCH | Windows 10 Kernel (Direct Memory Access) DMA Protection must be enabled."
+  when: wn10_ep_000310 | bool
+  tags:
+    - WN10-EP-000310
+    - CAT2
+    - CCI-001090
+    - SRG-OS-000138-GPOS-00069
+    - SV-220902r1137695_rule
+    - V-220902
+    - NIST800-53_SC-4
+    - NIST800-53A_SC-4.1
+    - NIST800-53R4_SC-4
+  ansible.windows.win_regedit:
+    path: HKLM:\Software\Policies\Microsoft\Windows\Kernel DMA Protection
+    name: DeviceEnumerationPolicy
+    data: 0
+    type: dword

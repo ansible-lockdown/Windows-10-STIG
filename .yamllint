@@ -4,6 +4,7 @@ extends: default
 locale: en_US.UTF-8
 ignore: |
     tests/
+    .ansible/
     molecule/
     .github/
     .gitlab-ci.yml
