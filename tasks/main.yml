@@ -1,79 +1,110 @@
 ---
 
 - name: "MAIN | Display Banner"
-  tags:
-    - always
+  tags: always
   ansible.builtin.debug:
     msg: "{{ lockdown_banner.split('\n') }}"
 
+# os_family, os_installation_type and distribution_version all belong to the distribution subset,
+# so one gather supplies every fact the assert below reads.
+#
+# distribution is tested for a falsy value as well as for being undefined. ansible.windows's
+# setup.ps1 assigns ansible_distribution = $null unconditionally and only fills it from
+# Win32_OperatingSystem.Caption inside `if ($isAdmin)`, so on a non-administrative connection the
+# fact is present and None. An `is not defined` guard alone can therefore never fire, which left
+# the previous version of this task skipped and the assert reading None.
 - name: "MAIN | Gather distribution info"
-  when: ansible_distribution is not defined
-  tags:
-    - always
+  when: >-
+    not ansible_facts['distribution'] | default('', true) or
+    ansible_facts['os_installation_type'] is not defined
+  tags: always
   ansible.builtin.setup:
     gather_subset: distribution,!all,!min
 
+# The caption is the discriminator for the client release. A build-number range cannot serve:
+# Windows 10 1607 and Windows Server 2016 both report 10.0.14393, so any range wide enough to
+# admit Windows 10 also admits a Server SKU. os_installation_type is what separates them, and
+# unlike distribution it is read from the registry unconditionally, so it survives a
+# non-administrative gather.
+#
+# The installation type is tested negatively, against the two documented Server values, rather
+# than positively against 'Client'. That way an unexpected client-side value cannot reject an
+# otherwise valid host, while the caption test still does the real gating.
+#
+# regex_search was replaced by a substring test: it returns None rather than false on a miss, and
+# it raises outright when handed the None that a non-administrative gather leaves behind. Every
+# fact read here and in the messages is defaulted so a failure reports the reason instead of
+# collapsing into a template error.
 - name: "MAIN | Check OS version and family"
-  tags:
-    - always
+  when: not skip_os_check | bool
+  tags: always
   ansible.builtin.assert:
     that:
-      - ansible_os_family == 'Windows'
-      - ansible_distribution | regex_search('(Microsoft Windows 10)')
-    success_msg: "{{ ansible_distribution }} {{ ansible_distribution_major_version }} is the detected operating system."
-    fail_msg: "This role can only be run against Windows 10 Editions. {{ ansible_distribution }} {{ ansible_distribution_major_version }} is not supported."
-
-- name: "MAIN | Get Disk Facts"
-  when: wn10_00_000050 or wn10_00_000130
-  community.windows.win_disk_facts:
+      - ansible_facts['os_family'] | default('', true) == 'Windows'
+      - ansible_facts['os_installation_type'] | default('', true) not in ['Server', 'Server Core']
+      - "'Windows 10' in (ansible_facts['distribution'] | default('', true))"
+    success_msg: >-
+      {{ ansible_facts['distribution'] | default('unknown distribution', true) }}
+      {{ ansible_facts['distribution_version'] | default('unknown version', true) }}
+      is the detected operating system.
+    fail_msg: >-
+      This role can only be run against Windows 10 Editions.
+      {{ ansible_facts['distribution'] | default('unknown distribution', true) }}
+      {{ ansible_facts['distribution_version'] | default('unknown version', true) }}
+      (installation type {{ ansible_facts['os_installation_type'] | default('unknown', true) }})
+      is not supported. A blank distribution means the connection is not administrative.
 
 - name: "MAIN | Check ansible version"
-  tags:
-    - always
+  tags: always
   ansible.builtin.assert:
-    that: ansible_version.full is version_compare(win10stig_min_ansible_version, '>=')
-    msg: You must use Ansible {{ win10stig_min_ansible_version }} or greater
+    that: ansible_version.full is version_compare(min_ansible_version, '>=')
+    msg: You must use Ansible {{ min_ansible_version }} or greater
 
 - name: "MAIN | Include the Preliminary tasks"
-  tags:
-    - prelim_tasks
+  tags: prelim_tasks
   ansible.builtin.import_tasks:
     file: prelim.yml
 
 - name: "MAIN | Execute CAT 1 Controls Tasks"
-  when: win10stig_cat1_patch | bool
+  when: win10stig_cat1_controls | bool
   tags:
     - cat1
     - high
   ansible.builtin.import_tasks:
-    file: cat1.yml
+    file: Cat1/main.yml
 
 - name: "MAIN | Execute CAT 2 Controls Tasks"
-  when: win10stig_cat2_patch | bool
+  when: win10stig_cat2_controls | bool
   tags:
     - cat2
     - medium
   ansible.builtin.import_tasks:
-    file: cat2.yml
+    file: Cat2/main.yml
 
 - name: "MAIN | Execute CAT 3 Controls Tasks"
-  when: win10stig_cat3_patch | bool
+  when: win10stig_cat3_controls | bool
   tags:
     - cat3
     - low
   ansible.builtin.import_tasks:
-    file: cat3.yml
+    file: Cat3/main.yml
 
-- name: "MAIN | Run Post Tasks"
+- name: Add ansible file showing Benchmark and levels applied
+  when: create_benchmark_facts | bool
   tags:
     - always
+    - benchmark
+  ansible.builtin.import_tasks:
+    file: benchmark_facts.yml
+
+- name: "MAIN | Run Post Tasks"
+  tags: always
   ansible.builtin.import_tasks:
     file: post.yml
 
 - name: "MAIN | If Warnings found Output count and control IDs affected"
   when: warn_count != 0
-  tags:
-    - always
+  tags: always
   ansible.builtin.debug:
     msg:
       - "You have {{ warn_count }} Warning(s) that require investigation(s). Their ID’s are listed below:"

@@ -1,14 +1,14 @@
 ---
 
+# Pinned rather than tracking git HEAD, so a collection change cannot alter this role's behaviour
+# between runs. The floors are the versions this cycle was verified against and match the pins
+# carried across the Windows Fleet.
+#
+# community.general was removed: no task in this role calls it. ansible.windows accounts for 386
+# module calls and community.windows for 16.
 collections:
   - name: ansible.windows
-    type: git
-    source: https://github.com/ansible-collections/ansible.windows
+    version: ">=3.7.0"
 
   - name: community.windows
-    type: git
-    source: https://github.com/ansible-collections/community.windows
-
-  - name: community.general
-    type: git
-    source: https://github.com/ansible-collections/community.general
+    version: ">=3.3.0"

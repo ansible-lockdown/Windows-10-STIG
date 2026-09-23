@@ -1,8 +1,7 @@
 ---
 
 - name: "PRELIM | Get Display Version value."
-  tags:
-    - always
+  tags: always
   ansible.windows.win_reg_stat:
     path: HKLM:\Software\Microsoft\Windows NT\CurrentVersion
     name: DisplayVersion
@@ -11,8 +10,7 @@
   register: discovered_displayversion
 
 - name: "PRELIM | Get OS Build value."
-  tags:
-    - always
+  tags: always
   ansible.windows.win_reg_stat:
     path: HKLM:\Software\Microsoft\Windows NT\CurrentVersion
     name: CurrentBuild
@@ -20,76 +18,194 @@
   failed_when: false
   register: discovered_currentbuild
 
-- name: "PRELIM | Detect if Trusted Platform Module (TPM) is Available"
-  tags:
-    - always
-  block:
-    - name: "PRELIM | Retrieve TPM information"
-      ansible.windows.win_shell: Get-Tpm | ConvertTo-Json
-      changed_when: false
-      failed_when: false
-      register: discovered_tpm_info
-
-    - name: "PRELIM | Set fact for TPM presence"
-      ansible.builtin.set_fact:
-        discovered_tpm_present: "{{ (discovered_tpm_info.stdout | from_json).TpmPresent }}"
-
-- name: "PRELIM | Detect if Remote Desktop Services (RDP) is enabled"
-  tags:
-    - always
-  ansible.windows.win_reg_stat:
-    path: HKLM:\System\CurrentControlSet\Control\Terminal Server
-    name: fDenyTSConnections
+# Windows removes optional features between releases, and win_optional_feature raises
+# "Failed to find feature" rather than no-opping, so every removal is gated on the feature
+# actually being present on this host.
+- name: "PRELIM | Enumerate Windows optional features"
+  tags: always
+  ansible.windows.win_shell: (Get-WindowsOptionalFeature -Online).FeatureName
   changed_when: false
   failed_when: false
-  register: discovered_rdp_enabled
+  check_mode: false
+  register: discovered_optional_features
+
+- name: "PRELIM | Set fact for valid Windows optional feature names"
+  tags: always
+  ansible.builtin.set_fact:
+    discovered_feature_names: "{{ discovered_optional_features.stdout_lines | default([], true) | map('trim') | select | list }}"
+
+- name: "PRELIM | Gather Domain Membership Facts"
+  when: ansible_facts['windows_domain_member'] is not defined
+  tags: always
+  ansible.builtin.setup:
+    gather_subset: windows_domain,!all,!min
 
 - name: "PRELIM | Set Fact If Domain Joined."
-  when: ansible_windows_domain_member is defined
-  tags:
-    - always
+  when: ansible_facts['windows_domain_member'] is defined
+  tags: always
   ansible.builtin.set_fact:
-    discovered_domain_joined: "{{ ansible_windows_domain_member }}"
+    discovered_domain_joined: "{{ ansible_facts['windows_domain_member'] }}"
+
+# Every [System Access] control in this role is written with secedit. On a domain joined
+# host the Default Domain Policy owns that section and overwrites it at each policy refresh,
+# so a local write reverts within roughly two hours while the run still reports success. An
+# audit taken straight afterwards therefore reports a compliance that does not last. The
+# thirteen secedit backed controls are skipped on such a host and the operator is told once.
+- name: "PRELIM | Account Policy Scope"
+  tags: always
+  block:
+    # Keyed on the observed fact rather than discovered_domain_joined, which defaults to true.
+    # Keying it on the default would skip all thirteen controls on any host where the fact is
+    # missing, silently changing behaviour; this only raises the flag on observed membership.
+    - name: "PRELIM | Account Policy Scope | Set fact when account policy is domain scoped"
+      when: ansible_facts['windows_domain_member'] | default(false) | bool
+      ansible.builtin.set_fact:
+        discovered_account_policy_is_domain_scoped: true
+
+    - name: "PRELIM | Account Policy Scope | Warn that account policy is set at the domain"
+      when: discovered_account_policy_is_domain_scoped | bool
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! This host is domain joined, so the [System Access] account policy is set"
+          - "by the domain rather than locally. The Default Domain Policy overwrites local"
+          - "[System Access] at every policy refresh, so anything written here reverts within"
+          - "about two hours and an audit run straight afterwards reports a compliance that does"
+          - "not last. The thirteen secedit backed controls - the account lockout trio, the"
+          - "password policy controls, and the guest, administrator rename and LSA controls -"
+          - "are therefore skipped on this host. Set them in the Default Domain Policy instead."
+
+    - name: "PRELIM | Account Policy Scope | Set warning count"
+      when: discovered_account_policy_is_domain_scoped | bool
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'Account policy is domain scoped'
+
+# Two controls remove a local account's ability to reach this host over the network, which means
+# they sever the run that is applying them.
+#
+#   WN10-CC-000037  writes LocalAccountTokenFilterPolicy=0, filtering the privileged token of
+#                   local accounts on NETWORK logon. WinRM and psrp die; SSH survives, because it
+#                   does not take that logon path.
+#   WN10-UR-000070  sets SeDenyNetworkLogonRight to Guests, Enterprise Admins, Domain Admins and
+#                   Local account, removing the network logon right outright. WinRM AND SSH both
+#                   die, because Windows OpenSSH password authentication uses the same path.
+#
+# Both present misleadingly as "the specified credentials were rejected by the server": the port
+# keeps answering and the service keeps running, only authentication is refused. Do not diagnose
+# either as a network or service fault.
+- name: "PRELIM | Control Connection Scope"
+  tags: always
+  block:
+    # A domain principal is either DOMAIN\user or user@realm, so a name carrying neither
+    # separator is a local account.
+    #
+    # The backslash comes from a YAML single quoted variable rather than a Jinja literal on
+    # purpose. In a Jinja expression neither '\' nor '\\' matches one backslash here: the first
+    # is a syntax error, the second tests for two. A YAML single quoted scalar takes the
+    # character literally and never reaches Jinja's string parser, which is the only form that
+    # matches DOMAIN\user.
+    - name: "PRELIM | Control Connection Scope | Detect whether the run connects as a local account"
+      vars:
+        domain_separator_backslash: '\'
+      ansible.builtin.set_fact:
+        discovered_control_account_is_local: >-
+          {{ domain_separator_backslash not in (ansible_user | default(''))
+             and '@' not in (ansible_user | default('')) }}
+
+    # Two facts, because the two controls have different blast radii. WN10-CC-000037 filters the
+    # token on NETWORK logon only, so SSH survives it. WN10-UR-000070 removes the network logon
+    # right outright, so it severs SSH as well.
+    - name: "PRELIM | Control Connection Scope | Detect a local account over a network logon transport"
+      ansible.builtin.set_fact:
+        discovered_local_account_network_logon: >-
+          {{ discovered_control_account_is_local | bool
+             and (ansible_connection | default('ssh')) not in ['ssh', 'smart'] }}
+
+    - name: "PRELIM | Control Connection Scope | Warn that WN10-CC-000037 is skipped to keep the connection"
+      when:
+        - discovered_local_account_network_logon | bool
+        - discovered_domain_joined | bool
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! This run is connected as a local account over a network logon transport."
+          - "WN10-CC-000037 sets LocalAccountTokenFilterPolicy=0, which filters the privileged"
+          - "token of local accounts on network logon and would sever this connection mid-run."
+          - "It is skipped automatically. Connect with a domain account, or over SSH, to have it"
+          - "applied - a domain account is exempt and SSH does not use that logon path."
+
+    - name: "PRELIM | Control Connection Scope | Set WN10-CC-000037 warning count"
+      when:
+        - discovered_local_account_network_logon | bool
+        - discovered_domain_joined | bool
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-CC-000037'
+
+    - name: "PRELIM | Control Connection Scope | Warn that WN10-UR-000070 is skipped to keep the connection"
+      when:
+        - discovered_control_account_is_local | bool
+        - discovered_domain_joined | bool
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! This run is connected as a local account on a domain joined host."
+          - "WN10-UR-000070 sets SeDenyNetworkLogonRight to Guests, Enterprise Admins, Domain"
+          - "Admins and Local account, which removes this account's network logon right and severs"
+          - "the run. It takes BOTH transports with it: Windows OpenSSH password authentication"
+          - "uses the same logon path, so SSH is reset at the first auth packet and is not a"
+          - "fallback. The host is then reachable only from the console."
+          - "It is skipped automatically. To have it applied, connect as a domain account that is"
+          - "NOT a Domain Admin or Enterprise Admin - those two are denied by this control as well"
+          - "- and that IS a member of the local Administrators group on the target."
+
+    - name: "PRELIM | Control Connection Scope | Set WN10-UR-000070 warning count"
+      when:
+        - discovered_control_account_is_local | bool
+        - discovered_domain_joined | bool
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-UR-000070'
 
 ### DETECT IF SYSTEM IS VDI OR AVD ###
 - name: "PRELIM | Determine if system is a Virtual Machine (VDI)"
-  tags:
-    - always
+  tags: always
   ansible.windows.win_shell: (Get-WmiObject Win32_ComputerSystem).Model
   changed_when: false
   failed_when: false
+  check_mode: false
   register: discovered_vm_check
 
 - name: "PRELIM | Determine if system is using FSLogix (Roaming Profile Storage)"
-  tags:
-    - always
+  tags: always
   ansible.windows.win_shell: Get-Service FSLogixApps -ErrorAction SilentlyContinue
   changed_when: false
   failed_when: false
   ignore_errors: true
+  check_mode: false
   register: discovered_fslogix_check
 
 - name: "PRELIM | Determine if OS disk is Ephemeral (No Data at Rest)"
-  tags:
-    - always
+  tags: always
   ansible.windows.win_shell: Get-PhysicalDisk | Select-Object MediaType, OperationalStatus | Format-List
   changed_when: false
   failed_when: false
   ignore_errors: true
+  check_mode: false
   register: discovered_disk_check
 
 - name: "PRELIM | Determine if system is Azure Virtual Desktop (AVD)"
-  tags:
-    - always
+  tags: always
   ansible.windows.win_shell: Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\CloudDomainJoin\*"
   changed_when: false
   failed_when: false
   ignore_errors: true
+  check_mode: false
   register: discovered_avd_check
 
 - name: "PRELIM | Show VDI, AVD, FSLogix, and Disk Info"
-  tags:
-    - always
+  tags: always
   ansible.builtin.debug:
     msg:
       - "VM Model: {{ discovered_vm_check.stdout }}"
@@ -100,93 +216,84 @@
 ### SET FACT IF SYSTEM IS AVD WITH NO DATA AT REST ###
 - name: "PRELIM | Mark system as AVD with no data at rest"
   when: ("Azure" in discovered_vm_check.stdout) or ("CloudDomainJoin" in discovered_avd_check.stdout | default('')) or ("Running" in discovered_fslogix_check.stdout | default(''))
-  tags:
-    - always
+  tags: always
   ansible.builtin.set_fact:
     discovered_avd_no_data_at_rest: true
 
 ### SET FACT IF SYSTEM IS A NON-PERSISTENT VDI ###
+# Both of these tasks originally tested `discovered_vdi_persistence`, a register created nowhere in
+# this role. Guarded by default('') it read as an empty string rather than erroring, so the
+# non-persistent clause was always satisfied and the persistent fact could never be raised at all.
+#
+# The replacement must not be a loose heuristic either. Requiring only "the model is Virtual Machine
+# and some disk reports SSD" matched every Azure and on-prem Hyper-V guest, stateless or not, and
+# ten controls are gated on this fact - three of them CAT 1. Ordinary virtual machines were silently
+# skipping BitLocker and Credential Guard.
+#
+# Windows exposes no fact for "this desktop is refreshed on logoff", so detection now requires
+# positive evidence of a managed disposable desktop: an Azure Virtual Desktop cloud domain join, or
+# FSLogix profile redirection. Those are the mechanisms that actually make a desktop stateless.
+# Disk media type is not evidence of anything and is no longer consulted here.
+#
+# Where the estate knows better than the evidence does, set discovered_vdi_non_persistent in
+# inventory. This task only ever raises the fact, so an inventory value is never overwritten.
 - name: "PRELIM | Mark system as Non-Persistent VDI"
   when:
     - ("Virtual Machine" in discovered_vm_check.stdout)
-    - ("SSD" in discovered_disk_check.stdout | default(''))
-    - not ("Persistent" in discovered_vdi_persistence.stdout | default(''))
-  tags:
-    - always
+    - ("CloudDomainJoin" in discovered_avd_check.stdout | default('', true)) or
+      ("Running" in discovered_fslogix_check.stdout | default('', true))
+  tags: always
   ansible.builtin.set_fact:
     discovered_vdi_non_persistent: true
 
 ### SET FACT IF SYSTEM IS A PERSISTENT VDI ###
+# Must stay after the non-persistent task above, which this one reads.
 - name: "PRELIM | Mark system as Persistent VDI"
   when:
     - ("Virtual Machine" in discovered_vm_check.stdout)
-    - ("Persistent" in discovered_vdi_persistence.stdout | default(''))
-  tags:
-    - always
+    - not discovered_vdi_non_persistent | bool
+  tags: always
   ansible.builtin.set_fact:
     discovered_vdi_persistent: true
 
 ### DISPLAY MESSAGE IF SYSTEM IS AVD WITH NO DATA AT REST ###
 - name: "PRELIM | System is an AVD instance with NO data at rest - Certain Controls Will Be Skipped"
-  when: discovered_avd_no_data_at_rest
-  tags:
-    - always
+  when: discovered_avd_no_data_at_rest | bool
+  tags: always
   ansible.builtin.debug:
     msg: "This system is an AVD instance with NO DATA AT REST. Certain controls will not be applied."
 
 ### DISPLAY MESSAGE IF SYSTEM IS A NON-PERSISTENT VDI ###
+# The two conditions below were transposed: the non-persistent message fired on
+# discovered_vdi_persistent and vice versa, so an operator reading the output was told the
+# opposite of what the role had detected.
 - name: "PRELIM | System is a Non-Persistent VDI - Certain Controls Will Be Skipped"
-  when: discovered_vdi_persistent
-  tags:
-    - always
+  when: discovered_vdi_non_persistent | bool
+  tags: always
   ansible.builtin.debug:
     msg: "This system is a Non-Persistent VDI, meaning it is deleted or refreshed upon logoff. Certain controls will not be applied."
 
 ### DISPLAY MESSAGE IF SYSTEM IS A PERSISTENT VDI ###
 - name: "PRELIM | System is a Persistent VDI - All Relevant Controls Will Be Applied"
-  when: discovered_vdi_non_persistent
-  tags:
-    - always
+  when: discovered_vdi_persistent | bool
+  tags: always
   ansible.builtin.debug:
     msg: "This system is a Persistent VDI, meaning data is retained across logins. All applicable controls will be enforced."
 
 ### DISPLAY MESSAGE IF SYSTEM IS NOT A VDI/AVD ###
 - name: "PRELIM | System is Not a VDI or AVD - All Controls Will Apply"
   when:
-    - not discovered_avd_no_data_at_rest
-    - not discovered_vdi_non_persistent
-    - not discovered_vdi_persistent
-  tags:
-    - always
+    - not discovered_avd_no_data_at_rest | bool
+    - not discovered_vdi_non_persistent | bool
+    - not discovered_vdi_persistent | bool
+  tags: always
   ansible.builtin.debug:
     msg: "This system is not a VDI or AVD and will have all applicable security controls enforced."
 
-# hvm is for amazon ami's, Hyper-V we have found for azure, kvm is used for ('QEMU', 'Amazon EC2', 'DigitalOcean', 'Google', 'Scaleway', 'Nutanix', 'KVM', 'KVM Server', 'Bochs', 'AHV')
-# This list is not complete and will be updated as we try on more cloud based services.
-# As of now testing is working in azure using Hyper-V. We are currently using this for reference:
-# https://github.com/ansible/ansible/blob/905131fc76a07cf89dbc8d33e7a4910da3f10a16/lib/ansible/module_utils/facts/virtual/linux.py#L205
-- name: "PRELIM | Set Fact If Cloud Based System."
-  when:
-    - not ansible_virtualization_type == 'VMware' or
-      (ansible_system_vendor == 'Microsoft Corporation' and
-      ansible_virtualization_type in ['Hyper-V', 'hvm', 'kvm'])
-  tags:
-    - always
-  ansible.builtin.set_fact:
-    discovered_cloud_based_system: true
-
 - name: "PRELIM | Get Admin Users and Groups"
-  tags:
-    - always
+  tags: always
   ansible.windows.win_shell: Get-LocalGroupMember -Name 'Administrators'
   changed_when: false
   failed_when: false
+  check_mode: false
   register: discovered_admin_users_groups
-
-- name: "PRELIM | Get List of All Administrative Accounts"
-  tags:
-    - always
-  ansible.windows.win_shell: Get-LocalGroupMember -Name 'Administrators' | Select-Object -ExpandProperty Name | ConvertTo-Json -Compress
-  changed_when: false
-  failed_when: false
-  register: discovered_admin_accounts

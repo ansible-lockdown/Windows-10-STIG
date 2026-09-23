@@ -1,0 +1,1528 @@
+---
+
+- name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version."
+  when:
+    - wn10_00_000005 | bool
+    - discovered_domain_joined | bool
+    - ansible_facts['architecture'] != "64-bit"
+  tags:
+    - WN10-00-000005
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220697r991589_rule
+    - V-220697
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version. | Warning."
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You need to be on a 64-bit operating system when joined to a domain."
+          - "This is a requirement for STIG compliance"
+
+    - name: "MEDIUM | WN10-00-000005 | AUDIT | Domain-joined systems must use Windows 10 Enterprise Edition 64-bit version. | Warn Count."
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000005'
+
+- name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use."
+  when:
+    - wn10_00_000010 | bool
+    - discovered_domain_joined | bool
+    - not discovered_vdi_non_persistent | bool
+  tags:
+    - WN10-00-000010
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220698r991589_rule
+    - V-220698
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    # wmic is deprecated on Windows 10 and is a Feature-on-Demand that can be absent, in which case
+    # the register carries no stdout/stderr keys and every downstream conditional raises
+    # "dict object has no attribute stderr_lines". This uses CIM instead.
+    - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Get TPM status."
+      ansible.windows.win_shell: |
+        $tpm = Get-CimInstance -Namespace root\cimv2\security\microsofttpm -ClassName Win32_Tpm -ErrorAction SilentlyContinue
+        if ($null -eq $tpm) { "No Instance" }
+        else { "IsActivated=$($tpm.IsActivated_InitialValue) IsEnabled=$($tpm.IsEnabled_InitialValue) IsOwned=$($tpm.IsOwned_InitialValue) SpecVersion=$($tpm.SpecVersion)" }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000010_tpm_status
+
+    - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Running Instances Check."
+      when: "'No Instance' in discovered_00_000010_tpm_status.stdout | default('', true)"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Please confirm TPM status is Ready for use, there are no instances currently running."
+
+    # Warns when the TPM is NOT compliant. The previous conditions tested for the values being
+    # present, so the warning fired on a healthy TPM and stayed silent on a broken one. They also
+    # read stderr_lines, where wmic writes nothing but its "No Instance(s)" diagnostic.
+    - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Full TPM Check."
+      when:
+        - "'No Instance' not in discovered_00_000010_tpm_status.stdout | default('', true)"
+        - "'IsActivated=True' not in discovered_00_000010_tpm_status.stdout | default('', true) or
+           'IsEnabled=True' not in discovered_00_000010_tpm_status.stdout | default('', true) or
+           'IsOwned=True' not in discovered_00_000010_tpm_status.stdout | default('', true)"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Please confirm TPM status is Ready for use. Current settings do not meet STIG requirements."
+          - "{{ discovered_00_000010_tpm_status.stdout | default('', true) | trim }}"
+
+    - name: "MEDIUM | WN10-00-000010 | AUDIT | Windows 10 domain-joined systems must have a Trusted Platform Module (TPM) enabled and ready for use. | Warn Count."
+      when: "'No Instance' in discovered_00_000010_tpm_status.stdout | default('', true) or
+             'IsActivated=True' not in discovered_00_000010_tpm_status.stdout | default('', true) or
+             'IsEnabled=True' not in discovered_00_000010_tpm_status.stdout | default('', true) or
+             'IsOwned=True' not in discovered_00_000010_tpm_status.stdout | default('', true)"
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000010'
+
+- name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS."
+  when:
+    - wn10_00_000015 | bool
+    - not discovered_vdi_non_persistent | bool
+  tags:
+    - WN10-00-000015
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220699r991589_rule
+    - V-220699
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS | Check For UEFI Status."
+      ansible.windows.win_shell: $env:firmware_type
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000015_system_firmware_check
+
+    - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS | Legacy BIOS Error."
+      when: "'UEFI' not in discovered_00_000015_system_firmware_check.stdout_lines | string"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Your system firmware is configured to run in Legacy BIOS."
+          - "UEFI is the requirement for STIG to be in compliance."
+
+    - name: "MEDIUM | WN10-00-000015 | AUDIT | Windows 10 systems must have Unified Extensible Firmware Interface (UEFI) firmware and be configured to run in UEFI mode, not Legacy BIOS | Warn Count."
+      when: "'UEFI' not in discovered_00_000015_system_firmware_check.stdout_lines | string"
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000015'
+
+- name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: Continuously, where ESS is used; 30 days, for any additional internal network scans not covered by ESS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP)"
+  when: wn10_00_000025 | bool
+  tags:
+    - WN10-00-000025
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000191-GPOS-00080
+    - SV-220701r1000076_rule
+    - V-220701
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: Continuously, where ESS is used; 30 days, for any additional internal network scans not covered by ESS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP) | Check if an ESS software is specified"
+      when: win10stig_ess_software.name | length == 0
+      ansible.builtin.debug:
+        msg: "No ESS software specified in defaults/main/main.yml. Skipping scan. Warning Message To Follow!"
+
+    - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: Continuously, where ESS is used; 30 days, for any additional internal network scans not covered by ESS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP) | Check to see if ESS Software is installed."
+      when: win10stig_ess_software.name | length > 0
+      ansible.windows.win_shell: |
+        $installedApps = Get-WmiObject -Class Win32_Product | Select-Object -ExpandProperty Name
+        if ($installedApps -contains "{{ win10stig_ess_software.name }}") {
+            Write-Output "Installed: {{ win10stig_ess_software.name }}"
+        } else {
+            Write-Output "ESS Not Found"
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000025_ess_check
+
+    - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: Continuously, where ESS is used; 30 days, for any additional internal network scans not covered by ESS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP) | Set Fact For ESS Software is installed."
+      when: win10stig_ess_software.name | length > 0
+      ansible.builtin.set_fact:
+        discovered_00_000025_ess_installed: "{{ 'ESS Not Found' not in discovered_00_000025_ess_check.stdout }}"
+
+    - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: Continuously, where ESS is used; 30 days, for any additional internal network scans not covered by ESS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP) | Check running services for ESS Software"
+      when: discovered_00_000025_ess_installed | default(false)
+      ansible.windows.win_shell: |
+        $runningServices = Get-Service | Where-Object { $_.Status -eq 'Running' } | Select-Object -ExpandProperty Name
+        $foundServices = @()
+        {% for service in win10stig_ess_software.services %}
+        if ($runningServices -contains "{{ service }}") {
+            $foundServices += "{{ service }}"
+        }
+        {% endfor %}
+        if ($foundServices.Count -gt 0) {
+            Write-Output "Running: $($foundServices -join ', ')"
+        } else {
+            Write-Output "ESS Service Not Running"
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000025_ess_service_check
+
+    - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: Continuously, where ESS is used; 30 days, for any additional internal network scans not covered by ESS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP) | Set fact if services for ESS are running"
+      when: discovered_00_000025_ess_installed | default(false)
+      ansible.builtin.set_fact:
+        discovered_00_000025_ess_running: "{{ 'ESS Service Not Running' not in discovered_00_000025_ess_service_check.stdout }}"
+
+    - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: Continuously, where ESS is used; 30 days, for any additional internal network scans not covered by ESS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP) | Warning."
+      when: win10stig_ess_software.name | length == 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Please install DoD-approved ESS software and ensure it is operating continuously"
+          - "Ask site ISSM for documentation fo the ESS software installation and configuration"
+          - "Example of documentation can be a copy of the site's CCB approved Software Baseline with"
+          - "version of software noted or a memo from the ISSM stating current ESS software and version."
+
+    - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: Continuously, where ESS is used; 30 days, for any additional internal network scans not covered by ESS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP) | Warning For ESS Defined But Missing."
+      when: win10stig_ess_software.name | length > 0 and not discovered_00_000025_ess_installed | default(false)
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! ESS Software defined in win10stig_ess_software is not installed! Please read"
+          - "the notes for the variable and make the necessary change to the variable to properly check for compliance."
+          - "FINDING: {{ win10stig_ess_software.name }} is NOT installed! Install DoD-approved ESS software."
+
+    - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: Continuously, where ESS is used; 30 days, for any additional internal network scans not covered by ESS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP) | Warning For ESS Installed But Service Not Running."
+      when: win10stig_ess_software.name | length > 0 and discovered_00_000025_ess_installed | default(false) and not discovered_00_000025_ess_running | default(false)
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! ESS Software defined in win10stig_ess_software is installed! Please read"
+          - "the notes for the variable and make the necessary change to the variable to properly check for compliance."
+          - "If all information is correct then you will need to start the service."
+          - "FINDING: {{ win10stig_ess_software.name }} is installed but its services are NOT running!"
+
+    - name: "MEDIUM | WN10-00-000025 | AUDIT | Windows 10 must employ automated mechanisms to determine the state of system components with regard to flaw remediation using the following frequency: Continuously, where ESS is used; 30 days, for any additional internal network scans not covered by ESS; and annually, for external scans by Computer Network Defense Service Provider (CNDSP) | Warn Count."
+      when: (win10stig_ess_software.name | length == 0) or (win10stig_ess_software.name | length > 0 and not discovered_00_000025_ess_installed | default(false)) or (win10stig_ess_software.name | length > 0 and discovered_00_000025_ess_installed | default(false) and not discovered_00_000025_ess_running | default(false))
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000025'
+
+- name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception policy to allow the execution of authorized software programs."
+  when: wn10_00_000035 | bool
+  tags:
+    - WN10-00-000035
+    - CAT2
+    - CCI-001774
+    - SRG-OS-000370-GPOS-00155
+    - SV-220705r958808_rule
+    - V-220705
+    - NIST800-53R4_CM-7_5_b
+  block:
+    - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception policy to allow the execution of authorized software programs. | Check if AppLocker is enabled"
+      ansible.windows.win_shell: |
+        $applockerStatus = Get-AppLockerPolicy -Effective -Xml
+        if ($applockerStatus) {
+            Write-Output "AppLocker is Enabled"
+        } else {
+            Write-Output "AppLocker is NOT Enabled"
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000035_applocker_check
+
+    - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception policy to allow the execution of authorized software programs. | Applocker XML Out."
+      when:
+        - "'AppLocker is Enabled' in discovered_00_000035_applocker_check.stdout"
+        - win10stig_applocker_output == 1
+      ansible.windows.win_shell: Get-AppLockerPolicy -Effective -XML > {{ win10stig_applocker_xml_output }}
+      changed_when: false
+      failed_when: false
+
+    - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception policy to allow the execution of authorized software programs. | Check XML File Warning."
+      when:
+        - "'AppLocker is Enabled' in discovered_00_000035_applocker_check.stdout"
+        - win10stig_applocker_output == 1
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Please review the configuration of Applocker using the XML file located in directory"
+          - "{{ win10stig_applocker_xml_output }} to confirm you have a deny-all policy in place that utilizes"
+          - "a whitelist for applications. There is an AppLocker white paper from NSA that can be used as a guide"
+          - "https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-application-control/applocker/applocker-policies-deployment-guide"
+
+    - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception policy to allow the execution of authorized software programs. | Check For Applocker To Stdout."
+      when:
+        - "'AppLocker is Enabled' in discovered_00_000035_applocker_check.stdout"
+        - win10stig_applocker_output != 1
+      ansible.windows.win_shell: Get-AppLockerPolicy -Effective -XML
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000035_applocker_output
+
+    - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception policy to allow the execution of authorized software programs. | Check Stdout Print Out."
+      when:
+        - "'AppLocker is Enabled' in discovered_00_000035_applocker_check.stdout"
+        - win10stig_applocker_output != 1
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Please review the configuration of Applocker to confirm you have a deny-all policy in place that utilizes"
+          - "a whitelist for applications. There is an AppLocker white paper from NSA that can be used as a guide"
+          - "https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-application-control/applocker/applocker-policies-deployment-guide"
+          - "{{ discovered_00_000035_applocker_output.stdout_lines }}"
+
+    - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception policy to allow the execution of authorized software programs. | Warning Message When No Applocker."
+      when: "'AppLocker is Enabled' not in discovered_00_000035_applocker_check.stdout"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Applocker is not in use. Please confirm you have a deny-all policy in place that utilizes a whitelist for applications."
+          - "This can be done through a utility like AppLocker to limit applications only to authorized applications"
+          - "There is an AppLocker white paper from NSA that can be used as a guide"
+          - "https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-application-control/applocker/applocker-policies-deployment-guide"
+
+    - name: "MEDIUM | WN10-00-000035 | AUDIT | The operating system must employ a deny-all, permit-by-exception policy to allow the execution of authorized software programs. | Warn Count."
+      when: ('AppLocker is Enabled' not in discovered_00_000035_applocker_check.stdout) or ('AppLocker is Enabled' in discovered_00_000035_applocker_check.stdout and win10stig_applocker_output == 1) or ('AppLocker is Enabled' in discovered_00_000035_applocker_check.stdout and win10stig_applocker_output != 1)
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000035'
+
+- name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system."
+  when: wn10_00_000055 | bool
+  tags:
+    - WN10-00-000055
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220709r991589_rule
+    - V-220709
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system. | Run Check"
+      ansible.windows.win_shell: |
+        $bcdEntries = bcdedit /enum firmware | Select-String "description"
+        $windowsEntries = $bcdEntries | Where-Object { $_ -match "{{ win10stig_os_keyword }}" }
+
+        $otherOSEntries = @()
+        {% for os_name in win10stig_non_windows_os_keywords %}
+        $matches = $bcdEntries | Where-Object { $_ -match "{{ os_name }}" }
+        if ($matches) {
+            $otherOSEntries += $matches
+        }
+        {% endfor %}
+
+        if ($windowsEntries.Count -eq 1 -and $otherOSEntries.Count -eq 0) {
+            Write-Output "Windows is the only OS installed."
+        } else {
+            Write-Output "FINDING: Non-compliant OS configuration detected!"
+            if ($windowsEntries.Count -gt 1) {
+                Write-Output "Multiple Windows installations detected!"
+                Write-Output $windowsEntries
+            }
+            if ($otherOSEntries.Count -gt 0) {
+                Write-Output "Other OS detected!"
+                Write-Output $otherOSEntries
+            }
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000055_os_check
+
+    - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system. | Report Finding - Multiple Windows Installations Detected"
+      when: "'Multiple Windows installations detected!' in discovered_00_000055_os_check.stdout"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Multiple Windows installations detected! Only one should exist."
+          - "Results:"
+          - "{{ discovered_00_000055_os_check.stdout_lines }}"
+
+    - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system. | Report Finding - Other OS Detected"
+      when: "'Other OS detected!' in discovered_00_000055_os_check.stdout"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Non-Windows OS detected in boot configuration! Ensure only Windows is installed."
+          - "Results:"
+          - "{{ discovered_00_000055_os_check.stdout_lines }}"
+
+    - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system. | Report Finding - Non-Compliant OS Configuration"
+      when: "'FINDING: Non-compliant OS configuration detected!' in discovered_00_000055_os_check.stdout"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! System has multiple OS configurations, review boot entries!"
+          - "Results:"
+          - "{{ discovered_00_000055_os_check.stdout_lines }}"
+
+    - name: "MEDIUM | WN10-00-000055 | AUDIT | Alternate operating systems must not be permitted on the same system. | Warn Count."
+      when: >
+        ('Multiple Windows installations detected!' in discovered_00_000055_os_check.stdout) or ('Other OS detected!' in discovered_00_000055_os_check.stdout) or ('FINDING: Non-compliant OS configuration detected!' in discovered_00_000055_os_check.stdout)
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000055'
+
+- name: "MEDIUM | WN10-00-000060 | PATCH | Non system-created file shares on a system must limit access to groups that require it."
+  when: wn10_00_000060 | bool
+  tags:
+    - WN10-00-000060
+    - CAT2
+    - CCI-001090
+    - SRG-OS-000138-GPOS-00069
+    - SV-220710r1137695_rule
+    - V-220710
+    - NIST800-53_SC-4
+    - NIST800-53A_SC-4.1
+    - NIST800-53R4_SC-4
+  block:
+    - name: "MEDIUM | WN10-00-000060 | AUDIT | Non system-created file shares on a system must limit access to groups that require it. | Get Share Names"
+      ansible.windows.win_shell: Get-SmbShare | Where-Object { ($_.Name -notlike "ADMIN$") -and ($_.Name -notlike 'C$') -and ($_.Name -notlike 'IPC$') } | Select-Object -Property Name | format-table -hidetableheaders
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000060_share_names
+
+    - name: "MEDIUM | WN10-00-000060 | AUDIT | Non system-created file shares on a system must limit access to groups that require it. | Alert Share Names"
+      when: discovered_00_000060_share_names.stdout_lines | select() | length > 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have shares that non-system created. Please manually review those"
+          - "shares listed below to make sure appropriate permissions are applied"
+          - "{{ discovered_00_000060_share_names.stdout_lines | select() | list }}"
+
+    - name: "MEDIUM | WN10-00-000060 | AUDIT | Non system-created file shares on a system must limit access to groups that require it. | Warn Count."
+      when: discovered_00_000060_share_names.stdout_lines | select() | length > 0
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000060'
+
+- name: "MEDIUM | WN10-00-000075 | AUDIT | Only accounts responsible for the backup operations must be members of the Backup Operators group."
+  when: wn10_00_000075 | bool
+  tags:
+    - WN10-00-000075
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220713r991589_rule
+    - V-220713
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-00-000075 | AUDIT | Only accounts responsible for the backup operations must be members of the Backup Operators group. | Get Backup Operator users"
+      ansible.windows.win_shell: get-localgroupmember -Name "Backup Operators" | Select-Object -Property Name | Format-Table -hidetableheaders
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000075_bo_members
+
+    - name: "MEDIUM | WN10-00-000075 | AUDIT | Only accounts responsible for the backup operations must be members of the Backup Operators group. | Display Backup Operator users"
+      when: discovered_00_000075_bo_members.stdout_lines | select() | list | length > 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Below are the users in the Backup Operators group. Please review accounts are appropriate."
+          - "If the group contains no accounts, this is not a finding."
+          - "If the group contains any accounts, the accounts must be specifically for backup functions."
+          - "If the group contains any standard user accounts used for performing normal user tasks, this is a finding."
+          - "{{ discovered_00_000075_bo_members.stdout_lines | select() | list }}"
+
+    - name: "MEDIUM | WN10-00-000075 | AUDIT | Only accounts responsible for the backup operations must be members of the Backup Operators group. | Warn Count."
+      when: discovered_00_000075_bo_members.stdout_lines | select() | list | length > 0
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000075'
+
+- name: "MEDIUM | WN10-00-000080 | AUDIT | Only authorized user accounts must be allowed to create or run virtual machines on Windows 10 systems."
+  when: wn10_00_000080 | bool
+  tags:
+    - WN10-00-000080
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220714r958478_rule
+    - V-220714
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  block:
+    - name: "MEDIUM | WN10-00-000080 | AUDIT | Only authorized user accounts must be allowed to create or run virtual machines on Windows 10 systems. | Get Hyper-V group users"
+      ansible.windows.win_shell: get-localgroupmember -Name "Hyper-V Administrators" | Select-Object -Property Name | Format-Table -hidetableheaders
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000080_hyperv_members
+
+    - name: "MEDIUM | WN10-00-000080 | AUDIT | Only authorized user accounts must be allowed to create or run virtual machines on Windows 10 systems. | Display Hyper-V group users"
+      when: discovered_00_000080_hyperv_members.stdout_lines | select() | list | length > 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Below are the users in the Hyper-V Administrators group, please remove any unnecessary accounts"
+          - "{{ discovered_00_000080_hyperv_members.stdout_lines | select() | list }}"
+
+    - name: "MEDIUM | WN10-00-000080 | AUDIT | Only authorized user accounts must be allowed to create or run virtual machines on Windows 10 systems. | Warn Count."
+      when: discovered_00_000080_hyperv_members.stdout_lines | select() | list | length > 0
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000080'
+
+- name: "MEDIUM | WN10-00-000090 | PATCH | Accounts must be configured to require password expiration."
+  when: wn10_00_000090 | bool
+  tags:
+    - WN10-00-000090
+    - CAT2
+    - CCI-000199
+    - CCI-004066
+    - SRG-OS-000076-GPOS-00044
+    - SV-220716r1051019_rule
+    - V-220716
+    - NIST800-53_IA-5_1_d
+    - NIST800-53A_IA-5_1.1_v
+    - NIST800-53R4_IA-5_1_d
+  block:
+    - name: "MEDIUM | WN10-00-000090 | PATCH | Accounts must be configured to require password expiration. | Get list of PW Never Expire users"
+      ansible.windows.win_shell: get-localuser | select Name, Enabled, PasswordExpires | Where-Object -Property Enabled -eq True | Where { $_.PasswordExpires -eq $null } | Select-Object -Property Name | Format-Table -hidetableheaders
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000090_neverexpire_passwords
+
+    - name: "MEDIUM | WN10-00-000090 | PATCH | Accounts must be configured to require password expiration. | Set PW to Expire for PW Never Expire users"
+      when:
+        - discovered_00_000090_neverexpire_passwords.stdout_lines | select() | list | length > 0
+        - win10stig_password_expires
+      ansible.windows.win_user:
+        name: "{{ item }}"
+        password_never_expires: false
+      with_items:
+        - "{{ discovered_00_000090_neverexpire_passwords.stdout_lines | select() | list }}"
+
+    - name: "MEDIUM | WN10-00-000090 | AUDIT | Accounts must be configured to require password expiration. | Display list of PW Never Expire users"
+      when:
+        - discovered_00_000090_neverexpire_passwords.stdout_lines | select() | list | length > 0
+        - not win10stig_password_expires
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have some accounts that are set to never expire. Please review the below accounts and set an expiration"
+          - "{{ discovered_00_000090_neverexpire_passwords.stdout_lines | select() | list }}"
+
+    - name: "MEDIUM | WN10-00-000090 | AUDIT | Accounts must be configured to require password expiration. | Warn Count."
+      when:
+        - discovered_00_000090_neverexpire_passwords.stdout_lines | select() | list | length > 0
+        - not win10stig_password_expires
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000090'
+
+- name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements."
+  when: wn10_00_000095 | bool
+  tags:
+    - WN10-00-000095
+    - CAT2
+    - CCI-002165
+    - SRG-OS-000312-GPOS-00122
+    - SV-220717r1081048_rule
+    - V-220717
+    - NIST800-53R4_AC-3_4
+  block:
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Retrieve ACL entries for C: using icacls"
+      ansible.windows.win_shell: 'icacls C:\'
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000095_c_icacls_output
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Parse icacls output lines"
+      ansible.builtin.set_fact:
+        discovered_00_000095_c_icacls_lines: >-
+          {{
+            discovered_00_000095_c_icacls_output.stdout.splitlines() |
+            select("search", "^(?!Successfully processed)") |
+            select("search", "^(?!^$)") | list
+          }}
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Remove leading drive letter from icacls output lines"
+      ansible.builtin.set_fact:
+        discovered_00_000095_c_normalized_lines: "{{ discovered_00_000095_c_icacls_lines | map('regex_replace', '^[cC]:\\\\\\s*', '') | list }}"
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Remove all whitespace from icacls output lines"
+      ansible.builtin.set_fact:
+        discovered_00_000095_c_normalized_lines: "{{ discovered_00_000095_c_normalized_lines | map('regex_replace', '\\s+', '') | list }}"
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Normalize expected ACL entries from vars"
+      ansible.builtin.set_fact:
+        discovered_00_000095_c_normalized_expected_acl: "{{ discovered_00_000095_c_normalized_expected_acl | default([]) + [ (item.IdentityReference | regex_replace('\\s+', '')) ~ ':' ~ (item.Permissions | regex_replace('\\s+', '')) ] }}"
+      loop: "{{ win10stig_expected_c_acl }}"
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Retrieve ACL entries for C:\\Program Files using icacls"
+      ansible.windows.win_shell: 'icacls "C:\Program Files"'
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000095_programfiles_icacls_output
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Parse icacls output lines for Program Files"
+      ansible.builtin.set_fact:
+        discovered_00_000095_programfiles_icacls_lines: >-
+          {{
+            discovered_00_000095_programfiles_icacls_output.stdout.splitlines() |
+            select("search", "^(?!Successfully processed)") |
+            select("search", "^(?!^$)") | list
+          }}
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Remove leading 'C:\\Program Files' from Program Files icacls output lines"
+      ansible.builtin.set_fact:
+        discovered_00_000095_programfiles_normalized_lines: "{{ discovered_00_000095_programfiles_icacls_lines | map('regex_replace', '^[cC]:\\\\Program Files\\\\?\\s*', '') | list }}"
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Remove all whitespace from Program Files icacls output lines"
+      ansible.builtin.set_fact:
+        discovered_00_000095_programfiles_normalized_lines: "{{ discovered_00_000095_programfiles_normalized_lines | map('regex_replace', '\\s+', '') | list }}"
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Normalize expected ACL entries for Program Files from vars"
+      ansible.builtin.set_fact:
+        discovered_00_000095_programfiles_normalized_expected_acl: "{{ discovered_00_000095_programfiles_normalized_expected_acl | default([]) + [ (item.IdentityReference | regex_replace('\\s+', '')) ~ ':' ~ (item.Permissions | regex_replace('\\s+', '')) ] }}"
+      loop: "{{ win10stig_expected_programfiles_acl }}"
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Retrieve ACL entries for C:\\Windows using icacls"
+      ansible.windows.win_shell: 'icacls "C:\Windows"'
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000095_windows_icacls_output
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Parse icacls output lines for Windows"
+      ansible.builtin.set_fact:
+        discovered_00_000095_windows_icacls_lines: >-
+          {{
+            discovered_00_000095_windows_icacls_output.stdout.splitlines() |
+            select("search", "^(?!Successfully processed)") |
+            select("search", "^(?!^$)") | list
+          }}
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Remove leading 'C:\\Windows' from Windows icacls output lines"
+      ansible.builtin.set_fact:
+        discovered_00_000095_windows_normalized_lines: "{{ discovered_00_000095_windows_icacls_lines | map('regex_replace', '^[cC]:\\\\Windows\\\\?\\s*', '') | list }}"
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Remove all whitespace from Windows icacls output lines"
+      ansible.builtin.set_fact:
+        discovered_00_000095_windows_normalized_lines: "{{ discovered_00_000095_windows_normalized_lines | map('regex_replace', '\\s+', '') | list }}"
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Normalize expected ACL entries for Windows from vars"
+      ansible.builtin.set_fact:
+        discovered_00_000095_windows_normalized_expected_acl: "{{ discovered_00_000095_windows_normalized_expected_acl | default([]) + [ (item.IdentityReference | regex_replace('\\s+', '')) ~ ':' ~ (item.Permissions | regex_replace('\\s+', '')) ] }}"
+      loop: "{{ win10stig_expected_windows_acl }}"
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Display ACL Compliance Results for C:, Program Files, and Windows"
+      ansible.builtin.debug:
+        msg:
+          - "═══════════════════════════════════════════════════════════════════"
+          - "            Windows ACL STIG Compliance Check Summary               "
+          - "═══════════════════════════════════════════════════════════════════"
+          - "C:"
+          - "Expected ACL Entries:"
+          - "{{ discovered_00_000095_c_normalized_expected_acl }}"
+          - "Actual ACL Entries:"
+          - "{{ discovered_00_000095_c_normalized_lines }}"
+          - "C: Mismatches:"
+          - "{{ (discovered_00_000095_c_normalized_expected_acl | difference(discovered_00_000095_c_normalized_lines)) if (discovered_00_000095_c_normalized_expected_acl | difference(discovered_00_000095_c_normalized_lines)) | length > 0 else 'None' }}"
+          - ""
+          - "───────────────────────────────────────────────────────────────────"
+          - "C:\\Program Files"
+          - "Expected ACL Entries:"
+          - "{{ discovered_00_000095_programfiles_normalized_expected_acl }}"
+          - "Actual ACL Entries:"
+          - "{{ discovered_00_000095_programfiles_normalized_lines }}"
+          - "C:\\Program Files Mismatches:"
+          - "{{ (discovered_00_000095_programfiles_normalized_expected_acl | difference(discovered_00_000095_programfiles_normalized_lines)) if (discovered_00_000095_programfiles_normalized_expected_acl | difference(discovered_00_000095_programfiles_normalized_lines)) | length > 0 else 'None' }}"
+          - ""
+          - "───────────────────────────────────────────────────────────────────"
+          - "C:\\Windows"
+          - "Expected ACL Entries:"
+          - "{{ discovered_00_000095_windows_normalized_expected_acl }}"
+          - "Actual ACL Entries:"
+          - "{{ discovered_00_000095_windows_normalized_lines }}"
+          - "C:\\Windows Mismatches:"
+          - "{{ (discovered_00_000095_windows_normalized_expected_acl | difference(discovered_00_000095_windows_normalized_lines)) if (discovered_00_000095_windows_normalized_expected_acl | difference(discovered_00_000095_windows_normalized_lines)) | length > 0 else 'None' }}"
+          - ""
+          - "───────────────────────────────────────────────────────────────────"
+
+    - name: "MEDIUM | WN10-00-000095 | AUDIT | Permissions for system files and directories must conform to minimum requirements. | Warn Count."
+      when: >
+        ((discovered_00_000095_windows_normalized_expected_acl | difference(discovered_00_000095_windows_normalized_lines)) | length > 0) or
+        ((discovered_00_000095_programfiles_normalized_expected_acl | difference(discovered_00_000095_programfiles_normalized_lines)) | length > 0) or
+        ((discovered_00_000095_c_normalized_expected_acl | difference(discovered_00_000095_c_normalized_lines)) | length > 0)
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000095'
+
+- name: "MEDIUM | WN10-00-000105 | PATCH | Simple Network Management Protocol (SNMP) must not be installed on the system."
+  when: wn10_00_000105 | bool
+  tags:
+    - WN10-00-000105
+    - CAT2
+    - CCI-000382
+    - SRG-OS-000096-GPOS-00050
+    - SV-220719r958480_rule
+    - V-220719
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_iii
+    - NIST800-53R4_CM-7_b
+  block:
+    - name: "MEDIUM | WN10-00-000105 | AUDIT | Simple Network Management Protocol (SNMP) must not be installed on the system. | Check if SNMP is installed via Windows Capability"
+      ansible.windows.win_shell: |
+        $feature = Get-WindowsCapability -Online | Where-Object Name -like "SNMP.Client*"
+        if ($feature.State -eq "Installed") {
+            Write-Output "SNMP Service is installed"
+            exit 1
+        } else {
+            Write-Output "SNMP Service is NOT installed"
+            exit 0
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000105_snmp_check
+
+    - name: "MEDIUM | WN10-00-000105 | PATCH | Simple Network Management Protocol (SNMP) must not be installed on the system. | Remove SNMP Installation"
+      when: "'SNMP Service is installed' in discovered_00_000105_snmp_check.stdout"
+      ansible.windows.win_shell: Remove-WindowsCapability -Online -Name "SNMP.Client~~~~0.0.1.0"
+      notify: Change_Requires_Reboot
+
+    - name: "MEDIUM | WN10-00-000105 | PATCH | Simple Network Management Protocol (SNMP) must not be installed on the system. | Ensure SNMP service is stopped and disabled"
+      ansible.windows.win_service:
+        name: SNMP
+        state: stopped
+        start_mode: disabled
+      failed_when: false
+
+    - name: "MEDIUM | WN10-00-000105 | AUDIT | Simple Network Management Protocol (SNMP) must not be installed on the system. | Check if SNMP binary exists in System32"
+      ansible.windows.win_shell: |
+        if (Test-Path "C:\Windows\System32\snmp.exe") {
+            Write-Output "SNMP binary found (Finding)"
+            exit 1
+        } else {
+            Write-Output "SNMP binary NOT found"
+            exit 0
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000105_snmp_binary_check
+
+    - name: "MEDIUM | WN10-00-000105 | PATCH | Simple Network Management Protocol (SNMP) must not be installed on the system. | Take ownership of SNMP file and grant permissions"
+      when: "'SNMP binary found (Finding)' in discovered_00_000105_snmp_binary_check.stdout"
+      ansible.windows.win_shell: |
+        takeown /f "C:\Windows\System32\snmp.exe" /a
+        icacls "C:\Windows\System32\snmp.exe" /grant Administrators:F /c /l /q
+      changed_when: true
+      failed_when: false
+      register: discovered_00_000105_snmp_permission_fix
+
+    - name: "MEDIUM | WN10-00-000105 | PATCH | Simple Network Management Protocol (SNMP) must not be installed on the system. | Remove SNMP binary if found"
+      when:
+        - "'SNMP binary found (Finding)' in discovered_00_000105_snmp_binary_check.stdout"
+        - "'SUCCESS:' in discovered_00_000105_snmp_permission_fix.stdout"
+      ansible.windows.win_file:
+        path: "C:\\Windows\\System32\\snmp.exe"
+        state: absent
+
+- name: "MEDIUM | WN10-00-000110 | PATCH | Simple TCP/IP Services must not be installed on the system."
+  when:
+    - wn10_00_000110 | bool
+    - "'SimpleTCP' in discovered_feature_names"
+  tags:
+    - WN10-00-000110
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220720r958478_rule
+    - V-220720
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_optional_feature:
+    name: SimpleTCP
+    state: absent
+
+- name: "MEDIUM | WN10-00-000115 | PATCH | The Telnet Client must not be installed on the system."
+  when:
+    - wn10_00_000115 | bool
+    - "'TelnetClient' in discovered_feature_names"
+  tags:
+    - WN10-00-000115
+    - CAT2
+    - CCI-000382
+    - SRG-OS-000096-GPOS-00050
+    - SV-220721r958480_rule
+    - V-220721
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_optional_feature:
+    name: TelnetClient
+    state: absent
+
+- name: "MEDIUM | WN10-00-000120 | PATCH | The TFTP Client must not be installed on the system."
+  when:
+    - wn10_00_000120 | bool
+    - "'TFTP' in discovered_feature_names"
+  tags:
+    - WN10-00-000120
+    - CAT2
+    - CCI-000382
+    - SRG-OS-000096-GPOS-00050
+    - SV-220722r958480_rule
+    - V-220722
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_optional_feature:
+    name: TFTP
+    state: absent
+
+- name: "MEDIUM | WN10-00-000130 | PATCH | Software certificate installation files must be removed from Windows 10."
+  when:
+    - wn10_00_000130 | bool
+    - win10stig_lengthy_search | bool
+  tags:
+    - WN10-00-000130
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220723r991589_rule
+    - V-220723
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Get Drive Letters"
+      ansible.windows.win_shell: Get-Volume | Where-Object { $_.DriveType -eq 'Fixed' -and $_.DriveLetter } | Select-Object -ExpandProperty DriveLetter
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000130_drive_letters
+
+    - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Get Drive Letters"
+      ansible.builtin.set_fact:
+        discovered_00_000130_drive_letters_list: "{{ discovered_00_000130_drive_letters.stdout_lines }}"
+
+    - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Search for files"
+      ansible.windows.win_find:
+        paths: '{{ item }}:\\'
+        recurse: true
+        patterns: ['*.p12', '*.pfx']
+      loop: "{{ discovered_00_000130_drive_letters_list }}"
+      register: discovered_00_000130_files
+
+    - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Filter out excluded certificate files"
+      ansible.builtin.set_fact:
+        discovered_00_000130_filtered_certificate_files: >-
+          {{ discovered_00_000130_files.results | map(attribute='files') | flatten | rejectattr('path', 'search', win10stig_certificate_exclusion_paths | join('|')) | list }}
+
+    - name: "MEDIUM | WN10-00-000130 | PATCH | Software certificate installation files must be removed from Windows 10. | Remove unauthorized certificate installation files"
+      changed_when: discovered_00_000130_filtered_certificate_files | length > 0
+      when:
+        - win10stig_auto_remediate_files
+        - discovered_00_000130_filtered_certificate_files | length > 0
+      ansible.windows.win_file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ discovered_00_000130_filtered_certificate_files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+    - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Alert on unauthorized certificate installation files"
+      when: not win10stig_auto_remediate_files
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have unauthorized .p12 and/or .pfx files on your system."
+          - "Please review and remove the following files manually or set"
+          - "win10stig_auto_remediate_files: true to remove the files automatically."
+          - "{{ discovered_00_000130_filtered_certificate_files | map(attribute='path') | list }}"
+
+    - name: "MEDIUM | WN10-00-000130 | AUDIT | Software certificate installation files must be removed from Windows 10. | Warn Count."
+      when: not win10stig_auto_remediate_files
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000130'
+
+- name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system."
+  when: wn10_00_000135 | bool
+  tags:
+    - WN10-00-000135
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220724r991589_rule
+    - V-220724
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Initialize firewall detection variables"
+      ansible.builtin.set_fact:
+        discovered_00_000135_firewall_installed: false
+        discovered_00_000135_firewall_name: []
+
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Check for third-party firewalls (SecurityCenter2)"
+      ansible.windows.win_shell: |
+        $firewall = Get-CimInstance -Namespace root\SecurityCenter2 -ClassName FirewallProduct | ConvertTo-Json -Compress
+        if ($firewall) { $firewall } else { '[]' }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000135_firewall_product_check
+
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Check if Windows Defender Firewall is enabled"
+      ansible.windows.win_shell: |
+        Get-NetFirewallProfile | Select-Object Name, Enabled | ConvertTo-Json -Compress
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000135_defender_firewall_check
+
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Set fact if a firewall is installed"
+      ansible.builtin.set_fact:
+        discovered_00_000135_firewall_installed: >-
+          {{
+            (discovered_00_000135_firewall_product_check.stdout | from_json | length > 0) or
+            ('"Enabled":1' in discovered_00_000135_defender_firewall_check.stdout)
+          }}
+        discovered_00_000135_firewall_name: >-
+          {{
+            (discovered_00_000135_firewall_product_check.stdout | from_json | map(attribute='displayName') | list)
+            + (['Windows Defender Firewall'] if '"Enabled":1' in discovered_00_000135_defender_firewall_check.stdout else [])
+          }}
+
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Check if third-party firewall is running (SecurityCenter2)"
+      when: discovered_00_000135_firewall_installed | bool
+      ansible.windows.win_shell: |
+        $firewall = Get-CimInstance -Namespace root\SecurityCenter2 -ClassName FirewallProduct
+        if ($firewall -and $firewall.enabled -eq 1) {
+          Write-Output "Running"
+        } else {
+          Write-Output "Not Running"
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000135_third_party_firewall_running_status
+
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Check if Windows Defender Firewall is running"
+      when: "'Windows Defender Firewall' in discovered_00_000135_firewall_name"
+      ansible.windows.win_shell: |
+        $profiles = Get-NetFirewallProfile | Where-Object { $_.Enabled -eq "True" }
+        if ($profiles) {
+          Write-Output "Running"
+        } else {
+          Write-Output "Not Running"
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000135_defender_firewall_running_status
+
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Set fact if a firewall is running"
+      ansible.builtin.set_fact:
+        discovered_00_000135_firewall_running: >-
+          {{
+            ('Running' in discovered_00_000135_third_party_firewall_running_status.stdout | default(''))
+            or ('Running' in discovered_00_000135_defender_firewall_running_status.stdout | default(''))
+          }}
+
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Check Windows Defender Firewall profiles"
+      ansible.windows.win_shell: |
+        Get-NetFirewallProfile | Select-Object Name, Enabled | ConvertTo-Json -Compress
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000135_defender_profiles
+
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Parse Windows Defender Firewall profiles"
+      ansible.builtin.set_fact:
+        discovered_00_000135_defender_profiles_json: "{{ discovered_00_000135_defender_profiles.stdout | from_json }}"
+
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Extract enabled Windows Defender Firewall profiles"
+      ansible.builtin.set_fact:
+        discovered_00_000135_enabled_profiles: >-
+          {{ discovered_00_000135_defender_profiles_json
+             | selectattr('Enabled', 'equalto', 1)
+             | map(attribute='Name')
+             | list }}
+
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Check for disabled Windows Defender firewall profiles"
+      ansible.builtin.set_fact:
+        discovered_00_000135_disabled_profiles: >-
+          {{ discovered_00_000135_defender_profiles_json
+             | selectattr('Enabled', 'equalto', 0)
+             | map(attribute='Name')
+             | list }}
+
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warning Windows Defender Firewall Profile Status"
+      when: discovered_00_000135_disabled_profiles | length > 0
+      ansible.builtin.debug:
+        msg:
+          - "══════════════════════════════════════════════════════════════════════"
+          - "                 Windows Defender Firewall Profile Status              "
+          - "══════════════════════════════════════════════════════════════════════"
+          - "Warning!! One or more Windows Defender Firewall profiles are DISABLED!"
+          - "Verify profiles (Domain, Private, Public) are properly Enabled"
+          - "and configured to comply with STIG."
+          - "----------------------------------------------------------------------"
+          - " Domain Profile:  {{ 'Enabled' if 'Domain' in discovered_00_000135_enabled_profiles else 'Disabled' }}"
+          - " Private Profile: {{ 'Enabled' if 'Private' in discovered_00_000135_enabled_profiles else 'Disabled' }}"
+          - " Public Profile:  {{ 'Enabled' if 'Public' in discovered_00_000135_enabled_profiles else 'Disabled' }}"
+          - "----------------------------------------------------------------------"
+          - "If any profile is Disabled, notate why and document."
+          - "══════════════════════════════════════════════════════════════════════"
+
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn if a firewall is installed but not running"
+      when: discovered_00_000135_firewall_installed and not discovered_00_000135_firewall_running | default(false)
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! A firewall is installed but NOT currently running!"
+          - "Detected Firewall: {{ discovered_00_000135_firewall_name }}"
+          - "Ensure that the firewall is enabled and actively protecting the system."
+
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Warn if no firewall is detected"
+      when:
+        - not (discovered_00_000135_firewall_installed | default(false))
+        - not (discovered_00_000135_firewall_running | default(false))
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! No active firewall detected!"
+          - "Install and enable a host-based firewall to comply with STIG requirements."
+
+    - name: "MEDIUM | WN10-00-000135 | AUDIT | A host-based firewall must be installed and enabled on the system. | Trigger warning facts"
+      when: >-
+        (not discovered_00_000135_firewall_installed) or
+        (discovered_00_000135_firewall_installed and not discovered_00_000135_firewall_running | default(false)) or
+        (discovered_00_000135_disabled_profiles | length > 0)
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000135'
+
+- name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts."
+  when:
+    - wn10_00_000140 | bool
+    - discovered_domain_joined | bool
+  tags:
+    - WN10-00-000140
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220725r991589_rule
+    - V-220725
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Check if any firewall product is installed"
+      ansible.windows.win_shell: (Get-CimInstance -Namespace root\SecurityCenter2 -ClassName FirewallProduct) | ConvertTo-Json
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000140_firewall_product_check
+
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Set fact if a firewall product is installed and store name"
+      when: discovered_00_000140_firewall_product_check.stdout | default('') | trim != ''
+      ansible.builtin.set_fact:
+        discovered_00_000140_firewall_installed: "{{ discovered_00_000140_firewall_product_check.stdout | default('') | trim != '' }}"
+        discovered_00_000140_firewall_name: "{{ discovered_00_000140_firewall_product_check.stdout | from_json | map(attribute='displayName') | list }}"
+
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Check if installed firewall is running"
+      when: discovered_00_000140_firewall_installed
+      ansible.windows.win_shell: |
+        $firewall = Get-CimInstance -Namespace root\SecurityCenter2 -ClassName FirewallProduct
+        if ($firewall -and $firewall.enabled -eq 1) {
+          Write-Output "Running"
+        } else {
+          Write-Output "Not Running"
+        }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000140_firewall_running_status
+
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Set fact if a firewall is running"
+      when: discovered_00_000140_firewall_installed
+      ansible.builtin.set_fact:
+        discovered_00_000140_firewall_running: "{{ discovered_00_000140_firewall_running_status.stdout | trim == 'Running' }}"
+
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Get Windows Defender Firewall inbound rules"
+      when: "'Windows Defender Firewall' in discovered_00_000140_firewall_name"
+      ansible.windows.win_shell: Get-NetFirewallRule -Direction Inbound -Enabled True | Select-Object Name, DisplayName, Enabled, Direction, Action, Profile, RemoteAddress | ConvertTo-Json -Compress
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000140_inbound_firewall_rules
+
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Set fact for Windows Defender inbound rules"
+      when:
+        - discovered_00_000140_inbound_firewall_rules.stdout | default('') | trim != ''
+        - "'Windows Defender Firewall' in discovered_00_000140_firewall_name"
+      ansible.builtin.set_fact:
+        discovered_00_000140_active_inbound_rules: "{{ discovered_00_000140_inbound_firewall_rules.stdout | from_json }}"
+
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Ensure authorized remote management hosts are defined"
+      when: "'Windows Defender Firewall' in discovered_00_000140_firewall_name"
+      ansible.builtin.set_fact:
+        win10stig_authorized_remote_management_hosts: "{{ win10stig_authorized_remote_management_hosts | default([]) }}"
+
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Identify unauthorized inbound rules"
+      when:
+        - "'Windows Defender Firewall' in discovered_00_000140_firewall_name"
+        - discovered_00_000140_active_inbound_rules | length > 0
+        - win10stig_authorized_remote_management_hosts | length > 0
+      ansible.builtin.set_fact:
+        discovered_00_000140_unauthorized_inbound_rules: "{{ discovered_00_000140_active_inbound_rules | rejectattr('RemoteAddress', 'search', win10stig_authorized_remote_management_hosts | join('|')) | list }}"
+
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Set fact to store all inbound rules for manual review if no authorized hosts are defined"
+      when:
+        - "'Windows Defender Firewall' in discovered_00_000140_firewall_name"
+        - discovered_00_000140_active_inbound_rules | length > 0
+        - win10stig_authorized_remote_management_hosts | length == 0
+      ansible.builtin.set_fact:
+        discovered_00_000140_all_inbound_rules_for_review: "{{ discovered_00_000140_active_inbound_rules }}"
+
+    # Auto Remediate
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Remove unauthorized inbound firewall rules auto remediation"
+      when:
+        - win10stig_remove_unauthorized_hosts | default(false)
+        - discovered_00_000140_unauthorized_inbound_rules | length > 0
+      ansible.windows.win_shell: |
+        {% for rule in discovered_00_000140_unauthorized_inbound_rules %}
+        Remove-NetFirewallRule -Name "{{ rule.Name }}"
+        {% endfor %}
+      changed_when: true
+      failed_when: false
+      register: discovered_00_000140_fw_remediation
+
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Log remediated firewall rules"
+      when:
+        - win10stig_remove_unauthorized_hosts | bool
+        - discovered_00_000140_fw_remediation is changed
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Unauthorized inbound rules have been removed."
+          - "Auto-remediation is !!!! ENABLED !!!! by setting win10stig_remove_unauthorized_hosts"
+          - to true. These rules were deleted:"
+          - "{{ discovered_00_000140_unauthorized_inbound_rules }}"
+
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Warning!! Unauthorized inbound firewall rules detected"
+      when:
+        - "'Windows Defender Firewall' in discovered_00_000140_firewall_name"
+        - win10stig_authorized_remote_management_hosts | length > 0
+        - discovered_00_000140_unauthorized_inbound_rules | length > 0
+        - not win10stig_remove_unauthorized_hosts
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Unauthorized inbound firewall rules detected!"
+          - "These rules allow remote access from unauthorized IPs."
+          - "Please check you variable settings to make sure they are correct"
+          - "or remove those hosts from the firewall rules."
+          - "Unauthorized Rules:"
+          - "{{ discovered_00_000140_unauthorized_inbound_rules }}"
+
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Displaying all inbound firewall rules for manual review"
+      when:
+        - "'Windows Defender Firewall' in discovered_00_000140_firewall_name"
+        - win10stig_authorized_remote_management_hosts | length == 0
+        - discovered_00_000140_all_inbound_rules_for_review | length > 0
+        - not win10stig_remove_unauthorized_hosts
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! No authorized remote management hosts are defined in"
+          - "win10stig_authorized_remote_management_hosts."
+          - "Displaying all inbound firewall rules for manual review:"
+          - "{{ discovered_00_000140_all_inbound_rules_for_review }}"
+
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Message if a third-party firewall is used"
+      when:
+        - discovered_00_000140_firewall_installed
+        - "'Windows Defender Firewall' not in discovered_00_000140_firewall_name"
+        - not win10stig_remove_unauthorized_hosts
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! A third-party firewall is in use."
+          - "If a third-party firewall is used, configure inbound exceptions to ** only include authorized remote management hosts **."
+          - "Detected Firewall: {{ discovered_00_000140_firewall_name }}"
+
+    - name: "MEDIUM | WN10-00-000140 | AUDIT | Inbound exceptions to the firewall on Windows 10 domain workstations must only allow authorized remote management hosts. | Warn Count."
+      when: >-
+        (win10stig_remove_unauthorized_hosts | bool and discovered_00_000140_fw_remediation is changed) or
+        ("Windows Defender Firewall" in discovered_00_000140_firewall_name and
+         win10stig_authorized_remote_management_hosts | length > 0 and
+         discovered_00_000140_unauthorized_inbound_rules | length > 0 and
+         not win10stig_remove_unauthorized_hosts) or
+        ("Windows Defender Firewall" in discovered_00_000140_firewall_name and
+         win10stig_authorized_remote_management_hosts | length == 0 and
+         discovered_00_000140_all_inbound_rules_for_review | length > 0 and
+         not win10stig_remove_unauthorized_hosts) or
+        (discovered_00_000140_firewall_installed and
+         "Windows Defender Firewall" not in discovered_00_000140_firewall_name and
+         not win10stig_remove_unauthorized_hosts)
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000140'
+
+- name: "MEDIUM | WN10-00-000155 | PATCH | The Windows PowerShell 2.0 feature must be disabled on the system."
+  when:
+    - wn10_00_000155 | bool
+    - "'MicrosoftWindowsPowerShellV2Root' in discovered_feature_names"
+  tags:
+    - WN10-00-000155
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220728r958478_rule
+    - V-220728
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_optional_feature:
+    name: MicrosoftWindowsPowerShellV2Root
+    state: absent
+
+- name: "MEDIUM | WN10-00-000160 | PATCH | The Server Message Block (SMB) v1 protocol must be disabled on the system."
+  when:
+    - wn10_00_000160 | bool
+    - "'SMB1Protocol' in discovered_feature_names"
+  tags:
+    - WN10-00-000160
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220729r958478_rule
+    - V-220729
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_optional_feature:
+    name: SMB1Protocol
+    state: absent
+
+- name: "MEDIUM | WN10-00-000165 | PATCH | The Server Message Block (SMB) v1 protocol must be disabled on the SMB server."
+  when: wn10_00_000165 | bool
+  tags:
+    - WN10-00-000165
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220730r958478_rule
+    - V-220730
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters
+    name: SMB1
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-00-000170 | PATCH | The Server Message Block (SMB) v1 protocol must be disabled on the SMB client."
+  when: wn10_00_000170 | bool
+  tags:
+    - WN10-00-000170
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220731r958478_rule
+    - V-220731
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\mrxsmb10
+    name: Start
+    data: 4
+    type: dword
+  notify: Change_Requires_Reboot
+
+# This service can't be stopped manually (through automation or manually through Services)
+# You need to disable then reboot Windows for the service to be stopped
+- name: "MEDIUM | WN10-00-000175 | PATCH | The Secondary Logon service must be disabled on Windows 10."
+  when: wn10_00_000175 | bool
+  tags:
+    - WN10-00-000175
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220732r958478_rule
+    - V-220732
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_service:
+    name: seclogon
+    start_mode: disabled
+  notify: Change_Requires_Reboot
+
+- name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10."
+  when: wn10_00_000190 | bool
+  tags:
+    - WN10-00-000190
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220733r991589_rule
+    - V-220733
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned User Accounts."
+      ansible.windows.win_shell: Get-WmiObject -Class Win32_UserAccount | Where-Object { $_.SID -match 'S-1-' } | Select-Object Name, SID, Domain | ConvertTo-Json -Compress
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000190_orphaned_user_accounts
+
+    - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Check For Orphaned Group Accounts."
+      ansible.windows.win_shell: Get-WmiObject -Class Win32_Group | Where-Object { $_.SID -match 'S-1-' } | Select-Object Name, SID, Domain | ConvertTo-Json -Compress
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000190_orphaned_group_accounts
+
+    - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Set fact for orphaned user accounts"
+      when: discovered_00_000190_orphaned_user_accounts.stdout | default('') | trim != ''
+      ansible.builtin.set_fact:
+        discovered_00_000190_orphaned_user_accounts_list: "{{ discovered_00_000190_orphaned_user_accounts.stdout | from_json }}"
+
+    - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Set fact for orphaned group accounts"
+      when: discovered_00_000190_orphaned_group_accounts.stdout | default('') | trim != ''
+      ansible.builtin.set_fact:
+        discovered_00_000190_orphaned_group_accounts_list: "{{ discovered_00_000190_orphaned_group_accounts.stdout | from_json }}"
+
+    - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Warning Message"
+      when: discovered_00_000190_orphaned_user_accounts_list | length > 0 or discovered_00_000190_orphaned_group_accounts_list | length > 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Orphaned SIDs detected in User Rights Assignments."
+          - "These SIDs belong to deleted or invalid accounts and should be removed."
+          - "Note: Valid domain accounts or groups may also show up as unresolved SIDs if a connection"
+          - "to the domain cannot be established for some reason."
+          - "-------------------------------------------------------------------------"
+          - "Orphaned User Accounts:"
+          - "{{ discovered_00_000190_orphaned_user_accounts_list | default('None Found') }}"
+          - "-------------------------------------------------------------------------"
+          - "Orphaned Group Accounts:"
+          - "{{ discovered_00_000190_orphaned_group_accounts_list | default('None Found') }}"
+          - "-------------------------------------------------------------------------"
+
+    - name: "MEDIUM | WN10-00-000190 | AUDIT | Orphaned security identifiers (SIDs) must be removed from user rights on Windows 10. | Warn Count."
+      when: discovered_00_000190_orphaned_user_accounts_list | length > 0 or discovered_00_000190_orphaned_group_accounts_list | length > 0
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000190'
+
+- name: "MEDIUM | WN10-00-000210 | PATCH | Bluetooth must be turned off unless approved by the organization."
+  notify: Change_Requires_Reboot
+  when: wn10_00_000210 | bool
+  tags:
+    - WN10-00-000210
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220734r1153416_rule
+    - V-220734
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  block:
+    - name: "MEDIUM | WN10-00-000210 | PATCH | Bluetooth must be turned off unless approved by the organization. | Disable BT in the registry"
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\PolicyManager\current\device\Connectivity
+        name: AllowBluetooth
+        data: 0
+        type: dword
+
+    - name: "MEDIUM | WN10-00-000210 | PATCH | Bluetooth must be turned off unless approved by the organization. | Disable BT service"
+      ansible.windows.win_service:
+        name: bthserv
+        state: stopped
+        start_mode: disabled
+
+- name: "MEDIUM | WN10-00-000230 | PATCH | The system must notify the user when a Bluetooth device attempts to connect."
+  when: wn10_00_000230 | bool
+  tags:
+    - WN10-00-000230
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220736r991589_rule
+    - V-220736
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Bluetooth
+    name: AcceptIncomingRequests
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-00-000250 | PATCH | Windows 10 nonpersistent VM sessions must not exceed 24 hours."
+  when:
+    - wn10_00_000250 | bool
+    - discovered_vdi_non_persistent | default(false) or discovered_vdi_persistent
+  tags:
+    - WN10-00-000250
+    - CAT2
+    - CCI-001199
+    - SRG-OS-000185-GPOS-00079
+    - SV-220738r958552_rule
+    - V-220738
+    - NIST800-53_SC-28
+    - NIST800-53A_SC-28.1
+    - NIST800-53R4_SC-28
+  block:
+    - name: "MEDIUM | WN10-00-000250 | PATCH | Windows 10 nonpersistent VM sessions must not exceed 24 hours. | Set session timeout set"
+      when:
+        - win10stig_non_persistent_max_session_timeout | int <= 86400000
+        - win10stig_non_persistent_max_session_timeout | length > 0
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Terminal Services
+        name: "{{ item.name }}"
+        data: "{{ win10stig_non_persistent_max_session_timeout }}"
+        type: dword
+      loop:
+        - { name: "MaxDisconnectionTime" }
+        - { name: "MaxIdleTime" }
+        - { name: "MaxSessionTime" }
+      notify: Change_Requires_Reboot
+
+    - name: "MEDIUM | WN10-00-000250 | AUDIT | Windows 10 nonpersistent VM sessions must not exceed 24 hours. | Warning Message"
+      when:
+        - win10stig_non_persistent_max_session_timeout | int > 86400000
+        - win10stig_non_persistent_max_session_timeout | length > 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have invalid setting for win10stig_non_persistent_max_session_timeout please"
+          - "make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-00-000250 | AUDIT | Windows 10 nonpersistent VM sessions must not exceed 24 hours. | Manual Check."
+      when: win10stig_non_persistent_max_session_timeout | length == 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Verify there is a documented policy or procedure in place that nonpersistent VM"
+          - "sessions do not exceed 24 hours. If the system is NOT a nonpersistent VM, this is Not Applicable."
+          - "For Azure Virtual Desktop (AVD) implementations with no data at rest, this is Not Applicable."
+          - "If there is no such documented policy or procedure in place, this is a finding."
+          - "To remediate automatically set a value in win10stig_non_persistent_max_session_timeout."
+
+    - name: "MEDIUM | WN10-00-000250 | AUDIT | Windows 10 nonpersistent VM sessions must not exceed 24 hours. | Warn Count."
+      when: win10stig_non_persistent_max_session_timeout | int > 86400000 or win10stig_non_persistent_max_session_timeout | length == 0
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000250'
+
+- name: "MEDIUM | WN10-00-000395 | PATCH | Windows 10 must not have portproxy enabled or in use."
+  when: wn10_00_000395 | bool
+  tags:
+    - WN10-00-000395
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000480-GPOS-00227
+    - SV-257593r991589_rule
+    - V-257593
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  block:
+    - name: "MEDIUM | WN10-00-000395 | AUDIT | Windows 10 must not have portproxy enabled or in use. | Check registry for portproxy entries"
+      ansible.windows.win_reg_stat:
+        path: HKLM:\SYSTEM\CurrentControlSet\Services\PortProxy\v4tov4\tcp
+      register: discovered_00_000395_portproxy_registry_check
+
+    - name: "MEDIUM | WN10-00-000395 | AUDIT | Windows 10 must not have portproxy enabled or in use. | Get active portproxy rules"
+      ansible.windows.win_shell: netsh interface portproxy show all
+      check_mode: false
+      register: discovered_00_000395_portproxy_netsh_output
+      changed_when: false
+
+    - name: "MEDIUM | WN10-00-000395 | AUDIT | Windows 10 must not have portproxy enabled or in use. | Get portproxy rules"
+      when: discovered_00_000395_portproxy_netsh_output.stdout_lines | length > 0 and win10stig_delete_each_portproxy and not win10stig_reset_portproxy
+      ansible.builtin.set_fact:
+        discovered_00_000395_portproxy_rules: >-
+          {{
+            discovered_00_000395_portproxy_netsh_output.stdout_lines
+            | select('match', '^\s*\d{1,3}.*:\d+\s+\d{1,3}.*:\d+')
+            | map('regex_replace', '\s+', ' ')
+            | map('split', ' ')
+            | map('extract', [0,1])
+            | list
+          }}
+
+    - name: "MEDIUM | WN10-00-000395 | PATCH | Windows 10 must not have portproxy enabled or in use. | Delete individual portproxy rules STIG-compliant method."
+      when:
+        - win10stig_delete_each_portproxy
+        - discovered_00_000395_portproxy_rules is defined
+      ansible.windows.win_shell: netsh interface portproxy delete v4tov4 tcp {{ item[0] }}
+      loop: "{{ discovered_00_000395_portproxy_rules }}"
+
+    - name: "MEDIUM | WN10-00-000395 | PATCH | Windows 10 must not have portproxy enabled or in use. | Reset all portproxy rules."
+      when:
+        - win10stig_reset_portproxy
+        - not win10stig_delete_each_portproxy
+        - discovered_00_000395_portproxy_registry_check.exists or (discovered_00_000395_portproxy_netsh_output.stdout_lines | reject('equalto', '') | list | length > 0)
+      ansible.windows.win_shell: netsh interface portproxy reset
+
+    - name: "MEDIUM | WN10-00-000395 | AUDIT | Windows 10 must not have portproxy enabled or in use. | Portproxy Compliance Status with Rule Details"
+      when:
+        - not win10stig_reset_portproxy
+        - not win10stig_delete_each_portproxy
+      ansible.builtin.debug:
+        msg:
+          - "Registry Key Present: {{ discovered_00_000395_portproxy_registry_check.exists }}"
+          - "Portproxy Rules Detected: {{ discovered_00_000395_portproxy_netsh_output.stdout_lines | reject('equalto', '') | list | length }}"
+          - "{{ 'Finding: Portproxy is enabled or in use.' if (discovered_00_000395_portproxy_registry_check.exists or (discovered_00_000395_portproxy_netsh_output.stdout_lines | reject('equalto', '') | list | length > 0)) else 'Compliant: Portproxy is not in use.' }}"
+          - "═══════════════ Current Portproxy Rules (if any) ═══════════════"
+          - "{{ discovered_00_000395_portproxy_netsh_output.stdout_lines | reject('equalto', '') | list | default(['None']) }}"
+
+    - name: "MEDIUM | WN10-00-000395 | AUDIT | Windows 10 must not have portproxy enabled or in use. | Warn Count."
+      when: discovered_00_000395_portproxy_registry_check.exists or (discovered_00_000395_portproxy_netsh_output.stdout_lines | reject('equalto', '') | list | length > 0)
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000395'
+
+- name: "MEDIUM | WN10-00-000107 | PATCH | Copilot must be disabled for Windows 10."
+  when: wn10_00_000107 | bool
+  tags:
+    - WN10-00-000107
+    - CAT2
+    - CCI-000382
+    - SRG-OS-000096-GPOS-00050
+    - SV-268315r1135269_rule
+    - V-268315
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_iii
+    - NIST800-53R4_CM-7_b
+  ansible.windows.win_regedit:
+    path: HKCU:\Software\Policies\Microsoft\Windows\WindowsCopilot
+    name: TurnOffWindowsCopilot
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-00-000126 | PATCH | Windows 10 systems must block consumer account user authentication."
+  when: wn10_00_000126 | bool
+  tags:
+    - WN10-00-000126
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-279687r1154974_rule
+    - V-279687
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftAccount
+    name: DisableUserAuth
+    data: 1
+    type: dword

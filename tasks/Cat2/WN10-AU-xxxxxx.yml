@@ -1,0 +1,1732 @@
+---
+
+- name: "MEDIUM | WN10-AU-000005 | PATCH | The system must be configured to audit Account Logon - Credential Validation failures"
+  when: wn10_au_000005 | bool
+  tags:
+    - WN10-AU-000005
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000470-GPOS-00214
+    - SV-220748r991578_rule
+    - V-220748
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000005 | AUDIT | The system must be configured to audit Account Logon - Credential Validation failures | Get current audit events"
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Credential Validation" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_ac_000040_audit
+
+    - name: "MEDIUM | WN10-AU-000005 | PATCH | The system must be configured to audit Account Logon - Credential Validation failures | Failures"
+      when: "'Failure' not in discovered_ac_000040_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Credential Validation" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000010 | PATCH | The system must be configured to audit Account Logon - Credential Validation successes."
+  when: wn10_au_000010 | bool
+  tags:
+    - WN10-AU-000010
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000470-GPOS-00214
+    - SV-220749r991578_rule
+    - V-220749
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000010 | AUDIT | The system must be configured to audit Account Logon - Credential Validation successes. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Credential Validation" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000010_audit
+
+    - name: "MEDIUM | WN10-AU-000010 | PATCH | The system must be configured to audit Account Logon - Credential Validation successes. | Success"
+      when: "'Success' not in discovered_au_000010_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Credential Validation" /success:enable
+
+- name: "MEDIUM | WN10-AU-000030 | PATCH | The system must be configured to audit Account Management - Security Group Management successes."
+  when: wn10_au_000030 | bool
+  tags:
+    - WN10-AU-000030
+    - CAT2
+    - CCI-000018
+    - CCI-000172
+    - CCI-001403
+    - CCI-001404
+    - CCI-001405
+    - CCI-002130
+    - CCI-002234
+    - SRG-OS-000004-GPOS-00004
+    - SV-220750r958368_rule
+    - V-220750
+    - NIST800-53_AC-2_4
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AC-2_4.1_i&ii
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AC-2_4
+    - NIST800-53R4_AU-12_c
+    - NIST800-53R4_AU-6_9
+  block:
+    - name: "MEDIUM | WN10-AU-000030 | AUDIT | The system must be configured to audit Account Management - Security Group Management successes. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Security Group Management" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000030_audit
+
+    - name: "MEDIUM | WN10-AU-000030 | PATCH | The system must be configured to audit Account Management - Security Group Management successes. | Success"
+      when: "'Success' not in discovered_au_000030_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Security Group Management" /success:enable
+
+- name: "MEDIUM | WN10-AU-000035 | PATCH | The system must be configured to audit Account Management - User Account Management failures."
+  when: wn10_au_000035 | bool
+  tags:
+    - WN10-AU-000035
+    - CAT2
+    - CCI-000018
+    - CCI-000172
+    - CCI-001403
+    - CCI-001404
+    - CCI-001405
+    - CCI-002130
+    - CCI-002234
+    - SRG-OS-000004-GPOS-00004
+    - SV-220751r958368_rule
+    - V-220751
+    - NIST800-53_AC-2_4
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AC-2_4.1_i&ii
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AC-2_4
+    - NIST800-53R4_AU-12_c
+    - NIST800-53R4_AU-6_9
+  block:
+    - name: "MEDIUM | WN10-AU-000035 | AUDIT | The system must be configured to audit Account Management - User Account Management failures. | Get Current Settings"
+      ansible.windows.win_shell: AuditPol /get /subcategory:"User Account Management" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000035_audit
+
+    - name: "MEDIUM | WN10-AU-000035 | PATCH | The system must be configured to audit Account Management - User Account Management failures. | Set Failures"
+      when: "'Failure' not in discovered_au_000035_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"User Account Management" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000040 | PATCH | The system must be configured to audit Account Management - User Account Management successes"
+  when: wn10_au_000040 | bool
+  tags:
+    - WN10-AU-000040
+    - CAT2
+    - CCI-000018
+    - CCI-000172
+    - CCI-001403
+    - CCI-001404
+    - CCI-001405
+    - CCI-002130
+    - CCI-002234
+    - SRG-OS-000004-GPOS-00004
+    - SV-220752r958368_rule
+    - V-220752
+    - NIST800-53_AC-2_4
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AC-2_4.1_i&ii
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AC-2_4
+    - NIST800-53R4_AU-12_c
+    - NIST800-53R4_AU-6_9
+  block:
+    - name: "MEDIUM | WN10-AU-000040 | AUDIT | The system must be configured to audit Account Management - User Account Management successes | Get Current Settings"
+      ansible.windows.win_shell: AuditPol /get /subcategory:"User Account Management" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000040_audit
+
+    - name: "MEDIUM | WN10-AU-000040 | PATCH | The system must be configured to audit Account Management - User Account Management successes | Set Success."
+      when: "'Success' not in discovered_au_000040_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"User Account Management" /success:enable
+
+- name: "MEDIUM | WN10-AU-000045 | PATCH | The system must be configured to audit Detailed Tracking - PNP Activity successes."
+  when: wn10_au_000045 | bool
+  tags:
+    - WN10-AU-000045
+    - CAT2
+    - CCI-000172
+    - CCI-001814
+    - CCI-003938
+    - SRG-OS-000365-GPOS-00152
+    - SV-220753r1051025_rule
+    - V-220753
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+    - NIST800-53R4_CM-5_1
+  block:
+    - name: "MEDIUM | WN10-AU-000045 | AUDIT | The system must be configured to audit Detailed Tracking - PNP Activity successes. | Get Current Settings"
+      ansible.windows.win_shell: AuditPol /get /subcategory:"User Account Management" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000045_audit
+
+    - name: "MEDIUM | WN10-AU-000045 | PATCH | The system must be configured to audit Detailed Tracking - PNP Activity successes. | Set Failures"
+      when: "'Success' not in discovered_au_000045_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Plug and Play Events" /success:enable
+
+- name: "MEDIUM | WN10-AU-000050 | PATCH | The system must be configured to audit Detailed Tracking - Process Creation successes."
+  when: wn10_au_000050 | bool
+  tags:
+    - WN10-AU-000050
+    - CAT2
+    - CCI-000172
+    - CCI-001814
+    - CCI-003938
+    - SRG-OS-000365-GPOS-00152
+    - SV-220754r1051026_rule
+    - V-220754
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+    - NIST800-53R4_CM-5_1
+  block:
+    - name: "MEDIUM | WN10-AU-000050 | AUDIT | The system must be configured to audit Detailed Tracking - Process Creation successes. | Find Current Settings"
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Process Creation" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000050_audit
+
+    - name: "MEDIUM | WN10-AU-000050 | PATCH | The system must be configured to audit Detailed Tracking - Process Creation successes. | Apply Success"
+      when: "'Success' not in discovered_au_000050_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Process Creation" /success:enable
+
+- name: "MEDIUM | WN10-AU-000054 | PATCH | The system must be configured to audit Logon/Logoff - Account Lockout failures."
+  when: wn10_au_000054 | bool
+  tags:
+    - WN10-AU-000054
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000470-GPOS-00214
+    - SV-220755r991578_rule
+    - V-220755
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000054 | AUDIT | The system must be configured to audit Logon/Logoff - Account Lockout failures. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Account Lockout" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000054_audit
+
+    - name: "MEDIUM | WN10-AU-000054 | PATCH | The system must be configured to audit Logon/Logoff - Account Lockout failures. | Apply Failure."
+      when: "'Failure' not in discovered_au_000054_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Account Lockout" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000060 | PATCH | The system must be configured to audit Logon/Logoff - Group Membership successes."
+  when: wn10_au_000060 | bool
+  tags:
+    - WN10-AU-000060
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000470-GPOS-00214
+    - SV-220756r991578_rule
+    - V-220756
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000060 | AUDIT | The system must be configured to audit Logon/Logoff - Group Membership successes | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Group Membership" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000060_audit
+
+    - name: "MEDIUM | WN10-AU-000060 | PATCH | The system must be configured to audit Logon/Logoff - Group Membership successes | Success"
+      when: "'Success' not in discovered_au_000060_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Group Membership" /success:enable
+
+- name: "MEDIUM | WN10-AU-000065 | PATCH | The system must be configured to audit Logon/Logoff - Logoff successes."
+  when: wn10_au_000065 | bool
+  tags:
+    - WN10-AU-000065
+    - CAT2
+    - CCI-000067
+    - CCI-000172
+    - SRG-OS-000032-GPOS-00013
+    - SV-220757r958406_rule
+    - V-220757
+    - NIST800-53_AC-17_1
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AC-17_1.1
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AC-17_1
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000065 | AUDIT | The system must be configured to audit Logon/Logoff - Logoff successes. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Logoff" -r | ConvertFrom-Csv | Select-Object -ExpandProperty "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000065_audit
+
+    - name: "MEDIUM | WN10-AU-000065 | PATCH | The system must be configured to audit Logon/Logoff - Logoff successes. | Ensure Audit Logoff Events is set to Success"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Logoff" /success:enable
+      when: "'Success' not in discovered_au_000065_audit.stdout"
+
+- name: "MEDIUM | WN10-AU-000070 | PATCH | The system must be configured to audit Logon/Logoff - Logon failures."
+  when: wn10_au_000070 | bool
+  tags:
+    - WN10-AU-000070
+    - CAT2
+    - CCI-000067
+    - CCI-000172
+    - SRG-OS-000032-GPOS-00013
+    - SV-220758r958406_rule
+    - V-220758
+    - NIST800-53_AC-17_1
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AC-17_1.1
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AC-17_1
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000070 | AUDIT | The system must be configured to audit Logon/Logoff - Logon failures. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Logon" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000070_audit
+
+    - name: "MEDIUM | WN10-AU-000070 | PATCH | The system must be configured to audit Logon/Logoff - Logon failures. | Failure"
+      when: "'Failure' not in discovered_au_000070_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Logon" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000075 | PATCH | The system must be configured to audit Logon/Logoff - Logon successes."
+  when: wn10_au_000075 | bool
+  tags:
+    - WN10-AU-000075
+    - CAT2
+    - CCI-000067
+    - CCI-000172
+    - SRG-OS-000032-GPOS-00013
+    - SV-220759r958406_rule
+    - V-220759
+    - NIST800-53_AC-17_1
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AC-17_1.1
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AC-17_1
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000075 | PATCH | The system must be configured to audit Logon/Logoff - Logon successes. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Logon" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000075_audit
+
+    - name: "MEDIUM | WN10-AU-000075 | PATCH | The system must be configured to audit Logon/Logoff - Logon successes. | Success"
+      when: "'Success' not in discovered_au_000075_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Logon" /success:enable
+
+- name: "MEDIUM | WN10-AU-000080 | PATCH | The system must be configured to audit Logon/Logoff - Special Logon successes."
+  when: wn10_au_000080 | bool
+  tags:
+    - WN10-AU-000080
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000470-GPOS-00214
+    - SV-220760r991578_rule
+    - V-220760
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000080 | AUDIT | The system must be configured to audit Logon/Logoff - Special Logon successes. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Special Logon" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000080_audit
+
+    - name: "MEDIUM | WN10-AU-000080 | PATCH | The system must be configured to audit Logon/Logoff - Special Logon successes. | Success"
+      when: "'Success' not in discovered_au_000080_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Special Logon" /success:enable
+
+- name: "MEDIUM | WN10-AU-000081 | PATCH | Windows 10 must be configured to audit Object Access - File Share failures."
+  when: wn10_au_000081 | bool
+  tags:
+    - WN10-AU-000081
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000474-GPOS-00219
+    - SV-220761r991583_rule
+    - V-220761
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000081 | AUDIT | Windows 10 must be configured to audit Object Access - File Share failures. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"File Share" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000081_audit
+
+    - name: "MEDIUM | WN10-AU-000081 | PATCH | Windows 10 must be configured to audit Object Access - File Share failures. | Failures."
+      when: "'Failure' not in discovered_au_000081_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"File Share" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000082 | PATCH | Windows 10 must be configured to audit Object Access - File Share successes."
+  when: wn10_au_000082 | bool
+  tags:
+    - WN10-AU-000082
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000474-GPOS-00219
+    - SV-220762r991583_rule
+    - V-220762
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000082 | AUDIT | Windows 10 must be configured to audit Object Access - File Share successes. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"File Share" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000082_audit
+
+    - name: "MEDIUM | WN10-AU-000082 | PATCH | Windows 10 must be configured to audit Object Access - File Share successes. | Successes."
+      when: "'Success' not in discovered_au_000082_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"File Share" /success:enable
+
+- name: "MEDIUM | WN10-AU-000083 | PATCH | Windows 10 must be configured to audit Object Access - Other Object Access Events successes."
+  when: wn10_au_000083 | bool
+  tags:
+    - WN10-AU-000083
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000474-GPOS-00219
+    - SV-220763r991583_rule
+    - V-220763
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000083 | AUDIT | Windows 10 must be configured to audit Object Access - Other Object Access Events successes. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Other Object Access Events" -r | ConvertFrom-Csv | Select-Object -ExpandProperty "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000083_audit
+
+    - name: "MEDIUM | WN10-AU-000083 | PATCH | Windows 10 must be configured to audit Object Access - Other Object Access Events successes. | Set To Success"
+      when: "'Success' not in discovered_au_000083_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Other Object Access Events" /success:enable
+
+- name: "MEDIUM | WN10-AU-000084 | PATCH | Windows 10 must be configured to audit Object Access - Other Object Access Events failures."
+  when: wn10_au_000084 | bool
+  tags:
+    - WN10-AU-000084
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000474-GPOS-00219
+    - SV-220764r991583_rule
+    - V-220764
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000084 | AUDIT | Windows 10 must be configured to audit Object Access - Other Object Access Events failures. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Other Object Access Events" -r | ConvertFrom-Csv | Select-Object -ExpandProperty "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000084_audit
+
+    - name: "MEDIUM | WN10-AU-000084 | PATCH | Windows 10 must be configured to audit Object Access - Other Object Access Events failures. | Set To Failure."
+      when: "'Failure' not in discovered_au_000084_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Other Object Access Events" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000085 | PATCH | The system must be configured to audit Object Access - Removable Storage failures."
+  when: wn10_au_000085 | bool
+  tags:
+    - WN10-AU-000085
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000474-GPOS-00219
+    - SV-220765r991583_rule
+    - V-220765
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000085 | AUDIT | The system must be configured to audit Object Access - Removable Storage failures. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Removable Storage" -r | ConvertFrom-Csv | Select-Object -ExpandProperty "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000085_audit
+
+    - name: "MEDIUM | WN10-AU-000085 | PATCH | The system must be configured to audit Object Access - Removable Storage failures. | Set To Failure."
+      when: "'Failure' not in discovered_au_000085_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Removable Storage" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000090 | PATCH | The system must be configured to audit Object Access - Removable Storage successes."
+  when: wn10_au_000090 | bool
+  tags:
+    - WN10-AU-000090
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000474-GPOS-00219
+    - SV-220766r991583_rule
+    - V-220766
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000090 | AUDIT | The system must be configured to audit Object Access - Removable Storage successes. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Removable Storage" -r | ConvertFrom-Csv | Select-Object -ExpandProperty "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000090_audit
+
+    - name: "MEDIUM | WN10-AU-000090 | PATCH | The system must be configured to audit Object Access - Removable Storage successes. | Set To Success."
+      when: "'Success' not in discovered_au_000090_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Removable Storage" /success:enable
+
+- name: "MEDIUM | WN10-AU-000100 | PATCH | The system must be configured to audit Policy Change - Audit Policy Change successes."
+  when: wn10_au_000100 | bool
+  tags:
+    - WN10-AU-000100
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000471-GPOS-00215
+    - SV-220767r991579_rule
+    - V-220767
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000100 | AUDIT | The system must be configured to audit Policy Change - Audit Policy Change successes. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Audit Policy Change" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000100_audit
+
+    - name: "MEDIUM | WN10-AU-000100 | PATCH | The system must be configured to audit Policy Change - Audit Policy Change successes. | Success"
+      when: "'Success' not in discovered_au_000100_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Audit Policy Change" /success:enable
+
+- name: "MEDIUM | WN10-AU-000105 | PATCH | The system must be configured to audit Policy Change - Authentication Policy Change successes."
+  when: wn10_au_000105 | bool
+  tags:
+    - WN10-AU-000105
+    - CAT2
+    - CCI-000172
+    - CCI-002234
+    - SRG-OS-000327-GPOS-00127
+    - SV-220768r958732_rule
+    - V-220768
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+    - NIST800-53R4_AC-6_9
+  block:
+    - name: "MEDIUM | WN10-AU-000105 | AUDIT | The system must be configured to audit Policy Change - Authentication Policy Change successes. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Authentication Policy Change" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000105_audit
+
+    - name: "MEDIUM | WN10-AU-000105 | PATCH | The system must be configured to audit Policy Change - Authentication Policy Change successes. | Success."
+      when: "'Success' not in discovered_au_000105_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Authentication Policy Change" /success:enable
+
+- name: "MEDIUM | WN10-AU-000107 | PATCH | The system must be configured to audit Policy Change - Authorization Policy Change successes."
+  when: wn10_au_000107 | bool
+  tags:
+    - WN10-AU-000107
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000471-GPOS-00215
+    - SV-220769r991579_rule
+    - V-220769
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000107 | AUDIT | The system must be configured to audit Policy Change - Authorization Policy Change successes. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Authorization Policy Change" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000107_audit
+
+    - name: "MEDIUM | WN10-AU-000107 | PATCH | The system must be configured to audit Policy Change - Authorization Policy Change successes. | Success"
+      when: "'Success' not in discovered_au_000107_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Authorization Policy Change" /success:enable
+
+- name: "MEDIUM | WN10-AU-000110 | PATCH | The system must be configured to audit Privilege Use - Sensitive Privilege Use failures."
+  when: wn10_au_000110 | bool
+  tags:
+    - WN10-AU-000110
+    - CAT2
+    - CCI-000172
+    - CCI-002234
+    - SRG-OS-000327-GPOS-00127
+    - SV-220770r958732_rule
+    - V-220770
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+    - NIST800-53R4_AC-6_9
+  block:
+    - name: "MEDIUM | WN10-AU-000110 | AUDIT | The system must be configured to audit Privilege Use - Sensitive Privilege Use failures. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Sensitive Privilege Use" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000110_audit
+
+    - name: "MEDIUM | WN10-AU-000110 | PATCH | The system must be configured to audit Privilege Use - Sensitive Privilege Use failures. | Failure"
+      when: "'Failure' not in discovered_au_000110_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Sensitive Privilege Use" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000115 | PATCH | The system must be configured to audit Privilege Use - Sensitive Privilege Use successes."
+  when: wn10_au_000115 | bool
+  tags:
+    - WN10-AU-000115
+    - CAT2
+    - CCI-000172
+    - CCI-002234
+    - SRG-OS-000327-GPOS-00127
+    - SV-220771r958732_rule
+    - V-220771
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+    - NIST800-53R4_AC-6_9
+  block:
+    - name: "MEDIUM | WN10-AU-000115 | AUDIT | The system must be configured to audit Privilege Use - Sensitive Privilege Use successes. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Sensitive Privilege Use" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000115_audit
+
+    - name: "MEDIUM | WN10-AU-000115 | PATCH | The system must be configured to audit Privilege Use - Sensitive Privilege Use successes. | Success"
+      when: "'Success' not in discovered_au_000115_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Sensitive Privilege Use" /success:enable
+
+- name: "MEDIUM | WN10-AU-000120 | PATCH | The system must be configured to audit System - IPSec Driver failures."
+  when: wn10_au_000120 | bool
+  tags:
+    - WN10-AU-000120
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000477-GPOS-00222
+    - SV-220772r991586_rule
+    - V-220772
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000120 | AUDIT | The system must be configured to audit System - IPSec Driver failures. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"IPsec Driver" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000120_audit
+
+    - name: "MEDIUM | WN10-AU-000120 | PATCH | The system must be configured to audit System - IPSec Driver failures. | Failure"
+      when: "'Failure' not in discovered_au_000120_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"IPsec Driver" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000130 | PATCH | The system must be configured to audit System - Other System Events successes."
+  when: wn10_au_000130 | bool
+  tags:
+    - WN10-AU-000130
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000471-GPOS-00215
+    - SV-220773r991579_rule
+    - V-220773
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000130 | AUDIT | The system must be configured to audit System - Other System Events successes. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Other System Events" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000130_audit
+
+    - name: "MEDIUM | WN10-AU-000130 | PATCH | The system must be configured to audit System - Other System Events successes. | Success"
+      when: "'Success' not in discovered_au_000130_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Other System Events" /success:enable
+
+- name: "MEDIUM | WN10-AU-000135 | PATCH | The system must be configured to audit System - Other System Events failures."
+  when: wn10_au_000135 | bool
+  tags:
+    - WN10-AU-000135
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000471-GPOS-00215
+    - SV-220774r991579_rule
+    - V-220774
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000135 | AUDIT | The system must be configured to audit System - Other System Events failures. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Other System Events" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000135_audit
+
+    - name: "MEDIUM | WN10-AU-000135 | PATCH | The system must be configured to audit System - Other System Events failures. | Failure"
+      when: "'Failure' not in discovered_au_000135_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Other System Events" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000140 | PATCH | The system must be configured to audit System - Security State Change successes."
+  when: wn10_au_000140 | bool
+  tags:
+    - WN10-AU-000140
+    - CAT2
+    - CCI-000172
+    - CCI-002234
+    - SRG-OS-000327-GPOS-00127
+    - SV-220775r958732_rule
+    - V-220775
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+    - NIST800-53R4_AC-6_9
+  block:
+    - name: "MEDIUM | WN10-AU-000140 | AUDIT | The system must be configured to audit System - Security State Change successes. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Security State Change" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000140_audit
+
+    - name: "MEDIUM | WN10-AU-000140 | PATCH | The system must be configured to audit System - Security State Change successes. | Success"
+      when: "'Success' not in discovered_au_000140_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Security State Change" /success:enable
+
+- name: "MEDIUM | WN10-AU-000150 | PATCH | The system must be configured to audit System - Security System Extension successes."
+  when: wn10_au_000150 | bool
+  tags:
+    - WN10-AU-000150
+    - CAT2
+    - CCI-000172
+    - CCI-002234
+    - SRG-OS-000327-GPOS-00127
+    - SV-220776r958732_rule
+    - V-220776
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+    - NIST800-53R4_AC-6_9
+  block:
+    - name: "MEDIUM | WN10-AU-000150 | AUDIT | The system must be configured to audit System - Security System Extension successes. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Security System Extension" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000150_audit
+
+    - name: "MEDIUM | WN10-AU-000150 | PATCH | The system must be configured to audit System - Security System Extension successes. | Success"
+      when: "'Success' not in discovered_au_000150_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Security System Extension" /success:enable
+
+- name: "MEDIUM | WN10-AU-000155 | PATCH | The system must be configured to audit System - System Integrity failures."
+  when: wn10_au_000155 | bool
+  tags:
+    - WN10-AU-000155
+    - CAT2
+    - CCI-000172
+    - CCI-002234
+    - SRG-OS-000327-GPOS-00127
+    - SV-220777r958732_rule
+    - V-220777
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+    - NIST800-53R4_AC-6_9
+  block:
+    - name: "MEDIUM | WN10-AU-000155 | AUDIT | The system must be configured to audit System - System Integrity failures. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"System Integrity" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000155_audit
+
+    - name: "MEDIUM | WN10-AU-000155 | PATCH | The system must be configured to audit System - System Integrity failures. | Failure"
+      when: "'Failure' not in discovered_au_000155_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"System Integrity" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000160 | PATCH | The system must be configured to audit System - System Integrity successes."
+  when: wn10_au_000160 | bool
+  tags:
+    - WN10-AU-000160
+    - CAT2
+    - CCI-000172
+    - CCI-002234
+    - SRG-OS-000327-GPOS-00127
+    - SV-220778r958732_rule
+    - V-220778
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+    - NIST800-53R4_AC-6_9
+  block:
+    - name: "MEDIUM | WN10-AU-000160 | AUDIT | The system must be configured to audit System - System Integrity successes. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"System Integrity" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000160_audit
+
+    - name: "MEDIUM | WN10-AU-000160 | PATCH | The system must be configured to audit System - System Integrity successes. | Success"
+      when: "'Success' not in discovered_au_000160_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"System Integrity" /success:enable
+
+- name: "MEDIUM | WN10-AU-000500 | PATCH | The Application event log size must be configured to 32768 KB or greater."
+  when: wn10_au_000500 | bool
+  tags:
+    - WN10-AU-000500
+    - CAT2
+    - CCI-001849
+    - SRG-OS-000341-GPOS-00132
+    - SV-220779r958752_rule
+    - V-220779
+    - NIST800-53R4_AU-4
+  block:
+    - name: "MEDIUM | WN10-AU-000500 | PATCH | The Application event log size must be configured to 32768 KB or greater. | Set Variable"
+      when: win10stig_application_max_log_file_size >= 32768
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\Application
+        name: MaxSize
+        data: "{{ win10stig_application_max_log_file_size }}"
+        type: dword
+
+    - name: "MEDIUM | WN10-AU-000500 | AUDIT | The Application event log size must be configured to 32768 KB or greater. | Warning Message"
+      when: win10stig_application_max_log_file_size < 32768
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid file size set for win10stig_application_max_log_file_size. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-AU-000500 | AUDIT | The Application event log size must be configured to 32768 KB or greater. | Warn Count."
+      when: win10stig_application_max_log_file_size < 32768
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AU-000500'
+
+- name: "MEDIUM | WN10-AU-000505 | PATCH | The Security event log size must be configured to 1024000 KB or greater."
+  when: wn10_au_000505 | bool
+  tags:
+    - WN10-AU-000505
+    - CAT2
+    - CCI-001849
+    - SRG-OS-000341-GPOS-00132
+    - SV-220780r958752_rule
+    - V-220780
+    - NIST800-53R4_AU-4
+  block:
+    - name: "MEDIUM | WN10-AU-000505 | PATCH | The Security event log size must be configured to 1024000 KB or greater. | Set Variable"
+      when: win10stig_security_max_log_file_size >= 1024000
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\Security
+        name: MaxSize
+        data: "{{ win10stig_security_max_log_file_size }}"
+        type: dword
+
+    - name: "MEDIUM | WN10-AU-000505 | AUDIT | The Security event log size must be configured to 1024000 KB or greater. | Warning Check For Variable Standards."
+      when: win10stig_security_max_log_file_size < 1024000
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid file size set for win10stig_security_max_log_file_size. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-AU-000505 | AUDIT | The Security event log size must be configured to 1024000 KB or greater. | Warn Count."
+      when: win10stig_security_max_log_file_size < 1024000
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AU-000505'
+
+- name: "MEDIUM | WN10-AU-000510 | PATCH | The System event log size must be configured to 32768 KB or greater."
+  when: wn10_au_000510 | bool
+  tags:
+    - WN10-AU-000510
+    - CAT2
+    - CCI-001849
+    - SRG-OS-000341-GPOS-00132
+    - SV-220781r958752_rule
+    - V-220781
+    - NIST800-53R4_AU-4
+  block:
+    - name: "MEDIUM | WN10-AU-000510 | PATCH | The System event log size must be configured to 32768 KB or greater. | Set Variable"
+      when: win10stig_system_max_log_file_size >= 32768
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\System
+        name: MaxSize
+        data: "{{ win10stig_system_max_log_file_size }}"
+        type: dword
+
+    - name: "MEDIUM | WN10-AU-000510 | AUDIT | The System event log size must be configured to 32768 KB or greater. | Warning Check For Variable Standards."
+      when: win10stig_system_max_log_file_size < 32768
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid file size set for win10stig_system_max_log_file_size. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-AU-000510 | AUDIT | The System event log size must be configured to 32768 KB or greater. | Warn Count."
+      when: win10stig_system_max_log_file_size < 32768
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AU-000510'
+
+- name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts."
+  when: wn10_au_000515 | bool
+  tags:
+    - WN10-AU-000515
+    - CAT2
+    - CCI-000162
+    - CCI-000163
+    - CCI-000164
+    - SRG-OS-000057-GPOS-00027
+    - SV-220782r958434_rule
+    - V-220782
+    - NIST800-53_AU-9
+    - NIST800-53A_AU-9.1
+    - NIST800-53R4_AU-9
+  block:
+    - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Get Application Event Log File Location from Registry"
+      ansible.windows.win_reg_stat:
+        path: "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application"
+        name: "File"
+      register: discovered_au_000515_detected_application_log
+
+    - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Set a fact for the Application Event Log file location"
+      ansible.builtin.set_fact:
+        discovered_au_000515_application_event_log_location: "{{ discovered_au_000515_detected_application_log.value }}"
+
+    - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Check if the log file location is default"
+      ansible.builtin.set_fact:
+        discovered_au_000515_is_default_location: "{{ discovered_au_000515_application_event_log_location == 'C:\\Windows\\system32\\winevt\\Logs\\Application.evtx' }}"
+
+    - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Set the correct log file path based on default or non-default location"
+      ansible.builtin.set_fact:
+        discovered_au_000515_log_file_path: "{{ discovered_au_000515_application_event_log_location if discovered_au_000515_is_default_location == false else 'C:\\Windows\\system32\\winevt\\Logs\\Application.evtx' }}"
+
+    - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Retrieve ACL entries for the Application event log"
+      ansible.windows.win_shell: (Get-Acl "{{ discovered_au_000515_application_event_log_location }}").Access | ConvertTo-Json -Compress
+      check_mode: false
+      register: discovered_au_000515_app_event_log_acl_entries
+      changed_when: false
+      failed_when: false
+
+    - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Parse ACL entries for further checks"
+      ansible.builtin.set_fact:
+        discovered_au_000515_parsed_acl_entries: "{{ discovered_au_000515_app_event_log_acl_entries.stdout | from_json }}"
+
+    - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Set fact for authorized entries with proper rights (manual filtering)"
+      ansible.builtin.set_fact:
+        discovered_au_000515_authorized_entries: >-
+          {%- set auth = [] -%}
+          {%- for entry in discovered_au_000515_parsed_acl_entries -%}
+            {%- if (entry.IdentityReference.Value in ['NT AUTHORITY\\SYSTEM', 'BUILTIN\\Administrators', 'NT SERVICE\\EventLog', 'NT Service\\Eventlog'] and entry.FileSystemRights == 2032127)
+                  or (entry.IdentityReference.Value == 'APPLICATION PACKAGE AUTHORITY\\ALL APPLICATION PACKAGES' and entry.FileSystemRights == 1179817) -%}
+              {%- set _ = auth.append(entry) -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ auth }}
+
+    - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Set fact for unauthorized accounts (or misconfigured authorized accounts)"
+      ansible.builtin.set_fact:
+        discovered_au_000515_unauthorized_accounts_with_extra_permissions: >-
+          {{
+            discovered_au_000515_parsed_acl_entries | map('to_json') | list
+            | difference(discovered_au_000515_authorized_entries | map('to_json') | list)
+            | map('from_json') | list
+          }}
+
+    - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Check for permissions when log location is default"
+      when:
+        - discovered_au_000515_is_default_location
+        - >
+          (discovered_au_000515_unauthorized_accounts_with_extra_permissions | length > 0) or
+          (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | length == 0) or
+          (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | length == 0) or
+          (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT SERVICE\\EventLog') | selectattr('FileSystemRights', 'equalto', 2032127) | length == 0)
+      ansible.builtin.debug:
+        msg:
+          - "═══════════════════════════════════════════════════════════════════"
+          - "        Windows 10 Application Event Log ACL Compliance Check      "
+          - "═══════════════════════════════════════════════════════════════════"
+          - ""
+          - "C:\\Windows\\System32\\winevt\\Logs\\Application.evtx"
+          - ""
+          - "{{ 'No unauthorized accounts detected' if discovered_au_000515_unauthorized_accounts_with_extra_permissions | length == 0 else 'Warning!! Unauthorized Accounts Detected:' }}"
+          - "{{ discovered_au_000515_unauthorized_accounts_with_extra_permissions | map(attribute='IdentityReference') | list if discovered_au_000515_unauthorized_accounts_with_extra_permissions | length > 0 else '' }}"
+          - ""
+          - "Permissions of these unauthorized accounts:"
+          - "{{ discovered_au_000515_unauthorized_accounts_with_extra_permissions | map(attribute='FileSystemRights') | list }}"
+          - ""
+          - "───────────────────────────────────────────────────────────────────"
+          - ""
+          - "Checking Full Control for required accounts..."
+          - ""
+          - "{{ 'NT AUTHORITY\\SYSTEM does NOT have Full Control' if (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'NT AUTHORITY\\SYSTEM has Full Control as expected.' }}"
+          - "{{ 'BUILTIN\\Administrators does NOT have Full Control' if (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'BUILTIN\\Administrators has Full Control as expected.' }}"
+          - "{{ 'NT SERVICE\\EventLog does NOT have Full Control' if (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT SERVICE\\EventLog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'NT SERVICE\\EventLog has Full Control as expected.' }}"
+          - ""
+          - "═══════════════════════════════════════════════════════════════════"
+
+    - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Check for permissions when log location is non-default"
+      when:
+        - not discovered_au_000515_is_default_location
+        - >
+          (discovered_au_000515_unauthorized_accounts_with_extra_permissions | length > 0) or
+          (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+          (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+          (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT Service\\Eventlog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0)
+      ansible.builtin.debug:
+        msg:
+          - "═══════════════════════════════════════════════════════════════════"
+          - "        Windows 10 Application Event Log ACL Compliance Check      "
+          - "═══════════════════════════════════════════════════════════════════"
+          - ""
+          - "{{ discovered_au_000515_log_file_path }}"
+          - ""
+          - "{{ 'No unauthorized accounts detected' if discovered_au_000515_unauthorized_accounts_with_extra_permissions | length == 0 else 'Warning!! Unauthorized Accounts Detected:' }}"
+          - "{{ discovered_au_000515_unauthorized_accounts_with_extra_permissions | map(attribute='IdentityReference') | list if discovered_au_000515_unauthorized_accounts_with_extra_permissions | length > 0 else '' }}"
+          - ""
+          - "Permissions of these unauthorized accounts:"
+          - "{{ discovered_au_000515_unauthorized_accounts_with_extra_permissions | map(attribute='FileSystemRights') | list }}"
+          - ""
+          - "───────────────────────────────────────────────────────────────────"
+          - ""
+          - "Checking Full Control for required accounts..."
+          - ""
+          - "{{ 'NT AUTHORITY\\SYSTEM does NOT have Full Control' if (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'NT AUTHORITY\\SYSTEM has Full Control as expected.' }}"
+          - "{{ 'BUILTIN\\Administrators does NOT have Full Control' if (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'BUILTIN\\Administrators has Full Control as expected.' }}"
+          - "{{ 'NT Service\\Eventlog does NOT have Full Control' if (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT Service\\Eventlog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'NT Service\\Eventlog has Full Control as expected.' }}"
+          - ""
+          - "Checking if NT Service\\Eventlog has the correct format for non-default location..."
+          - "{{ 'Warning!! NT SERVICE\\EventLog should be listed as NT Service\\Eventlog' if (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT Service\\Eventlog') | list | length == 0) else 'NT Service\\Eventlog is correctly listed as NT Service\\Eventlog.' }}"
+          - ""
+          - "═══════════════════════════════════════════════════════════════════"
+
+    - name: "MEDIUM | WN10-AU-000515 | AUDIT | Windows 10 permissions for the Application event log must prevent access by non-privileged accounts. | Warn Count."
+      when: >
+        (
+          (discovered_au_000515_is_default_location and
+          (
+            (discovered_au_000515_unauthorized_accounts_with_extra_permissions | length > 0) or
+            (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+            (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+            (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT SERVICE\\EventLog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0)
+          ))
+          or
+          ((not discovered_au_000515_is_default_location) and
+          (
+            (discovered_au_000515_unauthorized_accounts_with_extra_permissions | length > 0) or
+            (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+            (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+            (discovered_au_000515_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT Service\\Eventlog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0)
+          ))
+        )
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AU-000515'
+
+- name: "MEDIUM | WN10-AU-000520 | PATCH | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts."
+  when: wn10_au_000520 | bool
+  tags:
+    - WN10-AU-000520
+    - CAT2
+    - CCI-000162
+    - CCI-000163
+    - CCI-000164
+    - SRG-OS-000057-GPOS-00027
+    - SV-220783r958434_rule
+    - V-220783
+    - NIST800-53_AU-9
+    - NIST800-53A_AU-9.1
+    - NIST800-53R4_AU-9
+  block:
+    - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Get Security Event Log File Location from Registry"
+      ansible.windows.win_reg_stat:
+        path: "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Security"
+        name: "File"
+      register: discovered_au_000520_detected_security_log
+
+    - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Set a fact for the Security Event Log file location"
+      ansible.builtin.set_fact:
+        discovered_au_000520_security_event_log_location: "{{ discovered_au_000520_detected_security_log.value }}"
+
+    - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Check if the log file location is default"
+      ansible.builtin.set_fact:
+        discovered_au_000520_is_default_location: "{{ discovered_au_000520_security_event_log_location == 'C:\\Windows\\system32\\winevt\\Logs\\Security.evtx' }}"
+
+    - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Set the correct log file path based on default or non-default location"
+      ansible.builtin.set_fact:
+        discovered_au_000520_log_file_path: "{{ discovered_au_000520_security_event_log_location if discovered_au_000520_is_default_location == false else 'C:\\Windows\\system32\\winevt\\Logs\\Security.evtx' }}"
+
+    - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Retrieve ACL entries for the Security event log"
+      ansible.windows.win_shell: (Get-Acl "{{ discovered_au_000520_security_event_log_location }}").Access | ConvertTo-Json -Compress
+      check_mode: false
+      register: discovered_au_000520_sec_event_log_acl_entries
+      changed_when: false
+      failed_when: false
+
+    - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Parse ACL entries for further checks"
+      ansible.builtin.set_fact:
+        discovered_au_000520_parsed_acl_entries: "{{ discovered_au_000520_sec_event_log_acl_entries.stdout | from_json }}"
+
+    - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Set fact for authorized entries with proper rights (manual filtering)"
+      ansible.builtin.set_fact:
+        discovered_au_000520_authorized_entries: >-
+          {%- set auth = [] -%}
+          {%- for entry in discovered_au_000520_parsed_acl_entries -%}
+            {%- if (entry.IdentityReference.Value in ['NT AUTHORITY\\SYSTEM', 'BUILTIN\\Administrators', 'NT SERVICE\\EventLog', 'NT Service\\Eventlog'] and entry.FileSystemRights == 2032127)
+                  or (entry.IdentityReference.Value == 'APPLICATION PACKAGE AUTHORITY\\ALL APPLICATION PACKAGES' and entry.FileSystemRights == 1179817) -%}
+              {%- set _ = auth.append(entry) -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ auth }}
+
+    - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Set fact for unauthorized accounts (or misconfigured authorized accounts)"
+      ansible.builtin.set_fact:
+        discovered_au_000520_unauthorized_accounts_with_extra_permissions: >-
+          {{
+            discovered_au_000520_parsed_acl_entries | map('to_json') | list
+            | difference(discovered_au_000520_authorized_entries | map('to_json') | list)
+            | map('from_json') | list
+          }}
+
+    - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Check for permissions when log location is default"
+      when:
+        - discovered_au_000520_is_default_location
+        - >
+          (discovered_au_000520_unauthorized_accounts_with_extra_permissions | length > 0) or
+          (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+          (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+          (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT SERVICE\\EventLog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0)
+      ansible.builtin.debug:
+        msg:
+          - "═══════════════════════════════════════════════════════════════════"
+          - "        Windows 10 Security Event Log ACL Compliance Check           "
+          - "═══════════════════════════════════════════════════════════════════"
+          - ""
+          - "C:\\Windows\\System32\\winevt\\Logs\\Security.evtx"
+          - ""
+          - "{{ 'No unauthorized accounts detected' if discovered_au_000520_unauthorized_accounts_with_extra_permissions | length == 0 else 'Warning!! Unauthorized Accounts Detected:' }}"
+          - "{{ discovered_au_000520_unauthorized_accounts_with_extra_permissions | map(attribute='IdentityReference') | list if discovered_au_000520_unauthorized_accounts_with_extra_permissions | length > 0 else '' }}"
+          - ""
+          - "Permissions of these unauthorized accounts:"
+          - "{{ discovered_au_000520_unauthorized_accounts_with_extra_permissions | map(attribute='FileSystemRights') | list }}"
+          - ""
+          - "───────────────────────────────────────────────────────────────────"
+          - ""
+          - "Checking Full Control for required accounts..."
+          - ""
+          - "{{ 'NT AUTHORITY\\SYSTEM does NOT have Full Control' if (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'NT AUTHORITY\\SYSTEM has Full Control as expected.' }}"
+          - "{{ 'BUILTIN\\Administrators does NOT have Full Control' if (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'BUILTIN\\Administrators has Full Control as expected.' }}"
+          - "{{ 'NT SERVICE\\EventLog does NOT have Full Control' if (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT SERVICE\\EventLog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'NT SERVICE\\EventLog has Full Control as expected.' }}"
+          - ""
+          - "═══════════════════════════════════════════════════════════════════"
+
+    - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Check for permissions when log location is non-default"
+      when:
+        - not discovered_au_000520_is_default_location
+        - >
+          (discovered_au_000520_unauthorized_accounts_with_extra_permissions | length > 0) or
+          (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+          (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+          (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT Service\\Eventlog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0)
+      ansible.builtin.debug:
+        msg:
+          - "═══════════════════════════════════════════════════════════════════"
+          - "        Windows 10 Security Event Log ACL Compliance Check           "
+          - "═══════════════════════════════════════════════════════════════════"
+          - ""
+          - "{{ discovered_au_000520_log_file_path }}"
+          - ""
+          - "{{ 'No unauthorized accounts detected' if discovered_au_000520_unauthorized_accounts_with_extra_permissions | length == 0 else 'Warning!! Unauthorized Accounts Detected:' }}"
+          - "{{ discovered_au_000520_unauthorized_accounts_with_extra_permissions | map(attribute='IdentityReference') | list if discovered_au_000520_unauthorized_accounts_with_extra_permissions | length > 0 else '' }}"
+          - ""
+          - "Permissions of these unauthorized accounts:"
+          - "{{ discovered_au_000520_unauthorized_accounts_with_extra_permissions | map(attribute='FileSystemRights') | list }}"
+          - ""
+          - "───────────────────────────────────────────────────────────────────"
+          - ""
+          - "Checking Full Control for required accounts..."
+          - ""
+          - "{{ 'NT AUTHORITY\\SYSTEM does NOT have Full Control' if (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'NT AUTHORITY\\SYSTEM has Full Control as expected.' }}"
+          - "{{ 'BUILTIN\\Administrators does NOT have Full Control' if (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'BUILTIN\\Administrators has Full Control as expected.' }}"
+          - "{{ 'NT Service\\Eventlog does NOT have Full Control' if (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT Service\\Eventlog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'NT Service\\Eventlog has Full Control as expected.' }}"
+          - ""
+          - "Checking if NT Service\\Eventlog has the correct format for non-default location..."
+          - "{{ 'Warning!! NT SERVICE\\EventLog should be listed as NT Service\\Eventlog' if (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT Service\\Eventlog') | list | length == 0) else 'NT Service\\Eventlog is correctly listed as NT Service\\Eventlog.' }}"
+          - ""
+          - "═══════════════════════════════════════════════════════════════════"
+
+    - name: "MEDIUM | WN10-AU-000520 | AUDIT | Windows 10 permissions for the Security event log must prevent access by non-privileged accounts. | Warn Count."
+      when: >
+        (
+          (discovered_au_000520_is_default_location and
+          (
+            (discovered_au_000520_unauthorized_accounts_with_extra_permissions | length > 0) or
+            (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+            (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+            (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT SERVICE\\EventLog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0)
+          ))
+          or
+          ((not discovered_au_000520_is_default_location) and
+          (
+            (discovered_au_000520_unauthorized_accounts_with_extra_permissions | length > 0) or
+            (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+            (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+            (discovered_au_000520_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT Service\\Eventlog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0)
+          ))
+        )
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AU-000520'
+
+- name: "MEDIUM | WN10-AU-000525 | PATCH | Windows 10 permissions for the System event log must prevent access by non-privileged accounts."
+  when: wn10_au_000525 | bool
+  tags:
+    - WN10-AU-000525
+    - CAT2
+    - CCI-000162
+    - CCI-000163
+    - CCI-000164
+    - SRG-OS-000057-GPOS-00027
+    - SV-220784r958434_rule
+    - V-220784
+    - NIST800-53_AU-9
+    - NIST800-53A_AU-9.1
+    - NIST800-53R4_AU-9
+  block:
+    - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Get System Event Log File Location from Registry"
+      ansible.windows.win_reg_stat:
+        path: "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\System"
+        name: "File"
+      register: discovered_au_000525_detected_system_log
+
+    - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Set a fact for the System Event Log file location"
+      ansible.builtin.set_fact:
+        discovered_au_000525_system_event_log_location: "{{ discovered_au_000525_detected_system_log.value }}"
+
+    - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Check if the log file location is default"
+      ansible.builtin.set_fact:
+        discovered_au_000525_is_default_location: "{{ discovered_au_000525_system_event_log_location == 'C:\\Windows\\system32\\winevt\\Logs\\System.evtx' }}"
+
+    - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Set the correct log file path based on default or non-default location"
+      ansible.builtin.set_fact:
+        discovered_au_000525_log_file_path: "{{ discovered_au_000525_system_event_log_location if discovered_au_000525_is_default_location == false else 'C:\\Windows\\system32\\winevt\\Logs\\System.evtx' }}"
+
+    - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Retrieve ACL entries for the System event log"
+      ansible.windows.win_shell: (Get-Acl "{{ discovered_au_000525_system_event_log_location }}").Access | ConvertTo-Json -Compress
+      check_mode: false
+      register: discovered_au_000525_sys_event_log_acl_entries
+      changed_when: false
+      failed_when: false
+
+    - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Parse ACL entries for further checks"
+      ansible.builtin.set_fact:
+        discovered_au_000525_parsed_acl_entries: "{{ discovered_au_000525_sys_event_log_acl_entries.stdout | from_json }}"
+
+    - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Set fact for authorized entries with proper rights (manual filtering)"
+      ansible.builtin.set_fact:
+        discovered_au_000525_authorized_entries: >-
+          {%- set auth = [] -%}
+          {%- for entry in discovered_au_000525_parsed_acl_entries -%}
+            {%- if (entry.IdentityReference.Value in ['NT AUTHORITY\\SYSTEM', 'BUILTIN\\Administrators', 'NT SERVICE\\EventLog', 'NT Service\\Eventlog'] and entry.FileSystemRights == 2032127)
+                  or (entry.IdentityReference.Value == 'APPLICATION PACKAGE AUTHORITY\\ALL APPLICATION PACKAGES' and entry.FileSystemRights == 1179817) -%}
+              {%- set _ = auth.append(entry) -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ auth }}
+
+    - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Set fact for unauthorized accounts (or misconfigured authorized accounts)"
+      ansible.builtin.set_fact:
+        discovered_au_000525_unauthorized_accounts_with_extra_permissions: >-
+          {{
+            discovered_au_000525_parsed_acl_entries | map('to_json') | list
+            | difference(discovered_au_000525_authorized_entries | map('to_json') | list)
+            | map('from_json') | list
+          }}
+
+    - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Check for permissions when log location is default"
+      when:
+        - discovered_au_000525_is_default_location
+        - >
+          (discovered_au_000525_unauthorized_accounts_with_extra_permissions | length > 0) or
+          (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+          (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+          (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT SERVICE\\EventLog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0)
+      ansible.builtin.debug:
+        msg:
+          - "═══════════════════════════════════════════════════════════════════"
+          - "        Windows 10 System Event Log ACL Compliance Check             "
+          - "═══════════════════════════════════════════════════════════════════"
+          - ""
+          - "C:\\Windows\\system32\\winevt\\Logs\\System.evtx"
+          - ""
+          - "{{ 'No unauthorized accounts detected' if discovered_au_000525_unauthorized_accounts_with_extra_permissions | length == 0 else 'Warning!! Unauthorized Accounts Detected:' }}"
+          - "{{ discovered_au_000525_unauthorized_accounts_with_extra_permissions | map(attribute='IdentityReference') | list if discovered_au_000525_unauthorized_accounts_with_extra_permissions | length > 0 else '' }}"
+          - ""
+          - "Permissions of these unauthorized accounts:"
+          - "{{ discovered_au_000525_unauthorized_accounts_with_extra_permissions | map(attribute='FileSystemRights') | list }}"
+          - ""
+          - "───────────────────────────────────────────────────────────────────"
+          - ""
+          - "Checking Full Control for required accounts..."
+          - ""
+          - "{{ 'NT AUTHORITY\\SYSTEM does NOT have Full Control' if (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'NT AUTHORITY\\SYSTEM has Full Control as expected.' }}"
+          - "{{ 'BUILTIN\\Administrators does NOT have Full Control' if (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'BUILTIN\\Administrators has Full Control as expected.' }}"
+          - "{{ 'NT SERVICE\\EventLog does NOT have Full Control' if (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT SERVICE\\EventLog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'NT SERVICE\\EventLog has Full Control as expected.' }}"
+          - ""
+          - "═══════════════════════════════════════════════════════════════════"
+
+    - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Check for permissions when log location is non-default"
+      when:
+        - not discovered_au_000525_is_default_location
+        - >
+          (discovered_au_000525_unauthorized_accounts_with_extra_permissions | length > 0) or
+          (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+          (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+          (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT Service\\Eventlog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0)
+      ansible.builtin.debug:
+        msg:
+          - "═══════════════════════════════════════════════════════════════════"
+          - "        Windows 10 System Event Log ACL Compliance Check             "
+          - "═══════════════════════════════════════════════════════════════════"
+          - ""
+          - "{{ discovered_au_000525_log_file_path }}"
+          - ""
+          - "{{ 'No unauthorized accounts detected' if discovered_au_000525_unauthorized_accounts_with_extra_permissions | length == 0 else 'Warning!! Unauthorized Accounts Detected:' }}"
+          - "{{ discovered_au_000525_unauthorized_accounts_with_extra_permissions | map(attribute='IdentityReference') | list if discovered_au_000525_unauthorized_accounts_with_extra_permissions | length > 0 else '' }}"
+          - ""
+          - "Permissions of these unauthorized accounts:"
+          - "{{ discovered_au_000525_unauthorized_accounts_with_extra_permissions | map(attribute='FileSystemRights') | list }}"
+          - ""
+          - "───────────────────────────────────────────────────────────────────"
+          - ""
+          - "Checking Full Control for required accounts..."
+          - ""
+          - "{{ 'NT AUTHORITY\\SYSTEM does NOT have Full Control' if (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'NT AUTHORITY\\SYSTEM has Full Control as expected.' }}"
+          - "{{ 'BUILTIN\\Administrators does NOT have Full Control' if (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'BUILTIN\\Administrators has Full Control as expected.' }}"
+          - "{{ 'NT Service\\Eventlog does NOT have Full Control' if (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT Service\\Eventlog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) else 'NT Service\\Eventlog has Full Control as expected.' }}"
+          - ""
+          - "Checking if NT Service\\Eventlog has the correct format for non-default location..."
+          - "{{ 'Warning!! NT SERVICE\\EventLog should be listed as NT Service\\Eventlog' if (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT Service\\Eventlog') | list | length == 0) else 'NT Service\\Eventlog is correctly listed as NT Service\\Eventlog.' }}"
+          - ""
+          - "═══════════════════════════════════════════════════════════════════"
+
+    - name: "MEDIUM | WN10-AU-000525 | AUDIT | Windows 10 permissions for the System event log must prevent access by non-privileged accounts. | Warn Count."
+      when: >
+        (
+          (discovered_au_000525_is_default_location and
+          (
+            (discovered_au_000525_unauthorized_accounts_with_extra_permissions | length > 0) or
+            (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+            (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+            (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT SERVICE\\EventLog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0)
+          ))
+          or
+          ((not discovered_au_000525_is_default_location) and
+          (
+            (discovered_au_000525_unauthorized_accounts_with_extra_permissions | length > 0) or
+            (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT AUTHORITY\\SYSTEM') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+            (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'BUILTIN\\Administrators') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0) or
+            (discovered_au_000525_parsed_acl_entries | selectattr('IdentityReference.Value', 'equalto', 'NT Service\\Eventlog') | selectattr('FileSystemRights', 'equalto', 2032127) | list | length == 0)
+          ))
+        )
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AU-000525'
+
+- name: "MEDIUM | WN10-AU-000555 | PATCH | Windows 10 must be configured to audit Other Policy Change Events Failures."
+  when: wn10_au_000555 | bool
+  tags:
+    - WN10-AU-000555
+    - CAT2
+    - CCI-000130
+    - SRG-OS-000037-GPOS-00015
+    - SV-220786r958412_rule
+    - V-220786
+    - NIST800-53_AU-3
+    - NIST800-53A_AU-3.1
+    - NIST800-53R4_AU-3
+  block:
+    - name: "MEDIUM | WN10-AU-000555 | AUDIT | Windows 10 must be configured to audit Other Policy Change Events Failures. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Other Policy Change Events" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000555_audit
+
+    - name: "MEDIUM | WN10-AU-000555 | PATCH | Windows 10 must be configured to audit Other Policy Change Events Failures. | Failure"
+      when: "'Failure' not in discovered_au_000555_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Other Policy Change Events" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000560 | PATCH | Windows 10 must be configured to audit other Logon/Logoff Events Successes."
+  when: wn10_au_000560 | bool
+  tags:
+    - WN10-AU-000560
+    - CAT2
+    - CCI-000130
+    - SRG-OS-000037-GPOS-00015
+    - SV-220787r958412_rule
+    - V-220787
+    - NIST800-53_AU-3
+    - NIST800-53A_AU-3.1
+    - NIST800-53R4_AU-3
+  block:
+    - name: "MEDIUM | WN10-AU-000560 | AUDIT | Windows 10 must be configured to audit other Logon/Logoff Events Successes. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Other Logon/Logoff Events" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000560_audit
+
+    - name: "MEDIUM | WN10-AU-000560 | PATCH | Windows 10 must be configured to audit other Logon/Logoff Events Successes. | Apply Success."
+      when: "'Success' not in discovered_au_000560_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Other Logon/Logoff Events" /success:enable
+
+- name: "MEDIUM | WN10-AU-000565 | PATCH | Windows 10 must be configured to audit other Logon/Logoff Events Failures."
+  when: wn10_au_000565 | bool
+  tags:
+    - WN10-AU-000565
+    - CAT2
+    - CCI-000130
+    - SRG-OS-000037-GPOS-00015
+    - SV-220788r958412_rule
+    - V-220788
+    - NIST800-53_AU-3
+    - NIST800-53A_AU-3.1
+    - NIST800-53R4_AU-3
+  block:
+    - name: "MEDIUM | WN10-AU-000565 | AUDIT | Windows 10 must be configured to audit other Logon/Logoff Events Failures. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Other Logon/Logoff Events" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000565_audit
+
+    - name: "MEDIUM | WN10-AU-000565 | PATCH | Windows 10 must be configured to audit other Logon/Logoff Events Failures. | Apply Failure."
+      when: "'Failure' not in discovered_au_000565_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Other Logon/Logoff Events" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000570 | PATCH | Windows 10 must be configured to audit Detailed File Share Failures."
+  when: wn10_au_000570 | bool
+  tags:
+    - WN10-AU-000570
+    - CAT2
+    - CCI-000130
+    - SRG-OS-000037-GPOS-00015
+    - SV-220789r958412_rule
+    - V-220789
+    - NIST800-53_AU-3
+    - NIST800-53A_AU-3.1
+    - NIST800-53R4_AU-3
+  block:
+    - name: "MEDIUM | WN10-AU-000570 | AUDIT | Windows 10 must be configured to audit Detailed File Share Failures. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Detailed File Share" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000570_audit
+
+    - name: "MEDIUM | WN10-AU-000570 | PATCH | Windows 10 must be configured to audit Detailed File Share Failures. | Failure"
+      when: "'Failure' not in discovered_au_000570_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Detailed File Share" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000575 | PATCH | Windows 10 must be configured to audit MPSSVC Rule-Level Policy Change Successes."
+  when: wn10_au_000575 | bool
+  tags:
+    - WN10-AU-000575
+    - CAT2
+    - CCI-000130
+    - SRG-OS-000037-GPOS-00015
+    - SV-220790r958412_rule
+    - V-220790
+    - NIST800-53_AU-3
+    - NIST800-53A_AU-3.1
+    - NIST800-53R4_AU-3
+  block:
+    - name: "MEDIUM | WN10-AU-000575 | AUDIT | Windows 10 must be configured to audit MPSSVC Rule-Level Policy Change Successes. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"MPSSVC Rule-Level Policy Change" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000575_audit
+
+    - name: "MEDIUM | WN10-AU-000575 | PATCH | Windows 10 must be configured to audit MPSSVC Rule-Level Policy Change Successes. | Success"
+      when: "'Success' not in discovered_au_000575_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"MPSSVC Rule-Level Policy Change" /success:enable
+
+- name: "MEDIUM | WN10-AU-000580 | PATCH | Windows 10 must be configured to audit MPSSVC Rule-Level Policy Change Failures."
+  when: wn10_au_000580 | bool
+  tags:
+    - WN10-AU-000580
+    - CAT2
+    - CCI-000130
+    - SRG-OS-000037-GPOS-00015
+    - SV-220791r958412_rule
+    - V-220791
+    - NIST800-53_AU-3
+    - NIST800-53A_AU-3.1
+    - NIST800-53R4_AU-3
+  block:
+    - name: "MEDIUM | WN10-AU-000580 | AUDIT | Windows 10 must be configured to audit MPSSVC Rule-Level Policy Change Failures. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"MPSSVC Rule-Level Policy Change" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000580_audit
+
+    - name: "MEDIUM | WN10-AU-000580 | PATCH | Windows 10 must be configured to audit MPSSVC Rule-Level Policy Change Failures. | Failure"
+      when: "'Failure' not in discovered_au_000580_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"MPSSVC Rule-Level Policy Change" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000585 | PATCH | Windows 10 must have command line process auditing events enabled for failures."
+  when: wn10_au_000585 | bool
+  tags:
+    - WN10-AU-000585
+    - CAT2
+    - CCI-002234
+    - SRG-OS-000037-GPOS-00015
+    - SV-257589r958412_rule
+    - V-257589
+    - NIST800-53R4_AC-6_9
+  block:
+    - name: "MEDIUM | WN10-AU-000585 | AUDIT | Windows 10 must have command line process auditing events enabled for failures. | Get current audit events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Process Creation" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000585_audit
+
+    - name: "MEDIUM | WN10-AU-000585 | PATCH | Windows 10 must have command line process auditing events enabled for failures. | Failure"
+      when: "'Failure' not in discovered_au_000585_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Process Creation" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000581 | PATCH | Windows 10 must be configured to audit file system failures."
+  when: wn10_au_000581 | bool
+  tags:
+    - WN10-AU-000581
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000062-GPOS-00031
+    - SV-278918r1135272_rule
+    - V-278918
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000581 | AUDIT | Windows 10 must be configured to audit file system failures. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"File System" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000581_audit
+
+    - name: "MEDIUM | WN10-AU-000581 | PATCH | Windows 10 must be configured to audit file system failures. | Failures."
+      when: "'Failure' not in discovered_au_000581_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"File System" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000582 | PATCH | Windows 10 must be configured to audit file system successes."
+  when: wn10_au_000582 | bool
+  tags:
+    - WN10-AU-000582
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000062-GPOS-00031
+    - SV-278919r1135275_rule
+    - V-278919
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000582 | AUDIT | Windows 10 must be configured to audit file system successes. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"File System" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000582_audit
+
+    - name: "MEDIUM | WN10-AU-000582 | PATCH | Windows 10 must be configured to audit file system successes. | Successs."
+      when: "'Success' not in discovered_au_000582_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"File System" /success:enable
+
+- name: "MEDIUM | WN10-AU-000583 | PATCH | Windows 10 must be configured to audit handle manipulation failures."
+  when: wn10_au_000583 | bool
+  tags:
+    - WN10-AU-000583
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000062-GPOS-00031
+    - SV-278920r1135278_rule
+    - V-278920
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000583 | AUDIT | Windows 10 must be configured to audit handle manipulation failures. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Handle Manipulation" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000583_audit
+
+    - name: "MEDIUM | WN10-AU-000583 | PATCH | Windows 10 must be configured to audit handle manipulation failures. | Failures."
+      when: "'Failure' not in discovered_au_000583_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Handle Manipulation" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000584 | PATCH | Windows 10 must be configured to audit handle manipulation successes."
+  when: wn10_au_000584 | bool
+  tags:
+    - WN10-AU-000584
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000062-GPOS-00031
+    - SV-278921r1135281_rule
+    - V-278921
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000584 | AUDIT | Windows 10 must be configured to audit handle manipulation successes. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Handle Manipulation" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000584_audit
+
+    - name: "MEDIUM | WN10-AU-000584 | PATCH | Windows 10 must be configured to audit handle manipulation successes. | Successs."
+      when: "'Success' not in discovered_au_000584_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Handle Manipulation" /success:enable
+
+- name: "MEDIUM | WN10-AU-000586 | PATCH | Windows 10 must be configured to audit registry successes."
+  when: wn10_au_000586 | bool
+  tags:
+    - WN10-AU-000586
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000062-GPOS-00031
+    - SV-278922r1135284_rule
+    - V-278922
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000586 | AUDIT | Windows 10 must be configured to audit registry successes. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Registry" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000586_audit
+
+    - name: "MEDIUM | WN10-AU-000586 | PATCH | Windows 10 must be configured to audit registry successes. | Successs."
+      when: "'Success' not in discovered_au_000586_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Registry" /success:enable
+
+- name: "MEDIUM | WN10-AU-000587 | PATCH | Windows 10 must be configured to audit sensitive privilege use successes."
+  when: wn10_au_000587 | bool
+  tags:
+    - WN10-AU-000587
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000062-GPOS-00031
+    - SV-278924r1141910_rule
+    - V-278924
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000587 | AUDIT | Windows 10 must be configured to audit sensitive privilege use successes. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Sensitive Privilege Use" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000587_audit
+
+    - name: "MEDIUM | WN10-AU-000587 | PATCH | Windows 10 must be configured to audit sensitive privilege use successes. | Successs."
+      when: "'Success' not in discovered_au_000587_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Sensitive Privilege Use" /success:enable
+
+- name: "MEDIUM | WN10-AU-000588 | PATCH | Windows 10 must be configured to audit sensitive privilege use failures."
+  when: wn10_au_000588 | bool
+  tags:
+    - WN10-AU-000588
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000062-GPOS-00031
+    - SV-278925r1141913_rule
+    - V-278925
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000588 | AUDIT | Windows 10 must be configured to audit sensitive privilege use failures. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Sensitive Privilege Use" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000588_audit
+
+    - name: "MEDIUM | WN10-AU-000588 | PATCH | Windows 10 must be configured to audit sensitive privilege use failures. | Failures."
+      when: "'Failure' not in discovered_au_000588_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Sensitive Privilege Use" /failure:enable
+
+- name: "MEDIUM | WN10-AU-000589 | PATCH | Windows 10 must be configured to audit registry failures."
+  when: wn10_au_000589 | bool
+  tags:
+    - WN10-AU-000589
+    - CAT2
+    - CCI-000172
+    - SRG-OS-000062-GPOS-00031
+    - SV-278923r1135287_rule
+    - V-278923
+    - NIST800-53_AU-12_c
+    - NIST800-53A_AU-12.1_iv
+    - NIST800-53R4_AU-12_c
+  block:
+    - name: "MEDIUM | WN10-AU-000589 | AUDIT | Windows 10 must be configured to audit registry failures. | Get Current Audit Events."
+      ansible.windows.win_shell: AuditPol /get /subcategory:"Registry" -r | ConvertFrom-Csv | Select-Object -expand "Inclusion Setting"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_au_000589_audit
+
+    - name: "MEDIUM | WN10-AU-000589 | PATCH | Windows 10 must be configured to audit registry failures. | Failures."
+      when: "'Failure' not in discovered_au_000589_audit.stdout"
+      ansible.windows.win_shell: AuditPol /set /subcategory:"Registry" /failure:enable

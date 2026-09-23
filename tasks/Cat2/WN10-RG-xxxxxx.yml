@@ -1,0 +1,202 @@
+---
+
+- name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained."
+  when: wn10_rg_000005 | bool
+  tags:
+    - WN10-RG-000005
+    - CAT2
+    - CCI-002235
+    - SRG-OS-000324-GPOS-00125
+    - SV-220907r958726_rule
+    - V-220907
+    - NIST800-53R4_AC-6_10
+  block:
+    - name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained. | Get actual ACL for HKLM:\\SOFTWARE"
+      ansible.windows.win_shell: (Get-Acl -Path "HKLM:\SYSTEM").Access | Select-Object IdentityReference, RegistryRights, AccessControlType, IsInherited, InheritanceFlags, PropagationFlags | ConvertTo-Json -Depth 10
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_rg_000005_software_acl_raw
+
+    - name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained. | Parse actual ACL entries"
+      ansible.builtin.set_fact:
+        discovered_rg_000005_software_acl_extras: "{{ discovered_rg_000005_software_acl_raw.stdout | from_json }}"
+
+    - name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained. | Initialize normalized ACL list"
+      ansible.builtin.set_fact:
+        discovered_rg_000005_actual_software_acl_normalized: []
+
+    - name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained. | Normalize each ACL entry for comparison (STIG-aware)"
+      vars:
+        discovered_rg_000005_software_registry_rights_map:
+          1: "QueryValues"
+          2: "SetValue"
+          4: "CreateSubKey"
+          8: "EnumerateSubKeys"
+          16: "Notify"
+          32: "CreateLink"
+          65536: "Delete"
+          131072: "ReadPermissions"
+          131078: "WriteKey"
+          131097: "ReadKey"
+          262144: "ChangePermissions"
+          524288: "TakeOwnership"
+          983103: "FullControl"
+        discovered_rg_000005_software_access_control_type_map:
+          0: "Allow"
+          1: "Deny"
+        discovered_rg_000005_software_inheritance_flags_map:
+          0: "None"
+          1: "ContainerInherit"
+          2: "ObjectInherit"
+        discovered_rg_000005_software_propagation_flags_map:
+          0: "None"
+          1: "NoPropagateInherit"
+          2: "InheritOnly"
+        discovered_rg_000005_software_normalized_acl_entry:
+          IdentityReference: "{{ item.IdentityReference.Value }}"
+          RegistryRights: "{{ discovered_rg_000005_software_registry_rights_map[item.RegistryRights] | default(item.RegistryRights) }}"
+          AccessControlType: "{{ discovered_rg_000005_software_access_control_type_map[item.AccessControlType] | default(item.AccessControlType) }}"
+          IsInherited: "{{ item.IsInherited }}"
+          InheritanceFlags: "{{ discovered_rg_000005_software_inheritance_flags_map[item.InheritanceFlags] | default(item.InheritanceFlags) }}"
+          PropagationFlags: "{{ discovered_rg_000005_software_propagation_flags_map[item.PropagationFlags] | default(item.PropagationFlags) }}"
+      ansible.builtin.set_fact:
+        discovered_rg_000005_actual_software_acl_normalized: "{{ discovered_rg_000005_actual_software_acl_normalized + [discovered_rg_000005_software_normalized_acl_entry] }}"
+      loop: "{{ discovered_rg_000005_software_acl_extras }}"
+
+    - name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained. | Compare expected vs actual ACLs (missing or incorrect)"
+      ansible.builtin.set_fact:
+        discovered_rg_000005_software_acl_diff: "{{ win10stig_expected_software_acl | difference(discovered_rg_000005_actual_software_acl_normalized) }}"
+
+    - name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained. | Check for unexpected ACL entries (excluding known identities)"
+      ansible.builtin.set_fact:
+        discovered_rg_000005_software_acl_extras: >-
+          {{
+            discovered_rg_000005_actual_software_acl_normalized
+            | difference(win10stig_expected_software_acl)
+            | rejectattr('IdentityReference', 'in', win10stig_expected_software_acl | map(attribute='IdentityReference') | list)
+            | list
+          }}
+
+    - name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained. | Get actual ACL for HKLM:\\SYSTEM"
+      ansible.windows.win_shell: >
+        (Get-Acl -Path "HKLM:\SYSTEM").Access |
+        Select-Object IdentityReference, RegistryRights, AccessControlType, IsInherited, InheritanceFlags, PropagationFlags |
+        ConvertTo-Json -Depth 10
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_rg_000005_system_acl_raw
+
+    - name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained. | Parse actual ACL entries"
+      ansible.builtin.set_fact:
+        discovered_rg_000005_system_acl_entries: "{{ discovered_rg_000005_system_acl_raw.stdout | from_json }}"
+
+    - name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained. | Initialize normalized ACL list"
+      ansible.builtin.set_fact:
+        discovered_rg_000005_actual_system_acl_normalized: []
+
+    - name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained. | Normalize each ACL entry for comparison (STIG-aware)"
+      vars:
+        discovered_rg_000005_system_registry_rights_map:
+          1: "QueryValues"
+          2: "SetValue"
+          4: "CreateSubKey"
+          8: "EnumerateSubKeys"
+          16: "Notify"
+          32: "CreateLink"
+          65536: "Delete"
+          131072: "ReadPermissions"
+          131078: "WriteKey"
+          131097: "ReadKey"
+          262144: "ChangePermissions"
+          524288: "TakeOwnership"
+          983103: "FullControl"
+        discovered_rg_000005_system_access_control_type_map:
+          0: "Allow"
+          1: "Deny"
+        discovered_rg_000005_system_inheritance_flags_map:
+          0: "None"
+          1: "ContainerInherit"
+          2: "ObjectInherit"
+        discovered_rg_000005_system_propagation_flags_map:
+          0: "None"
+          1: "NoPropagateInherit"
+          2: "InheritOnly"
+        discovered_rg_000005_system_normalized_acl_entry:
+          IdentityReference: "{{ item.IdentityReference.Value }}"
+          RegistryRights: "{{ discovered_rg_000005_system_registry_rights_map[item.RegistryRights] | default(item.RegistryRights) }}"
+          AccessControlType: "{{ discovered_rg_000005_system_access_control_type_map[item.AccessControlType] | default(item.AccessControlType) }}"
+          IsInherited: "{{ item.IsInherited | bool }}"
+          InheritanceFlags: "{{ discovered_rg_000005_system_inheritance_flags_map[item.InheritanceFlags] | default(item.InheritanceFlags) }}"
+          PropagationFlags: "{{ discovered_rg_000005_system_propagation_flags_map[item.PropagationFlags] | default(item.PropagationFlags) }}"
+      ansible.builtin.set_fact:
+        discovered_rg_000005_actual_system_acl_normalized: >-
+          {{
+            discovered_rg_000005_actual_system_acl_normalized + [discovered_rg_000005_system_normalized_acl_entry]
+          }}
+      loop: "{{ discovered_rg_000005_system_acl_entries }}"
+
+    - name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained. | Compare expected vs actual ACLs (missing or incorrect)"
+      ansible.builtin.set_fact:
+        discovered_rg_000005_system_acl_diff: >-
+          {{
+            win10stig_expected_system_acl | difference(discovered_rg_000005_actual_system_acl_normalized)
+          }}
+
+    - name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained. | Check for unexpected ACL entries (excluding known identities)"
+      ansible.builtin.set_fact:
+        discovered_rg_000005_system_acl_extras: >-
+          {{
+            discovered_rg_000005_actual_system_acl_normalized
+            | difference(win10stig_expected_system_acl)
+            | rejectattr('IdentityReference', 'in', win10stig_expected_system_acl | map(attribute='IdentityReference') | list)
+            | list
+          }}
+
+    - name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained. | Display ACL Compliance Results for SOFTWARE and SYSTEM"
+      ansible.builtin.debug:
+        msg:
+          - "═══════════════════════════════════════════════════════════════════"
+          - "            Windows Registry ACL STIG Compliance Check             "
+          - "═══════════════════════════════════════════════════════════════════"
+          - ""
+          - "HKLM:\\SOFTWARE"
+          - ""
+          - "{{ 'No missing ACL entries' if discovered_rg_000005_software_acl_diff | length == 0 else 'Missing or incorrect ACL entries:' }}"
+          - "{{ discovered_rg_000005_software_acl_diff if discovered_rg_000005_software_acl_diff | length > 0 else '' }}"
+          - ""
+          - "{{ 'No unexpected ACL entries' if discovered_rg_000005_software_acl_extras | length == 0 else 'Unexpected ACL entries:' }}"
+          - "{{ discovered_rg_000005_software_acl_extras if discovered_rg_000005_software_acl_extras | length > 0 else '' }}"
+          - ""
+          - "───────────────────────────────────────────────────────────────────"
+          - ""
+          - "HKLM:\\SYSTEM"
+          - ""
+          - "{{ 'No missing ACL entries' if discovered_rg_000005_system_acl_diff | length == 0 else 'Missing or incorrect ACL entries:' }}"
+          - "{{ discovered_rg_000005_system_acl_diff if discovered_rg_000005_system_acl_diff | length > 0 else '' }}"
+          - ""
+          - "{{ 'No unexpected ACL entries' if discovered_rg_000005_system_acl_extras | length == 0 else 'Unexpected ACL entries:' }}"
+          - "{{ discovered_rg_000005_system_acl_extras if discovered_rg_000005_system_acl_extras | length > 0 else '' }}"
+          - ""
+          - "───────────────────────────────────────────────────────────────────"
+          - ""
+          - "Warning!! Accessing HKLM:\\SECURITY Hive Permissions."
+          - ""
+          - "You cannot retrieve ACLs or permissions for the HKLM:\\SECURITY registry hive using PowerShell"
+          - "from a regular user or even an administrator account. The SECURITY hive is protected by the Windows"
+          - "operating system and can only be accessed by the SYSTEM account. Attempting to access it using PowerShell"
+          - "commands like Get-Acl, reg save, or Copy-Item from a standard or admin session will result in Access is"
+          - "denied” or similar errors — even with elevated privileges."
+          - "To successfully retrieve ACLs from HKLM:\\SECURITY, you must:"
+          - "   - Run PowerShell as the SYSTEM user (e.g., using PsExec or a Scheduled Task)"
+          - "   - Export the hive using a SYSTEM-level task, then load and inspect it offline"
+          - "   - Use trusted forensic tools (e.g., KAPE, Velociraptor) that operate under SYSTEM-level permissions"
+          - ""
+          - "═══════════════════════════════════════════════════════════════════"
+
+    - name: "MEDIUM | WN10-RG-000005 | AUDIT | Default permissions for the HKEY_LOCAL_MACHINE registry hive must be maintained. | Add Warn Count."
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-RG-000005'

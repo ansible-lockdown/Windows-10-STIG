@@ -41,7 +41,12 @@ benchparse/
 *xccdf.xml
 *.retry
 
-# GitHub Action/Workflow files
-.github/
-.github/.ansible/.lock
+# GitHub runtime checkouts only. Do NOT ignore .github/ wholesale - that silently
+# swallows every new workflow file and they have to be force-added.
+.github/workflows/github_windows_IaC/
+.github/.ansible/
 .ansible/
+
+# QA artifacts - these belong under active/<cycle>/, never in the role repo
+*qa_report*
+qa_repocheck_*

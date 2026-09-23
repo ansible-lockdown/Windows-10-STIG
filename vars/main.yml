@@ -1,5 +1,8 @@
 ---
-# vars file for .
+
+# vars file for Windows-10-STIG
+
+min_ansible_version: 2.16.1
 
 # Used to control warning summary
 warn_control_list: ""
@@ -37,12 +40,48 @@ discovered_vdi_non_persistent: false
 #  - The VDI instance is explicitly **marked as persistent**.
 discovered_vdi_persistent: false
 
-# discovered_domain_joined is a setting built into the playbook for some controls that only applies
-# to standalone or domain joined systems. By default this is set to true.
-discovered_domain_joined: true
+# discovered_domain_joined is a setting built into the playbook for some controls that only apply
+# to standalone or domain joined systems. prelim.yml overwrites it from the windows_domain facts.
+# It defaults to false so that a host whose domain membership could not be established is treated
+# as standalone rather than having domain-only settings applied to it.
+discovered_domain_joined: false
 
-# This will be changed to true if discovered.
-discovered_cloud_based_system: false
+# Raised in prelim.yml when the host is domain joined. The Default Domain Policy owns
+# [System Access] there, so the secedit backed controls are skipped.
+discovered_account_policy_is_domain_scoped: false
+
+# Seeded so a later `when` can never reference them undefined.
+#
+# Each of these is set by a task that is itself behind a `when`, so on a host where that
+# condition is false the set_fact is skipped, the variable never comes into being, and the
+# next task's `when` aborts the whole play with "is undefined" rather than skipping.
+#
+# WN10-00-000140 is the case that bites in practice: it keys off
+# `Get-CimInstance root\SecurityCenter2 FirewallProduct`, which enumerates third party
+# firewall products only. A host running nothing but Windows Defender Firewall returns an
+# empty set, so the guarded set_fact is skipped and the play stops there. That is the
+# ordinary configuration, not an edge case.
+#
+# WN10-00-000190 keeps its guard, because its set_fact runs the output through `from_json`
+# and that fails on an empty string. The default below is what makes the guard safe.
+discovered_00_000140_firewall_installed: false
+discovered_00_000140_firewall_name: []
+discovered_00_000190_orphaned_user_accounts_list: []
+discovered_00_000190_orphaned_group_accounts_list: []
+
+# Both are raised in prelim.yml and both guard a control that would sever the run. Seeded here
+# so neither control's `when` is ever evaluated against an undefined name.
+#
+# discovered_control_account_is_local - ansible_user carries no domain separator, so the run is
+# connected as a local account whatever the transport. WN10-UR-000070 removes the network logon
+# right from every local account, which severs BOTH WinRM and SSH, because Windows OpenSSH
+# password authentication uses the same logon path. The console is the only way back in.
+discovered_control_account_is_local: false
+
+# discovered_local_account_network_logon - the above, and the transport is a network logon one.
+# WN10-CC-000037 filters the privileged token of local accounts on network logon only, so SSH
+# survives that control and is a genuine fallback for it.
+discovered_local_account_network_logon: false
 
 # This variable is used in the tracking of only 1 copy of Windows being installed on the machine related.
 win10stig_os_keyword: "Windows"
@@ -118,3 +157,10 @@ win10stig_expected_windows_acl:
   - { IdentityReference: "APPLICATION PACKAGE AUTHORITY\\ALL APPLICATION PACKAGES", Permissions: "(OI)(CI)(IO)(GR,GE)" }
   - { IdentityReference: "APPLICATION PACKAGE AUTHORITY\\ALL RESTRICTED APPLICATION PACKAGES", Permissions: "(RX)" }
   - { IdentityReference: "APPLICATION PACKAGE AUTHORITY\\ALL RESTRICTED APPLICATION PACKAGES", Permissions: "(OI)(CI)(IO)(GR,GE)" }
+
+company_title: 'MindPoint Group - A Quantum Sky Company'
+
+file_managed_by_ansible: |-
+  # File managed by ansible as part of {{ benchmark }} benchmark
+  # As part of Ansible-lockdown
+  # Provided by {{ company_title }}

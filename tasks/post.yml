@@ -1,15 +1,13 @@
 ---
 
 - name: "POST | Flush Handlers"
-  tags:
-    - always
+  tags: always
   ansible.builtin.meta: flush_handlers
 
 - name: "POST | Reboot System Options"
   vars:
     warn_control_id: Reboot_Required
-  tags:
-    - always
+  tags: always
   block:
     - name: "POST | Rebooting System................. Skip Reboot Has Been Set To: False"
       when:

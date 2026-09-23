@@ -1,12 +1,29 @@
 ---
 
-win10stig_cat1_patch: true
-win10stig_cat2_patch: true
-win10stig_cat3_patch: true
+# defaults file for Windows-10-STIG
+
+## metadata for Audit benchmark
+## also rendered into the compliance facts file by templates/compliance_facts.json.j2
+benchmark_version: 'v3.6.0'
+
+## Benchmark name used by auditing control role
+benchmark: Windows-10-STIG
+
+# Whether to skip the OS check for supported OS's
+skip_os_check: false
+
+# Create managed not custom local_facts files
+create_benchmark_facts: true
+ansible_facts_path: 'C:\ProgramData\ansible\facts.d'
+
+# CAT 1
+win10stig_cat1_controls: true
+# CAT 2
+win10stig_cat2_controls: true
+# CAT 3
+win10stig_cat3_controls: true
 
 # Global Variables
-
-win10stig_min_ansible_version: "2.16"
 
 # This parameter disables controls that could have a very lengthy find. For example
 # removing all files of a specific file type that search the entire drive.
@@ -16,17 +33,31 @@ win10stig_min_ansible_version: "2.16"
 win10stig_lengthy_search: true
 
 # win_skip_for_test is used in the playbook to skip over certain controls that
-# may cause breaking changes when running it for testing purposes.  These generally consist of winrmvi host controls
-# that are needed to keep the ansible connection alive.
+# may cause breaking changes when running it for testing purposes. These generally consist of WinRM
+# host controls that are needed to keep the ansible connection alive.
 # Controls that will be skipped:
+# WN10-CC-000052 - CAT2 - Restricts the Schannel ECC curve list, which breaks the WinRM TLS
+#                         handshake on the next connection and leaves the host unreachable
 # WN10-CC-000330 - CAT1 - Disables WinRM Allow Client Basic Auth
 # WN10-CC-000345 - CAT1 - Disables WinRM Allow Service Basic Auth
 # WN10-CC-000335 - CAT2 - The Windows Remote Management (WinRM) client must not allow unencrypted traffic.
 # WN10-CC-000350 - CAT2 - The Windows Remote Management (WinRM) service must not allow unencrypted traffic.
-# WN10-SO-000005 - CAT2 - Disables Built-In Admin Account
 # WN10-SO-000230 - CAT2 - The system must be configured to use FIPS-compliant algorithms for encryption, hashing, and signing.
+# WN10-CC-000037 - CAT2 - Sets LocalAccountTokenFilterPolicy=0 on a domain joined host, filtering
+#                         the privileged token of LOCAL accounts on network logon. A run connected
+#                         over WinRM or psrp as a local administrator loses the host as it applies.
+#                         A DOMAIN account is exempt and SSH is unaffected.
+# WN10-UR-000070 - CAT2 - Sets SeDenyNetworkLogonRight to Guests, Enterprise Admins, Domain Admins
+#                         and Local account. Severs BOTH WinRM and SSH, because Windows OpenSSH
+#                         password auth uses the same logon path, leaving only the console. A
+#                         Domain Admin is denied too - the principal that survives is a domain
+#                         account that is neither, and that is a local Administrator on the target.
 # Default: false
 win_skip_for_test: false
+
+# Both are ALSO skipped automatically when the run connects as a local account, whatever
+# win_skip_for_test is set to. prelim.yml sets discovered_control_account_is_local and
+# discovered_local_account_network_logon from ansible_connection and ansible_user.
 
 # Changes will be made that will require a system reboot.
 # The following option will allow whether or not to skip the reboot.
@@ -46,7 +77,6 @@ wn10_00_000045: true
 wn10_00_000050: true
 wn10_00_000070: true
 wn10_00_000100: true
-wn10_00_000145: true
 wn10_00_000150: true
 wn10_00_000240: true
 wn10_ac_000045: true
@@ -94,7 +124,6 @@ wn10_00_000170: true
 wn10_00_000175: true
 wn10_00_000190: true
 wn10_00_000210: true
-wn10_00_000220: true
 wn10_00_000230: true
 wn10_00_000250: true
 wn10_ac_000005: true
@@ -216,7 +245,6 @@ wn10_pk_000010: true
 wn10_pk_000015: true
 wn10_pk_000020: true
 wn10_rg_000005: true
-wn10_so_000005: true
 wn10_so_000010: true
 wn10_so_000015: true
 wn10_so_000020: true
@@ -230,6 +258,7 @@ wn10_so_000070: true
 wn10_so_000075: true
 wn10_so_000095: true
 wn10_so_000100: true
+wn10_so_000110: true
 wn10_so_000120: true
 wn10_so_000160: true
 wn10_so_000167: true
@@ -280,7 +309,16 @@ wn10_cc_000327: true
 wn10_cc_000391: true
 wn10_00_000395: true
 wn10_au_000585: true
-wn10_00_000125: true
+wn10_au_000581: true
+wn10_au_000582: true
+wn10_au_000583: true
+wn10_au_000584: true
+wn10_au_000586: true
+wn10_au_000587: true
+wn10_au_000588: true
+wn10_au_000589: true
+wn10_00_000107: true
+wn10_00_000126: true
 wn10_cc_000063: true
 
 # CAT 3 Rules
@@ -343,30 +381,14 @@ win10stig_av_sftw: WinDefend
 # Default: false
 win10stig_web_server: false
 
-# WN10-00-000145
-# wn10stig_dep_value is the value to set DEP to. To comply with STIG standards at least OptOut level needs to be set.
-# AlwaysOn, a more restrictive selection, is also valid but does not allow applications that do not function properly to be opted out of DEP.
-# Value options are AlwaysOn or OptOut. If OptOut is used you will need to manually select what applications to opt out of DEP
-# Default: OptOut
-wn10stig_dep_value: OptOut
-# wn10stig_dep_optout_apps is the list of apps to be opted out of DEP. Leaving blank will not configure
-# that list in the registry.
-# Example:
-# wn10stig_dep_included_apps:
-#   - "C:\\Program Files\\App1\\app1.exe"
-#   - "C:\\Users\\User\\AppData\\Local\\App2\\app2.exe"
-#   - "C:\\Program Files (x86)\\App3\\app3.exe"
-# Default: []
-wn10stig_dep_optout_apps: []
-
 # WN10-00-000240
-# wn10stig_internet_based_apps_to_check is a list of apps that can have access to the internet that are commonly found.
+# win10stig_internet_based_apps_to_check is a list of apps that can have access to the internet that are commonly found.
 # This list is not all inclusive and can be added to or have items removed.
 # STIG states you must establish and enforce a policy that prohibits administrative accounts from using
 # applications that access the internet, such as web browsers, or with potential internet sources, such as email.
 # Define specific exceptions for local service administration. These exceptions may include HTTP(S)-based tools that are used
 # for the administration of the local system, services, or attached devices.
-wn10stig_internet_based_apps_to_check:
+win10stig_internet_based_apps_to_check:
   - "chrome.exe"
   - "firefox.exe"
   - "iexplore.exe"
@@ -498,7 +520,7 @@ win10stig_remove_unauthorized_hosts: false
 # MaxDisconnectionTime
 # MaxIdleTime
 # MaxSessionTime
-# To convert to hours take the number wn10_00_000250_session_timeout_value / 3600000 gives you hours.
+# To convert to hours take the number win10stig_non_persistent_max_session_timeout / 3600000 gives you hours.
 # Note: 24 Hours = 86400000
 # Default: []
 win10stig_non_persistent_max_session_timeout: []
@@ -689,10 +711,10 @@ win10stig_sc_remove_option: 1
 
 # WN10-SO-000280
 # Windows 10 passwords for enabled local Administrator accounts must be changed at least every 60 days.
-# If the PasswordLastSet date is greater than wn10stig_pass_age_administrator days old, this is a finding.
+# If the PasswordLastSet date is greater than win10stig_pass_age_administrator days old, this is a finding.
 # NOTE: This can be set to 60 or less.
 # Default: 60
-wn10stig_pass_age_administrator: 60
+win10stig_pass_age_administrator: 60
 
 # WN10-UR-000010
 # win10stig_additional_network_logon_users_or_groups is the option to add additional groups.
