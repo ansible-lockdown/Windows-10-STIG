@@ -1,0 +1,299 @@
+---
+
+# Windows imposes TWO ordering constraints on the account lockout controls and this file is
+# ordered to satisfy both. Do not reorder them:
+#   1. LockoutBadCount (WN10-AC-000010) first - the other two are rejected until a bad-count
+#      threshold exists.
+#   2. LockoutDuration (WN10-AC-000005) before ResetLockoutCount (WN10-AC-000015) - secedit
+#      rejects a reset counter greater than the current duration with "The parameter is
+#      incorrect". Both default to 15, so a host still on the Windows default duration of 10
+#      fails on the reset counter if the order is swapped.
+# These three were previously implemented twice, here and in cat2_cloud_lockout_order.yml,
+# chosen by a cloud detection fact. Both copies had converged on the same keys in the same
+# order, so the duplicate file and the fact were removed.
+
+- name: "MEDIUM | WN10-AC-000010 | PATCH | The number of allowed bad logon attempts must be configured to 3 or less."
+  when:
+    - wn10_ac_000010 | bool
+    - not discovered_account_policy_is_domain_scoped | bool
+    - not win_skip_for_test | bool
+  tags:
+    - WN10-AC-000010
+    - CAT2
+    - CCI-000044
+    - SRG-OS-000021-GPOS-00005
+    - SV-220740r958388_rule
+    - V-220740
+    - NIST800-53_AC-7_a
+    - NIST800-53A_AC-7.1_ii
+    - NIST800-53R4_AC-7_a
+  block:
+    - name: "MEDIUM | WN10-AC-000010 | PATCH | The number of allowed bad logon attempts must be configured to 3 or less. | Set Variable"
+      when:
+        - win10stig_bad_login_lockout_count <= 3
+        - win10stig_bad_login_lockout_count > 0
+      community.windows.win_security_policy:
+        section: System Access
+        key: LockoutBadCount
+        value: "{{ win10stig_bad_login_lockout_count }}"
+
+    - name: "MEDIUM | WN10-AC-000010 | AUDIT | The number of allowed bad logon attempts must be configured to 3 or less. | Verify Variable Not 0 or more then 3 warning."
+      when: win10stig_bad_login_lockout_count > 3 or win10stig_bad_login_lockout_count == 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid number of attempts set for win10stig_bad_login_lockout_count. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-AC-000010 | AUDIT | The number of allowed bad logon attempts must be configured to 3 or less. | Set warning count."
+      when: win10stig_bad_login_lockout_count > 3 or win10stig_bad_login_lockout_count == 0
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AC-000010'
+
+- name: "MEDIUM | WN10-AC-000005 | PATCH | Windows 10 account lockout duration must be configured to 15 minutes or greater."
+  when:
+    - wn10_ac_000005 | bool
+    - not discovered_account_policy_is_domain_scoped | bool
+    - not win_skip_for_test | bool
+  tags:
+    - WN10-AC-000005
+    - CAT2
+    - CCI-002238
+    - SRG-OS-000329-GPOS-00128
+    - SV-220739r958736_rule
+    - V-220739
+    - NIST800-53_AC-7_b
+  block:
+    - name: "MEDIUM | WN10-AC-000005 | PATCH | Windows 10 account lockout duration must be configured to 15 minutes or greater."
+      when: win10stig_account_lockout_duration >= 15 or win10stig_account_lockout_duration == 0
+      community.windows.win_security_policy:
+        section: System Access
+        key: LockoutDuration
+        value: "{{ win10stig_account_lockout_duration }}"
+
+    - name: "MEDIUM | WN10-AC-000005 | AUDIT | Windows 10 account lockout duration must be configured to 15 minutes or greater. | Verify variable set to 15 or more minutes warning."
+      when: win10stig_account_lockout_duration < 15 and win10stig_account_lockout_duration != 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid number of minutes set for win10stig_account_lockout_duration please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-AC-000005 | AUDIT | Windows 10 account lockout duration must be configured to 15 minutes or greater. | Set warning count."
+      when: win10stig_account_lockout_duration < 15 and win10stig_account_lockout_duration != 0
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AC-000005'
+
+- name: "MEDIUM | WN10-AC-000015 | PATCH | The period of time before the bad logon counter is reset must be configured to 15 minutes."
+  when:
+    - wn10_ac_000015 | bool
+    - not discovered_account_policy_is_domain_scoped | bool
+    - not win_skip_for_test | bool
+  tags:
+    - WN10-AC-000015
+    - CAT2
+    - CCI-000044
+    - CCI-002238
+    - SRG-OS-000021-GPOS-00005
+    - SV-220741r958388_rule
+    - V-220741
+    - NIST800-53_AC-7_a
+    - NIST800-53A_AC-7.1_ii
+    - NIST800-53R4_AC-7_a
+    - NIST800-53R4_AC-7_b
+  # The Lockout Duration must be greater or equal to the Reset Account Lockout counter.
+  block:
+    - name: "MEDIUM | WN10-AC-000015 | PATCH | The period of time before the bad logon counter is reset must be configured to 15 minutes."
+      when:
+        - win10stig_account_lockout_counter_reset >= 15
+        - win10stig_account_lockout_counter_reset <= win10stig_account_lockout_duration
+      community.windows.win_security_policy:
+        section: System Access
+        key: ResetLockoutCount
+        value: "{{ win10stig_account_lockout_counter_reset }}"
+
+    - name: "MEDIUM | WN10-AC-000015 | AUDIT | The period of time before the bad logon counter is reset must be configured to 15 minutes. | Verify variable set to 15 or more minutes warning."
+      when: win10stig_account_lockout_counter_reset > win10stig_account_lockout_duration or win10stig_account_lockout_counter_reset < 15
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid number of minutes set for win10stig_account_lockout_counter_reset. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-AC-000015 | AUDIT | The period of time before the bad logon counter is reset must be configured to 15 minutes. | Set warning count."
+      when: win10stig_account_lockout_counter_reset > win10stig_account_lockout_duration or win10stig_account_lockout_counter_reset < 15
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AC-000015'
+
+- name: "MEDIUM | WN10-AC-000020 | PATCH | The password history must be configured to 24 passwords remembered."
+  when:
+    - wn10_ac_000020 | bool
+    - not discovered_account_policy_is_domain_scoped | bool
+  tags:
+    - WN10-AC-000020
+    - CAT2
+    - CCI-004061
+    - SRG-OS-000077-GPOS-00045
+    - SV-220742r1000079_rule
+    - V-220742
+    - NIST800-53_IA-5_1
+    - NIST800-53R5_IA-5_1
+  block:
+    - name: "MEDIUM | WN10-AC-000020 | PATCH | The password history must be configured to 24 passwords remembered. | Set Variable."
+      when: win10stig_max_passwords_saved == 24
+      community.windows.win_security_policy:
+        section: System Access
+        key: PasswordHistorySize
+        value: "{{ win10stig_max_passwords_saved }}"
+
+    - name: "MEDIUM | WN10-AC-000020 | AUDIT | The password history must be configured to 24 passwords remembered. | Check for more then 24 saved passwords warning."
+      when: win10stig_max_passwords_saved > 24 or win10stig_max_passwords_saved <= 23
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid number of maximum passwords set in win10stig_max_passwords_saved, please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-AC-000020 | AUDIT | The password history must be configured to 24 passwords remembered. | Set warning count"
+      when: win10stig_max_passwords_saved > 24 or win10stig_max_passwords_saved <= 23
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AC-000020'
+
+- name: "MEDIUM | WN10-AC-000025 | PATCH | The maximum password age must be configured to 60 days or less."
+  when:
+    - wn10_ac_000025 | bool
+    - not discovered_account_policy_is_domain_scoped | bool
+  tags:
+    - WN10-AC-000025
+    - CAT2
+    - CCI-000199
+    - CCI-004066
+    - SRG-OS-000076-GPOS-00044
+    - SV-220743r1051020_rule
+    - V-220743
+    - NIST800-53_IA-5_1_d
+    - NIST800-53A_IA-5_1.1_v
+    - NIST800-53R4_IA-5_1_d
+  block:
+    - name: "MEDIUM | WN10-AC-000025 | PATCH | The maximum password age must be configured to 60 days or less. | Configure Variable Set"
+      when:
+        - win10stig_maximum_password_age <= 60
+        - win10stig_maximum_password_age > 0
+      community.windows.win_security_policy:
+        section: System Access
+        key: MaximumPasswordAge
+        value: "{{ win10stig_maximum_password_age }}"
+
+    - name: "MEDIUM | WN10-AC-000025 | AUDIT | The maximum password age must be configured to 60 days or less. | Warning check for maximum password age time."
+      when: win10stig_maximum_password_age > 60 or win10stig_maximum_password_age == 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid age set for win10stig_maximum_password_age, please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-AC-000025 | AUDIT | The maximum password age must be configured to 60 days or less. | Set warning count."
+      when: win10stig_maximum_password_age > 60 or win10stig_maximum_password_age == 0
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AC-000025'
+
+- name: "MEDIUM | WN10-AC-000030 | PATCH | The minimum password age must be configured to at least 1 day."
+  when:
+    - wn10_ac_000030 | bool
+    - not discovered_account_policy_is_domain_scoped | bool
+  tags:
+    - WN10-AC-000030
+    - CAT2
+    - CCI-000198
+    - CCI-004066
+    - SRG-OS-000075-GPOS-00043
+    - SV-220744r1051021_rule
+    - V-220744
+    - NIST800-53_IA-5_1_d
+    - NIST800-53A_IA-5_1.1_v
+    - NIST800-53R4_IA-5_1_d
+  block:
+    - name: "MEDIUM | WN10-AC-000030 | PATCH | The minimum password age must be configured to at least 1 day. | Set Variable"
+      when: win10stig_minimum_password_age <= 999 or win10stig_minimum_password_age > 0
+      community.windows.win_security_policy:
+        section: System Access
+        key: MinimumPasswordAge
+        value: "{{ win10stig_minimum_password_age }}"
+
+    - name: "MEDIUM | WN10-AC-000030 | PATCH | The minimum password age must be configured to at least 1 day. | Warning check for minimum password age."
+      when: win10stig_minimum_password_age > 999 or win10stig_minimum_password_age == 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid age set for win10stig_minimum_password_age, please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-AC-000030 | PATCH | The minimum password age must be configured to at least 1 day. | Set warning count."
+      when: win10stig_minimum_password_age > 999 or win10stig_minimum_password_age == 0
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AC-000030'
+
+- name: "MEDIUM | WN10-AC-000035 | PATCH | Passwords must, at a minimum, be 14 characters."
+  when:
+    - wn10_ac_000035 | bool
+    - not discovered_account_policy_is_domain_scoped | bool
+  tags:
+    - WN10-AC-000035
+    - CAT2
+    - CCI-000205
+    - CCI-004066
+    - SRG-OS-000078-GPOS-00046
+    - SV-220745r1051022_rule
+    - V-220745
+    - NIST800-53_IA-5_1_a
+    - NIST800-53A_IA-5_1.1_i
+    - NIST800-53R4_IA-5_1_a
+  block:
+    - name: "MEDIUM | WN10-AC-000035 | PATCH | Passwords must, at a minimum, be 14 characters. | Set Variable"
+      when: win10stig_minimum_password_length >= 14
+      community.windows.win_security_policy:
+        section: System Access
+        key: MinimumPasswordLength
+        value: "{{ win10stig_minimum_password_length }}"
+
+    - name: "MEDIUM | WN10-AC-000035 | AUDIT | Passwords must, at a minimum, be 14 characters. | Warning Check For Variable Standards."
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid length set for win10stig_minimum_password_length, please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+      when: win10stig_minimum_password_length < 14
+
+    - name: "MEDIUM | WN10-AC-000035 | AUDIT | Passwords must, at a minimum, be 14 characters. | Set warning count."
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-AC-000035'
+      when: win10stig_minimum_password_length < 14
+
+- name: "MEDIUM | WN10-AC-000040 | PATCH | The built-in Microsoft password complexity filter must be enabled."
+  when:
+    - wn10_ac_000040 | bool
+    - not discovered_account_policy_is_domain_scoped | bool
+  tags:
+    - WN10-AC-000040
+    - CAT2
+    - CCI-000192
+    - CCI-000193
+    - CCI-000194
+    - CCI-001619
+    - SRG-OS-000069-GPOS-00037
+    - SV-220746r1051023_rule
+    - V-220746
+    - NIST800-53_IA-5_1_a
+    - NIST800-53A_IA-5_1.1_v
+    - NIST800-53R4_IA-5_1_a
+  community.windows.win_security_policy:
+    section: System Access
+    key: PasswordComplexity
+    value: 1

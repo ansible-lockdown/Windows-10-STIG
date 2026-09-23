@@ -1,0 +1,1608 @@
+---
+
+- name: "MEDIUM | WN10-CC-000005 | PATCH | Camera access from the lock screen must be disabled."
+  when: wn10_cc_000005 | bool
+  tags:
+    - WN10-CC-000005
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220792r958478_rule
+    - V-220792
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization
+    name: NoLockScreenCamera
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000007 | PATCH | Windows 10 must cover or disable the built-in or attached camera when not in use."
+  when: wn10_cc_000007 | bool
+  tags:
+    - WN10-CC-000007
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220793r958478_rule
+    - V-220793
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  block:
+    - name: "MEDIUM | WN10-CC-000007 | AUDIT | Windows 10 must cover or disable the built-in or attached camera when not in use. | Skip hardening if win10stig_ignore_camera_hardening is true."
+      when:
+        - win10stig_ignore_camera_hardening
+        - win10stig_allowed_to_use_camera
+      ansible.builtin.debug:
+        msg:
+          - "═══════════════════════════════════════════════════════════════════"
+          - "            Camera Security Hardening Warning Summary               "
+          - "═══════════════════════════════════════════════════════════════════"
+          - ""
+          - "Warning!! Camera security hardening has been set to true!"
+          - "win10stig_ignore_camera_hardening: true"
+          - ""
+          - "Warning!! The system is allowed to use the camera has been set to true!"
+          - "win10stig_allowed_to_use_camera: true"
+          - ""
+          - "This system is classified as a mobile device or an approved VTC suite."
+          - "Ensure physical security measures are in place."
+          - "For a built-in camera, the camera must be protected by a camera cover"
+          - "(e.g. laptop camera cover slide) when not in use."
+          - ""
+          - "═══════════════════════════════════════════════════════════════════"
+
+    - name: "MEDIUM | WN10-CC-000007 | AUDIT | Windows 10 must cover or disable the built-in or attached camera when not in use. | Check if a camera is installed."
+      when: not win10stig_ignore_camera_hardening
+      ansible.windows.win_shell: |
+        Get-PnpDevice | Where-Object {
+            ($_.Class -eq "Camera" -or $_.Class -eq "Imaging" -or $_.Class -eq "Image") -and
+            ($_.Name -match 'Camera|Webcam|FaceTime|Integrated|Built-in')
+        } | Select-Object Name, Status, @{N='LocationPath'; E={ if ($_.LocationPath) { $_.LocationPath } else { 'N/A' } }} | ConvertTo-Json -Depth 10
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_cc_000007_camera_status
+
+    - name: "MEDIUM | WN10-CC-000007 | AUDIT | Windows 10 must cover or disable the built-in or attached camera when not in use. | Set default value for camera detection"
+      ansible.builtin.set_fact:
+        discovered_cc_000007_detected_cameras: []
+        discovered_cc_000007_builtin_cameras: []
+        discovered_cc_000007_usb_cameras: []
+
+    - name: "MEDIUM | WN10-CC-000007 | AUDIT | Windows 10 must cover or disable the built-in or attached camera when not in use. | Parse detected cameras."
+      when:
+        - not win10stig_ignore_camera_hardening
+        - discovered_cc_000007_camera_status.stdout | default('') | length > 0
+      ansible.builtin.set_fact:
+        discovered_cc_000007_detected_cameras: "{{ discovered_cc_000007_camera_status.stdout | from_json | default([]) }}"
+
+    - name: "MEDIUM | WN10-CC-000007 | AUDIT | Windows 10 must cover or disable the built-in or attached camera when not in use. | Identify built-in non-USB cameras."
+      when: not win10stig_ignore_camera_hardening
+      ansible.builtin.set_fact:
+        discovered_cc_000007_builtin_cameras: "{{ discovered_cc_000007_detected_cameras | selectattr('LocationPath', 'search', '^(?!USB)') | selectattr('Name', 'search', '(?i)Camera|Webcam|FaceTime|Integrated|Built-in') | list }}"
+
+    - name: "MEDIUM | WN10-CC-000007 | AUDIT | Windows 10 must cover or disable the built-in or attached camera when not in use. | Identify USB external cameras."
+      when: not win10stig_ignore_camera_hardening
+      ansible.builtin.set_fact:
+        discovered_cc_000007_usb_cameras: "{{ discovered_cc_000007_detected_cameras | selectattr('LocationPath', 'search', '^USB') | selectattr('Name', 'search', '(?i)Camera|Webcam|FaceTime|Integrated|Built-in') | list }}"
+
+    - name: "MEDIUM | WN10-CC-000007 | PATCH | Windows 10 must cover or disable the built-in or attached camera when not in use. | Disable all cameras via registry if camera use is not allowed."
+      when:
+        - not win10stig_ignore_camera_hardening
+        - not win10stig_allowed_to_use_camera
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\webcam
+        name: Deny
+        type: string
+        data: Deny
+
+    - name: "MEDIUM | WN10-CC-000007 | PATCH | Windows 10 must cover or disable the built-in or attached camera when not in use. | Disable built-in camera via registry if camera use is allowed."
+      when:
+        - not win10stig_ignore_camera_hardening
+        - win10stig_allowed_to_use_camera
+        - discovered_cc_000007_builtin_cameras | length > 0
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\webcam
+        name: Deny
+        type: string
+        data: Deny
+
+    - name: "MEDIUM | WN10-CC-000007 | AUDIT | Windows 10 must cover or disable the built-in or attached camera when not in use. | Warn if USB camera is plugged in manual disconnection required."
+      when:
+        - not win10stig_ignore_camera_hardening
+        - win10stig_allowed_to_use_camera
+        - discovered_cc_000007_usb_cameras | length > 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! An external (USB) camera is connected!"
+          - "You must manually disconnect the camera when not in use"
+          - "or cover it to be in compliance."
+
+    - name: "MEDIUM | WN10-CC-000007 | AUDIT | Windows 10 must cover or disable the built-in or attached camera when not in use. | Warn Count."
+      when: >-
+        (not win10stig_ignore_camera_hardening and win10stig_allowed_to_use_camera and discovered_cc_000007_usb_cameras | length > 0) or
+        (win10stig_ignore_camera_hardening and win10stig_allowed_to_use_camera)
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-CC-000007'
+
+- name: "MEDIUM | WN10-CC-000010 | PATCH | The display of slide shows on the lock screen must be disabled."
+  when: wn10_cc_000010 | bool
+  tags:
+    - WN10-CC-000010
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220794r958478_rule
+    - V-220794
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization
+    name: NoLockScreenSlideshow
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000020 | PATCH | IPv6 source routing must be configured to highest protection."
+  when: wn10_cc_000020 | bool
+  tags:
+    - WN10-CC-000020
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220795r991589_rule
+    - V-220795
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters
+    name: DisableIpSourceRouting
+    data: 2
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000025 | PATCH | The system must be configured to prevent IP source routing."
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters
+    name: DisableIPSourceRouting
+    data: 2
+    type: dword
+  when: wn10_cc_000025 | bool
+  tags:
+    - WN10-CC-000025
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220796r991589_rule
+    - V-220796
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+
+- name: "MEDIUM | WN10-CC-000037 | PATCH | Local administrator accounts must have their privileged token filtered to prevent elevated privileges from being used over the network on domain systems."
+  when:
+    - wn10_cc_000037 | bool
+    - discovered_domain_joined | bool
+    - not win_skip_for_test
+    # Skipped automatically when the run itself is a local account over a network logon
+    # transport, because applying this severs that connection. See the note in prelim.yml.
+    - not discovered_local_account_network_logon | bool
+  tags:
+    - WN10-CC-000037
+    - CAT2
+    - CCI-001084
+    - SRG-OS-000134-GPOS-00068
+    - SV-220799r958518_rule
+    - V-220799
+    - NIST800-53_SC-3
+    - NIST800-53A_SC-3.1_ii
+    - NIST800-53R4_SC-3
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: LocalAccountTokenFilterPolicy
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000038 | PATCH | WDigest Authentication must be disabled."
+  when: wn10_cc_000038 | bool
+  tags:
+    - WN10-CC-000038
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220800r958478_rule
+    - V-220800
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\Wdigest
+    name: UseLogonCredential
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000039 | PATCH | Run as different user must be removed from context menus."
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Classes\{{ item }}\shell\runasuser
+    name: SuppressionPolicy
+    data: 4096
+    type: dword
+  with_items:
+    - batfile
+    - cmdfile
+    - exefile
+    - mscfile
+  when: wn10_cc_000039 | bool
+  tags:
+    - WN10-CC-000039
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220801r958478_rule
+    - V-220801
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+
+- name: "MEDIUM | WN10-CC-000040 | PATCH | Insecure logons to an SMB server must be disabled."
+  when: wn10_cc_000040 | bool
+  tags:
+    - WN10-CC-000040
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220802r991589_rule
+    - V-220802
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\LanmanWorkstation
+    name: AllowInsecureGuestAuth
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000044 | PATCH | Internet connection sharing must be disabled."
+  when: wn10_cc_000044 | bool
+  tags:
+    - WN10-CC-000044
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220803r958478_rule
+    - V-220803
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Network Connections
+    name: NC_ShowSharedAccessUI
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000052 | PATCH | Windows 10 must be configured to prioritize ECC Curves with longer key lengths first."
+  when:
+    - wn10_cc_000052 | bool
+    - not win_skip_for_test | bool
+  tags:
+    - WN10-CC-000052
+    - CAT2
+    - CCI-000803
+    - SRG-OS-000120-GPOS-00061
+    - SV-220805r971535_rule
+    - V-220805
+    - NIST800-53_IA-7
+    - NIST800-53A_IA-7.1
+    - NIST800-53R4_IA-7
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Cryptography\Configuration\SSL\00010002
+    name: EccCurves
+    data: NistP384 NistP256
+    type: multistring
+
+- name: "MEDIUM | WN10-CC-000055 | PATCH | Simultaneous connections to the Internet or a Windows domain must be limited."
+  when: wn10_cc_000055 | bool
+  tags:
+    - WN10-CC-000055
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220806r991589_rule
+    - V-220806
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WcmSvc\GroupPolicy
+    name: fMinimizeConnections
+    data: 3
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000060 | PATCH | Connections to non-domain networks when connected to a domain authenticated network must be blocked."
+  when:
+    - wn10_cc_000060 | bool
+    - discovered_domain_joined | bool
+  tags:
+    - WN10-CC-000060
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220807r991589_rule
+    - V-220807
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WcmSvc\GroupPolicy
+    name: fBlockNonDomain
+    data: 1
+    type: dword
+
+# This functionality has been removed in Windows 10 v1803 and newer and is not applicable to those newer versions
+# Add the following to the when statement for Windows 10 ansible_facts['distribution_version'] <= "10.0.1803.0"
+- name: "MEDIUM | WN10-CC-000065 | PATCH | Wi-Fi Sense must be disabled."
+  when:
+    - wn10_cc_000065 | bool
+    - ansible_facts['distribution_version'] <= "10.0.1803.0"
+  tags:
+    - WN10-CC-000065
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220808r991589_rule
+    - V-220808
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\WcmSvc\wifinetworkmanager\config
+    name: AutoConnectAllowedOEM
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000066 | PATCH | Command line data must be included in process creation events."
+  when: wn10_cc_000066 | bool
+  tags:
+    - WN10-CC-000066
+    - CAT2
+    - CCI-000135
+    - SRG-OS-000042-GPOS-00020
+    - SV-220809r958422_rule
+    - V-220809
+    - NIST800-53_AU-3_1
+    - NIST800-53A_AU-3_1.1_ii
+    - NIST800-53R4_AU-3_1
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit
+    name: ProcessCreationIncludeCmdLine_Enabled
+    data: 1
+    type: dword
+
+# This control is not applicable to Windows 10 version 1507 and 1607
+# Add the following to the when statement for Windows 10
+#     - ansible_facts['distribution_version'] != "10.0.1507.0" or
+#       ansible_facts['distribution_version'] != "10.0.1607.0"
+- name: "MEDIUM | WN10-CC-000068 | PATCH | Windows 10 must be configured to enable Remote host allows delegation of non-exportable credentials."
+  when:
+    - wn10_cc_000068 | bool
+    - ansible_facts['distribution_version'] != "10.0.1507.0" or ansible_facts['distribution_version'] != "10.0.1607.0"
+  tags:
+    - WN10-CC-000068
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220810r991589_rule
+    - V-220810
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation
+    name: AllowProtectedCreds
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000070 | PATCH | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection."
+  when:
+    - wn10_cc_000070 | bool
+    - not discovered_vdi_non_persistent | bool
+  tags:
+    - WN10-CC-000070
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220811r1016359_rule
+    - V-220811
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-CC-000070 | PATCH | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection. | Set virtualization-based Security enabled."
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard
+        name: EnableVirtualizationBasedSecurity
+        data: 1
+        type: dword
+
+    - name: "MEDIUM | WN10-CC-000070 | PATCH | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection. | Set Variable For Secure Boot."
+      when: win10stig_enable_virtualization_based_security == 1 or win10stig_enable_virtualization_based_security == 3
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard
+        name: RequirePlatformSecurityFeatures
+        data: "{{ win10stig_enable_virtualization_based_security }}"
+        type: dword
+
+    - name: "MEDIUM | WN10-CC-000070 | AUDIT | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection. | Warning Check For Variable Standards."
+      when:
+        - win10stig_enable_virtualization_based_security != 1
+        - win10stig_enable_virtualization_based_security != 3
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid setting for win10stig_enable_virtualization_based_security. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-CC-000070 | AUDIT | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection. | Warning Count."
+      when:
+        - win10stig_enable_virtualization_based_security != 1
+        - win10stig_enable_virtualization_based_security != 3
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-CC-000070'
+
+    - name: "MEDIUM | WN10-CC-000070 | AUDIT | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection. | Check Secure Boot status"
+      ansible.windows.win_shell: Confirm-SecureBootUEFI
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_cc_000070_secure_boot_status
+
+    - name: "MEDIUM | WN10-CC-000070 | AUDIT | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection. | Check Virtualization-Based Security (VBS) status"
+      ansible.windows.win_shell: (Get-CimInstance -ClassName Win32_DeviceGuard -Namespace root\Microsoft\Windows\DeviceGuard).VirtualizationBasedSecurityStatus
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_cc_000070_vbs_status
+
+    - name: "MEDIUM | WN10-CC-000070 | AUDIT | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection. | Check if Device Guard is running"
+      ansible.windows.win_shell: (Get-CimInstance -ClassName Win32_DeviceGuard -Namespace root\Microsoft\Windows\DeviceGuard).SecurityServicesRunning
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_cc_000070_device_guard_status
+
+    - name: "MEDIUM | WN10-CC-000070 | AUDIT | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection. | Check if Hyper-V is installed"
+      ansible.windows.win_shell: Get-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online | Select-Object -ExpandProperty State
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_cc_000070_hyper_v_status
+
+    - name: "MEDIUM | WN10-CC-000070 | AUDIT | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection. | Check if CPU supports DMA Protection (IOMMU)"
+      ansible.windows.win_shell: (Get-CimInstance -ClassName Win32_DeviceGuard -Namespace root\Microsoft\Windows\DeviceGuard).AvailableSecurityProperties
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_cc_000070_dma_protection_status
+
+    - name: "MEDIUM | WN10-CC-000070 | AUDIT | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection. | Display results and warnings"
+      ansible.builtin.debug:
+        msg:
+          - "═══════════════════════════════════════════════════════"
+          - "   Virtualization-Based Security (VBS) Check Results   "
+          - "═══════════════════════════════════════════════════════"
+          - "Secure Boot Enabled   : {{ 'Yes' if discovered_cc_000070_secure_boot_status.stdout == 'True' else 'No (Finding)' }}"
+          - "VBS Running           : {{ 'Yes' if discovered_cc_000070_vbs_status.stdout | int == 2 else 'No (Finding)' }}"
+          - "Device Guard Running  : {{ 'Yes' if '1' in discovered_cc_000070_device_guard_status.stdout else 'No (Finding)' }}"
+          - "Hyper-V Installed     : {{ 'Yes' if 'Enabled' in discovered_cc_000070_hyper_v_status.stdout else 'No (Finding)' }}"
+          - "DMA Protection        : {{ 'Yes' if '3' in discovered_cc_000070_dma_protection_status.stdout else 'No (Hardware Limitation?)' }}"
+          - "═══════════════════════════════════════════════════════"
+
+    - name: "MEDIUM | WN10-CC-000070 | AUDIT | Virtualization Based Security must be enabled on Windows 10 with the platform security level configured to Secure Boot or Secure Boot with DMA Protection. | Warning Count."
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-CC-000070'
+
+- name: "MEDIUM | WN10-CC-000085 | PATCH | Early Launch Antimalware, Boot-Start Driver Initialization Policy must prevent boot drivers."
+  when: wn10_cc_000085 | bool
+  tags:
+    - WN10-CC-000085
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220813r991589_rule
+    - V-220813
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-CC-000085 | PATCH | Early Launch Antimalware, Boot-Start Driver Initialization Policy must prevent boot drivers. | Apply registry settings."
+      when: win10stig_boot_driver_init_policy == 1 or win10stig_boot_driver_init_policy == 3 or win10stig_boot_driver_init_policy == 8
+      ansible.windows.win_regedit:
+        path: HKLM:\SYSTEM\CurrentControlSet\Policies\EarlyLaunch
+        name: DriverLoadPolicy
+        data: "{{ win10stig_boot_driver_init_policy }}"
+        type: dword
+
+    - name: "MEDIUM | WN10-CC-000085 | AUDIT | Early Launch Antimalware, Boot-Start Driver Initialization Policy must prevent boot drivers. | Warning Check For Variable Standards."
+      when:
+        - win10stig_boot_driver_init_policy != 1
+        - win10stig_boot_driver_init_policy != 3
+        - win10stig_boot_driver_init_policy != 8
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid setting for win10stig_boot_driver_init_policy. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-CC-000085 | AUDIT | Early Launch Antimalware, Boot-Start Driver Initialization Policy must prevent boot drivers. | Warning Count."
+      when:
+        - win10stig_boot_driver_init_policy != 1
+        - win10stig_boot_driver_init_policy != 3
+        - win10stig_boot_driver_init_policy != 8
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-CC-000085'
+
+- name: "MEDIUM | WN10-CC-000090 | PATCH | Group Policy objects must be reprocessed even if they have not changed."
+  when: wn10_cc_000090 | bool
+  tags:
+    - WN10-CC-000090
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220814r991589_rule
+    - V-220814
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Group Policy\{35378EAC-683F-11D2-A89A-00C04FBBCFA2}
+    name: NoGPOListChanges
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000100 | PATCH | Downloading print driver packages over HTTP must be prevented."
+  when: wn10_cc_000100 | bool
+  tags:
+    - WN10-CC-000100
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220815r958478_rule
+    - V-220815
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers
+    name: DisableWebPnPDownload
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000105 | PATCH | Web publishing and online ordering wizards must be prevented from downloading a list of providers."
+  when: wn10_cc_000105 | bool
+  tags:
+    - WN10-CC-000105
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220816r958478_rule
+    - V-220816
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
+    name: NoWebServices
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000110 | PATCH | Printing over HTTP must be prevented."
+  when: wn10_cc_000110 | bool
+  tags:
+    - WN10-CC-000110
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220817r958478_rule
+    - V-220817
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers
+    name: DisableHTTPPrinting
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000115 | PATCH | Systems must at least attempt device authentication using certificates."
+  when:
+    - wn10_cc_000115 | bool
+    - discovered_domain_joined | bool
+  tags:
+    - WN10-CC-000115
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220818r991589_rule
+    - V-220818
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters
+    name: DevicePKInitEnabled
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000120 | PATCH | The network selection user interface (UI) must not be displayed on the logon screen."
+  when: wn10_cc_000120 | bool
+  tags:
+    - WN10-CC-000120
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220819r958478_rule
+    - V-220819
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
+    name: DontDisplayNetworkSelectionUI
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000130 | PATCH | Local users on domain-joined computers must not be enumerated."
+  when:
+    - wn10_cc_000130 | bool
+    - discovered_domain_joined | bool
+  tags:
+    - WN10-CC-000130
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220820r958478_rule
+    - V-220820
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
+    name: EnumerateLocalUsers
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000145 | PATCH | Users must be prompted for a password on resume from sleep (on battery)."
+  when: wn10_cc_000145 | bool
+  tags:
+    - WN10-CC-000145
+    - CAT2
+    - CCI-002038
+    - SRG-OS-000373-GPOS-00156
+    - SV-220821r1051027_rule
+    - V-220821
+    - NIST800-53R4_IA-11
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Power\PowerSettings\0e796bdb-100d-47d6-a2d5-f7d2daa51f51
+    name: DCSettingIndex
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000150 | PATCH | The user must be prompted for a password on resume from sleep (plugged in)."
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Power\PowerSettings\0e796bdb-100d-47d6-a2d5-f7d2daa51f51
+    name: ACSettingIndex
+    data: 1
+    type: dword
+  when: wn10_cc_000150 | bool
+  tags:
+    - WN10-CC-000150
+    - CAT2
+    - CCI-002038
+    - SRG-OS-000373-GPOS-00156
+    - SV-220822r1051028_rule
+    - V-220822
+    - NIST800-53R4_IA-11
+
+- name: "MEDIUM | WN10-CC-000165 | PATCH | Unauthenticated RPC clients must be restricted from connecting to the RPC server."
+  when: wn10_cc_000165 | bool
+  tags:
+    - WN10-CC-000165
+    - CAT2
+    - CCI-001967
+    - SRG-OS-000379-GPOS-00164
+    - SV-220824r971545_rule
+    - V-220824
+    - NIST800-53R4_IA-3_1
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Rpc
+    name: RestrictRemoteClients
+    data: 1
+    type: dword
+
+# Windows 10 v1507 LTSB version does not include this setting and this control is NA to those systems
+# - ansible_facts['distribution_version'] != "10.0.1507.0"
+- name: "MEDIUM | WN10-CC-000195 | PATCH | Enhanced anti-spoofing for facial recognition must be enabled on Window 10."
+  when:
+    - wn10_cc_000195 | bool
+    - ansible_facts['distribution_version'] != "10.0.1507.0"
+  tags:
+    - WN10-CC-000195
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220830r991589_rule
+    - V-220830
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Biometrics\FacialFeatures
+    name: EnhancedAntiSpoofing
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000200 | PATCH | Administrator accounts must not be enumerated during elevation."
+  when: wn10_cc_000200 | bool
+  tags:
+    - WN10-CC-000200
+    - CAT2
+    - CCI-001084
+    - SRG-OS-000134-GPOS-00068
+    - SV-220832r958518_rule
+    - V-220832
+    - NIST800-53_SC-3
+    - NIST800-53A_SC-3.1_ii
+    - NIST800-53R4_SC-3
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\CredUI
+    name: EnumerateAdministrators
+    data: 0
+    type: dword
+
+# Windows 10 v1507 LTSB version does not include this setting and this control is NA to those systems
+# - ansible_facts['distribution_version'] >= "10.0.1709.0"
+- name: "MEDIUM | WN10-CC-000204 | PATCH | If Enhanced diagnostic data is enabled it must be limited to the minimum required to support Windows Analytics."
+  when:
+    - wn10_cc_000204 | bool
+    - ansible_facts['distribution_version'] >= "10.0.1709.0"
+  tags:
+    - WN10-CC-000204
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220833r991589_rule
+    - V-220833
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-CC-000204 | AUDIT | If Enhanced diagnostic data is enabled it must be limited to the minimum required to support Windows Analytics. | Get current Telemetry setting."
+      ansible.windows.win_reg_stat:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection
+        name: AllowTelemetry
+      register: discovered_cc_000204_telemetry_value
+
+    - name: "MEDIUM | WN10-CC-000204 | PATCH | If Enhanced diagnostic data is enabled it must be limited to the minimum required to support Windows Analytics. | Set Registry If Set To Full."
+      when:
+        - discovered_cc_000204_telemetry_value.exists | default(false)
+        - discovered_cc_000204_telemetry_value.value | int == 2
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection
+        name: LimitEnhancedDiagnosticDataWindowsAnalytics
+        data: 1
+        type: dword
+
+- name: "MEDIUM | WN10-CC-000205 | PATCH | Windows Telemetry must not be configured to Full."
+  when: wn10_cc_000205 | bool
+  tags:
+    - WN10-CC-000205
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220834r991589_rule
+    - V-220834
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-CC-000205 | PATCH | Windows Telemetry must not be configured to Full. | Set Registry Setting"
+      when: win10stig_allow_telemetry_value == 0 or win10stig_allow_telemetry_value == 1
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection
+        name: AllowTelemetry
+        data: "{{ win10stig_allow_telemetry_value }}"
+        type: dword
+
+    - name: "MEDIUM | WN10-CC-000205 | AUDIT | Windows Telemetry must not be configured to Full. | Warning Check For Variable Standards."
+      when:
+        - win10stig_allow_telemetry_value != 0
+        - win10stig_allow_telemetry_value != 1
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid setting for win10stig_allow_telemetry_value. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-CC-000205 | AUDIT | Windows Telemetry must not be configured to Full. | Warning Count."
+      when:
+        - win10stig_allow_telemetry_value != 0
+        - win10stig_allow_telemetry_value != 1
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-CC-000205'
+
+- name: "MEDIUM | WN10-CC-000210 | PATCH | The Windows Defender SmartScreen for Explorer must be enabled."
+  when: wn10_cc_000210 | bool
+  tags:
+    - WN10-CC-000210
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220836r958478_rule
+    - V-220836
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  block:
+    - name: "MEDIUM | WN10-CC-000210 | PATCH | The Windows Defender SmartScreen for Explorer must be enabled. | SmartScreen enable for Windows 10 v1607 or newer LTSB"
+      when: ansible_facts['distribution_version'] is version('10.0.14393.0', '>=')
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
+        name: EnableSmartScreen
+        data: 1
+        type: dword
+
+    - name: "MEDIUM | WN10-CC-000210 | PATCH | The Windows Defender SmartScreen for Explorer must be enabled. | SmartScreen enable for Windows 10 v1507 LTSB"
+      when: ansible_facts['distribution_version'] is version('10.0.10240.0', '==')
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
+        name: EnableSmartScreen
+        data: 2
+        type: dword
+
+    - name: "MEDIUM | WN10-CC-000210 | PATCH | The Windows Defender SmartScreen for Explorer must be enabled. | Block ShellSmartScreen"
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\System
+        name: ShellSmartScreenLevel
+        data: Block
+        type: string
+
+- name: "MEDIUM | WN10-CC-000215 | PATCH | Explorer Data Execution Prevention must be enabled."
+  when: wn10_cc_000215 | bool
+  tags:
+    - WN10-CC-000215
+    - CAT2
+    - CCI-002824
+    - SRG-OS-000433-GPOS-00192
+    - SV-220837r958928_rule
+    - V-220837
+    - NIST800-53R4_SI-16
+  block:
+    - name: "MEDIUM | WN10-CC-000215 | AUDIT | Explorer Data Execution Prevention must be enabled. | Get current setting."
+      ansible.windows.win_reg_stat:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer
+        name: NoDataExecutionPrevention
+      register: discovered_cc_000215_no_data_execution_prevention
+
+    - name: "MEDIUM | WN10-CC-000215 | PATCH | Explorer Data Execution Prevention must be enabled. | Apply if it exists."
+      when: discovered_cc_000215_no_data_execution_prevention.exists | default(false)
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer
+        name: NoDataExecutionPrevention
+        data: 0
+        type: dword
+
+- name: "MEDIUM | WN10-CC-000225 | PATCH | File Explorer shell protocol must run in protected mode."
+  when: wn10_cc_000225 | bool
+  tags:
+    - WN10-CC-000225
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220839r991589_rule
+    - V-220839
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer
+    name: PreXPSP2ShellProtocolBehavior
+    data: 0
+    type: dword
+
+# Windows 10 LTSC\B versions do not include Microsoft Edge, this is NA for those systems.
+#  - ansible_facts['distribution_version'] not in ['10.0.10240.0', '10.0.14393.0']  # Skip LTSC/LTSB v1507 and v1607
+- name: "MEDIUM | WN10-CC-000230 | PATCH | Users must not be allowed to ignore Windows Defender SmartScreen filter warnings for malicious websites in Microsoft Edge."
+  when:
+    - wn10_cc_000230 | bool
+    - ansible_facts['distribution_version'] not in ['10.0.10240.0', '10.0.14393.0']
+  tags:
+    - WN10-CC-000230
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220840r991589_rule
+    - V-220840
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\PhishingFilter
+    name: PreventOverride
+    data: 1
+    type: dword
+
+# Windows 10 LTSC\B versions do not include Microsoft Edge, this is NA for those systems.
+#  - ansible_facts['distribution_version'] not in ['10.0.10240.0', '10.0.14393.0']  # Skip LTSC/LTSB v1507 and v1607
+- name: "MEDIUM | WN10-CC-000235 | PATCH | Users must not be allowed to ignore Windows Defender SmartScreen filter warnings for unverified files in Microsoft Edge."
+  when:
+    - wn10_cc_000235 | bool
+    - ansible_facts['distribution_version'] not in ['10.0.10240.0', '10.0.14393.0']
+  tags:
+    - WN10-CC-000235
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220841r991589_rule
+    - V-220841
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\PhishingFilter
+    name: PreventOverrideAppRepUnknown
+    data: 1
+    type: dword
+
+# This setting is applicable starting with v1809 of Windows 10; it is NA for prior versions.
+# Windows 10 LTSC\B versions do not include Microsoft Edge; this is NA for those systems.
+#     - ansible_facts['distribution_version'] is version('10.0.17763.0', '>=')  # v1809 and newer
+#     - ansible_facts['distribution_version'] not in ['10.0.10240.0', '10.0.14393.0']  # Exclude v1507 and v1607 (LTSC/LTSB)
+- name: "MEDIUM | WN10-CC-000238 | PATCH | Windows 10 must be configured to prevent certificate error overrides in Microsoft Edge."
+  when:
+    - wn10_cc_000238 | bool
+    - ansible_facts['distribution_version'] is version('10.0.17763.0', '>=')
+    - ansible_facts['distribution_version'] not in ['10.0.10240.0', '10.0.14393.0']
+  tags:
+    - WN10-CC-000238
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220842r991589_rule
+    - V-220842
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Internet Settings
+    name: PreventCertErrorOverrides
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000245 | PATCH | The password manager function in the Edge browser must be disabled."
+  when:
+    - wn10_cc_000245 | bool
+    - ansible_facts['distribution_version'] not in ['10.0.10240.0', '10.0.14393.0']
+  tags:
+    - WN10-CC-000245
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220843r991589_rule
+    - V-220843
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main
+    name: FormSuggest Passwords
+    data: 'no'
+    type: string
+
+# Windows 10 LTSC\B versions do not include Microsoft Edge, this is NA for those systems.
+#  - ansible_facts['distribution_version'] not in ['10.0.10240.0', '10.0.14393.0']  # Skip LTSC/LTSB v1507 and v1607
+- name: "MEDIUM | WN10-CC-000250 | PATCH | The Windows Defender SmartScreen filter for Microsoft Edge must be enabled."
+  when:
+    - wn10_cc_000250 | bool
+    - ansible_facts['distribution_version'] not in ['10.0.10240.0', '10.0.14393.0']
+  tags:
+    - WN10-CC-000250
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220844r991589_rule
+    - V-220844
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\PhishingFilter
+    name: EnabledV9
+    data: 1
+    type: dword
+
+# This is NA for Windows 10 LTSC\B versions 1507 and 1607.
+- name: "MEDIUM | WN10-CC-000252 | PATCH | Windows 10 must be configured to disable Windows Game Recording and Broadcasting."
+  when:
+    - wn10_cc_000252 | bool
+    - ansible_facts['distribution_version'] not in ['10.0.10240.0', '10.0.14393.0']
+  tags:
+    - WN10-CC-000252
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220845r958478_rule
+    - V-220845
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR
+    name: AllowGameDVR
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000255 | PATCH | The use of a hardware security device with Windows Hello for Business must be enabled."
+  when:
+    - wn10_cc_000255 | bool
+    - discovered_vdi_persistent | bool
+  tags:
+    - WN10-CC-000255
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220846r991589_rule
+    - V-220846
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\PassportForWork
+    name: RequireSecurityDevice
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000260 | PATCH | Windows 10 must be configured to require a minimum pin length of six characters or greater."
+  when: wn10_cc_000260 | bool
+  tags:
+    - WN10-CC-000260
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220847r991589_rule
+    - V-220847
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-CC-000260 | PATCH | Windows 10 must be configured to require a minimum pin length of six characters or greater. | Apply Registry Setting."
+      when: win10stig_min_pin_length >= 6
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\PassportForWork\PINComplexity
+        name: MinimumPINLength
+        data: "{{ win10stig_min_pin_length }}"
+        type: dword
+
+    - name: "MEDIUM | WN10-CC-000260 | AUDIT | Windows 10 must be configured to require a minimum pin length of six characters or greater. | Warning Check For Variable Standards."
+      when: win10stig_min_pin_length < 6
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid setting for win10stig_min_pin_length. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-CC-000260 | AUDIT | Windows 10 must be configured to require a minimum pin length of six characters or greater. | Warning Count."
+      when: win10stig_min_pin_length < 6
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-CC-000260'
+
+- name: "MEDIUM | WN10-CC-000270 | PATCH | Passwords must not be saved in the Remote Desktop Client."
+  when: wn10_cc_000270 | bool
+  tags:
+    - WN10-CC-000270
+    - CAT2
+    - CCI-002038
+    - SRG-OS-000373-GPOS-00156
+    - SV-220848r1051029_rule
+    - V-220848
+    - NIST800-53R4_IA-11
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+    name: DisablePasswordSaving
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000275 | PATCH | Local drives must be prevented from sharing with Remote Desktop Session Hosts."
+  when: wn10_cc_000275 | bool
+  tags:
+    - WN10-CC-000275
+    - CAT2
+    - CCI-001090
+    - SRG-OS-000138-GPOS-00069
+    - SV-220849r1137695_rule
+    - V-220849
+    - NIST800-53_SC-4
+    - NIST800-53A_SC-4.1
+    - NIST800-53R4_SC-4
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+    name: fDisableCdm
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000280 | PATCH | Remote Desktop Services must always prompt a client for passwords upon connection."
+  when: wn10_cc_000280 | bool
+  tags:
+    - WN10-CC-000280
+    - CAT2
+    - CCI-002038
+    - SRG-OS-000373-GPOS-00156
+    - SV-220850r1051030_rule
+    - V-220850
+    - NIST800-53R4_IA-11
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+    name: fPromptForPassword
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000285 | PATCH | The Remote Desktop Session Host must require secure RPC communications."
+  when: wn10_cc_000285 | bool
+  tags:
+    - WN10-CC-000285
+    - CAT2
+    - CCI-001453
+    - SRG-OS-000250-GPOS-00093
+    - SV-220851r991554_rule
+    - V-220851
+    - NIST800-53_AC-17_2
+    - NIST800-53A_AC-17_2.1
+    - NIST800-53R4_AC-17_2
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+    name: fEncryptRPCTraffic
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000290 | PATCH | Remote Desktop Services must be configured with the client connection encryption set to the required level."
+  when: wn10_cc_000290 | bool
+  tags:
+    - WN10-CC-000290
+    - CAT2
+    - CCI-000068
+    - CCI-002890
+    - SRG-OS-000033-GPOS-00014
+    - SV-220852r958408_rule
+    - V-220852
+    - NIST800-53_AC-17_2
+    - NIST800-53A_AC-17_2.1
+    - NIST800-53R4_AC-17_2
+    - NIST800-53R4_MA-4_6
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+    name: MinEncryptionLevel
+    data: 3
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000295 | PATCH | Attachments must be prevented from being downloaded from RSS feeds."
+  when: wn10_cc_000295 | bool
+  tags:
+    - WN10-CC-000295
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220853r991589_rule
+    - V-220853
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Feeds
+    name: DisableEnclosureDownload
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000300 | PATCH | Basic authentication for RSS feeds over HTTP must not be used."
+  when: wn10_cc_000300 | bool
+  tags:
+    - WN10-CC-000300
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220854r958478_rule
+    - V-220854
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  block:
+    - name: "MEDIUM | WN10-CC-000300 | AUDIT | Basic authentication for RSS feeds over HTTP must not be used. | Get current setting."
+      ansible.windows.win_reg_stat:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Feeds
+        name: AllowBasicAuthInClear
+      register: discovered_cc_000300_allow_basic_auth_in_clear
+
+    - name: "MEDIUM | WN10-CC-000300 | PATCH | Basic authentication for RSS feeds over HTTP must not be used. | Apply if it exists."
+      when: discovered_cc_000300_allow_basic_auth_in_clear.exists | default(false)
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Feeds
+        name: AllowBasicAuthInClear
+        data: 0
+        type: dword
+
+- name: "MEDIUM | WN10-CC-000305 | PATCH | Indexing of encrypted files must be turned off."
+  when: wn10_cc_000305 | bool
+  tags:
+    - WN10-CC-000305
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220855r958478_rule
+    - V-220855
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search
+    name: AllowIndexingEncryptedStoresOrItems
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000310 | PATCH | Users must be prevented from changing installation options."
+  when: wn10_cc_000310 | bool
+  tags:
+    - WN10-CC-000310
+    - CAT2
+    - CCI-001812
+    - CCI-003980
+    - SRG-OS-000362-GPOS-00149
+    - SV-220856r1051031_rule
+    - V-220856
+    - NIST800-53R4_CM-11_2
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer
+    name: EnableUserControl
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000320 | PATCH | Users must be notified if a web-based program attempts to install software."
+  when: wn10_cc_000320 | bool
+  tags:
+    - WN10-CC-000320
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220858r991589_rule
+    - V-220858
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-CC-000320 | AUDIT | Users must be notified if a web-based program attempts to install software. | Get current setting."
+      ansible.windows.win_reg_stat:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer
+        name: SafeForScripting
+      register: discovered_cc_000320_safe_for_scripting
+
+    - name: "MEDIUM | WN10-CC-000320 | PATCH | Users must be notified if a web-based program attempts to install software. | Get current setting."
+      when: discovered_cc_000320_safe_for_scripting.exists | default(false)
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer
+        name: SafeForScripting
+        data: 0
+        type: dword
+
+- name: "MEDIUM | WN10-CC-000325 | PATCH | Automatically signing in the last interactive user after a system-initiated restart must be disabled."
+  when: wn10_cc_000325 | bool
+  tags:
+    - WN10-CC-000325
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00229
+    - SV-220859r991591_rule
+    - V-220859
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: DisableAutomaticRestartSignOn
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000326 | PATCH | PowerShell script block logging must be enabled on Windows 10."
+  when: wn10_cc_000326 | bool
+  tags:
+    - WN10-CC-000326
+    - CAT2
+    - CCI-000135
+    - SRG-OS-000042-GPOS-00020
+    - SV-220860r958422_rule
+    - V-220860
+    - NIST800-53_AU-3_1
+    - NIST800-53A_AU-3_1.1_ii
+    - NIST800-53R4_AU-3_1
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging
+    name: EnableScriptBlockLogging
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000335 | PATCH | The Windows Remote Management (WinRM) client must not allow unencrypted traffic."
+  when:
+    - wn10_cc_000335 | bool
+    - not win_skip_for_test
+  tags:
+    - WN10-CC-000335
+    - CAT2
+    - CCI-002890
+    - CCI-003123
+    - SRG-OS-000393-GPOS-00173
+    - SV-220863r958848_rule
+    - V-220863
+    - NIST800-53R4_MA-4_6
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client
+    name: AllowUnencryptedTraffic
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000350 | PATCH | The Windows Remote Management (WinRM) service must not allow unencrypted traffic."
+  when:
+    - wn10_cc_000350 | bool
+    - not win_skip_for_test
+  tags:
+    - WN10-CC-000350
+    - CAT2
+    - CCI-002890
+    - CCI-003123
+    - SRG-OS-000393-GPOS-00173
+    - SV-220866r958848_rule
+    - V-220866
+    - NIST800-53R4_MA-4_6
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service
+    name: AllowUnencryptedTraffic
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000355 | PATCH | The Windows Remote Management (WinRM) service must not store RunAs credentials."
+  when: wn10_cc_000355 | bool
+  tags:
+    - WN10-CC-000355
+    - CAT2
+    - CCI-002038
+    - SRG-OS-000373-GPOS-00156
+    - SV-220867r1051033_rule
+    - V-220867
+    - NIST800-53R4_IA-11
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service
+    name: DisableRunAs
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000360 | PATCH | The Windows Remote Management (WinRM) client must not use Digest authentication."
+  when: wn10_cc_000360 | bool
+  tags:
+    - WN10-CC-000360
+    - CAT2
+    - CCI-000877
+    - SRG-OS-000125-GPOS-00065
+    - SV-220868r958510_rule
+    - V-220868
+    - NIST800-53_MA-4_c
+    - NIST800-53A_MA-4.1_iv
+    - NIST800-53R4_MA-4_c
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client
+    name: AllowDigest
+    data: 0
+    type: dword
+
+# This setting requires v1903 or later of Windows 10; it is NA for prior versions.  The setting is NA when the “Allow voice activation” policy is
+# configured to disallow applications to be activated with voice for all users.
+# - ansible_facts['distribution_version'] >= "10.0.1903.0"
+- name: "MEDIUM | WN10-CC-000365 | PATCH | Windows 10 must be configured to prevent Windows apps from being activated by voice while the system is locked."
+  when:
+    - wn10_cc_000365 | bool
+    - ansible_facts['distribution_version'] >= "10.0.1903.0"
+  tags:
+    - WN10-CC-000365
+    - CAT2
+    - CCI-000056
+    - SRG-OS-000028-GPOS-00009
+    - SV-220869r958400_rule
+    - V-220869
+    - NIST800-53_AC-11_b
+    - NIST800-53A_AC-11.1_iii
+    - NIST800-53R4_AC-11_b
+  block:
+    - name: "MEDIUM | WN10-CC-000365 | AUDIT | Windows 10 must be configured to prevent Windows apps from being activated by voice while the system is locked. | Check for LetAppsActivateWithVoice"
+      ansible.windows.win_reg_stat:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy\
+        name: LetAppsActivateWithVoice
+      register: discovered_cc_000365_let_apps_activate_with_voice
+
+    - name: "MEDIUM | WN10-CC-000365 | PATCH | Windows 10 must be configured to prevent Windows apps from being activated by voice while the system is locked. | Apply Registry Setting"
+      when: not discovered_cc_000365_let_apps_activate_with_voice.exists | default(false) or discovered_cc_000365_let_apps_activate_with_voice.value | int != 2
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy
+        name: LetAppsActivateWithVoiceAboveLock
+        data: 2
+        type: dword
+
+- name: "MEDIUM | WN10-CC-000370 | PATCH | The convenience PIN for Windows 10 must be disabled."
+  when: wn10_cc_000370 | bool
+  tags:
+    - WN10-CC-000370
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220870r958478_rule
+    - V-220870
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\Software\Policies\Microsoft\Windows\System
+    name: AllowDomainPINLogon
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000385 | PATCH | Windows Ink Workspace must be configured to disallow access above the lock."
+  when: wn10_cc_000385 | bool
+  tags:
+    - WN10-CC-000385
+    - CAT2
+    - CCI-000381
+    - SRG-OS-000095-GPOS-00049
+    - SV-220871r958478_rule
+    - V-220871
+    - NIST800-53_CM-7
+    - NIST800-53A_CM-7.1_ii
+    - NIST800-53R4_CM-7_a
+  ansible.windows.win_regedit:
+    path: HKLM:\Software\Policies\Microsoft\WindowsInkWorkspace
+    name: AllowWindowsInkWorkspace
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000050 | PATCH | Hardened UNC paths must be defined to require mutual authentication and integrity for at least the \\\\*\\SYSVOL and \\\\*\\NETLOGON shares."
+  when:
+    - wn10_cc_000050 | bool
+    - discovered_domain_joined | bool
+  tags:
+    - WN10-CC-000050
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-250319r991589_rule
+    - V-250319
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\NetworkProvider\HardenedPaths
+    name: "{{ item }}"
+    data: RequireMutualAuthentication=1, RequireIntegrity=1
+    type: string
+  with_items:
+    - \\*\SYSVOL
+    - \\*\NETLOGON
+
+- name: "MEDIUM | WN10-CC-000327 | PATCH | PowerShell Transcription must be enabled on Windows 10."
+  when: wn10_cc_000327 | bool
+  tags:
+    - WN10-CC-000327
+    - CAT2
+    - CCI-000132
+    - CCI-000134
+    - SRG-OS-000041-GPOS-00019
+    - SV-252896r958420_rule
+    - V-252896
+    - NIST800-53_AU-3
+    - NIST800-53A_AU-3.1
+    - NIST800-53R4_AU-3
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription
+    name: EnableTranscripting
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-CC-000391 | PATCH | Internet Explorer must be disabled for Windows 10."
+  when: wn10_cc_000391 | bool
+  tags:
+    - WN10-CC-000391
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000185-GPOS-00079
+    - SV-256894r958552_rule
+    - V-256894
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-CC-000391 | AUDIT | Internet Explorer must be disabled for Windows 10. | Get Windows Edition"
+      ansible.windows.win_shell: (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").EditionID
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_cc_000391_os_edition_check
+
+    - name: "MEDIUM | WN10-CC-000391 | PATCH | Internet Explorer must be disabled for Windows 10. | Set fact"
+      ansible.builtin.set_fact:
+        discovered_cc_000391_is_semi_annual_channel: "{{ discovered_cc_000391_os_edition_check.stdout not in ['EnterpriseS', 'IoTEnterprise', 'ServerDatacenter', 'ServerStandard'] }}"
+
+    - name: "MEDIUM | WN10-CC-000391 | PATCH | Internet Explorer must be disabled for Windows 10. | Disable IE11 as a standalone browser"
+      when: discovered_cc_000391_is_semi_annual_channel
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main
+        name: DisableIE
+        data: 1
+        type: dword
+
+    - name: "MEDIUM | WN10-CC-000391 | PATCH | Internet Explorer must be disabled for Windows 10. | Remove IE11 Windows Feature"
+      # win_feature wraps ServerManager and its own docs say it is unavailable on client OSes,
+      # so it cannot run on Windows 10. IE is also absent entirely from current builds, hence
+      # the presence gate - without it the task raises "Failed to find feature".
+      when:
+        - discovered_cc_000391_is_semi_annual_channel
+        - win10stig_remove_internet_explorer_11 | bool
+        - "'Internet-Explorer-Optional-amd64' in discovered_feature_names"
+      ansible.windows.win_optional_feature:
+        name: Internet-Explorer-Optional-amd64
+        state: absent
+
+- name: "MEDIUM | WN10-CC-000063 | AUDIT | Windows 10 systems must use either Group Policy or an approved Mobile Device Management (MDM) product to enforce STIG compliance."
+  when:
+    - wn10_cc_000063 | bool
+    - discovered_domain_joined | bool
+  tags:
+    - WN10-CC-000063
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-268319r1135263_rule
+    - V-268319
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-CC-000063 | AUDIT | Windows 10 systems must use either Group Policy or an approved Mobile Device Management (MDM) product to enforce STIG compliance. | Check if system is receiving GPO using gpresult"
+      ansible.windows.win_shell: gpresult /R
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_cc_000063_gpresult_check
+
+    - name: "MEDIUM | WN10-CC-000063 | AUDIT | Windows 10 systems must use either Group Policy or an approved Mobile Device Management (MDM) product to enforce STIG compliance. | Check if device is MDM enrolled via registry"
+      ansible.windows.win_reg_stat:
+        path: HKLM:\SOFTWARE\Microsoft\Enrollments
+      register: discovered_cc_000063_mdm_registry_check
+
+    - name: "MEDIUM | WN10-CC-000063 | AUDIT | Windows 10 systems must use either Group Policy or an approved Mobile Device Management (MDM) product to enforce STIG compliance. | Set fact for managed system"
+      ansible.builtin.set_fact:
+        discovered_cc_000063_system_managed: "{{ 'Group Policy Objects' in discovered_cc_000063_gpresult_check.stdout or discovered_cc_000063_mdm_registry_check.exists }}"
+
+    - name: "MEDIUM | WN10-CC-000063 | AUDIT | Windows 10 systems must use either Group Policy or an approved Mobile Device Management (MDM) product to enforce STIG compliance. | Management Compliance Result"
+      when: not discovered_cc_000063_system_managed
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! The system must use either Group Policy or an approved Mobile Device Management (MDM) product to enforce STIG compliance."
+          - "Configure the Windows 10 system to use either Group Policy or an approved MDM product to enforce STIG compliance."
+
+    - name: "MEDIUM | WN10-CC-000063 | AUDIT | Windows 10 systems must use either Group Policy or an approved Mobile Device Management (MDM) product to enforce STIG compliance. | Warn Count."
+      when: not discovered_cc_000063_system_managed
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-CC-000063'

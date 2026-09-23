@@ -1,0 +1,111 @@
+---
+
+- name: "HIGH | WN10-SO-000140 | PATCH | Anonymous SID/Name translation must not be allowed."
+  when:
+    - wn10_so_000140 | bool
+    - not discovered_account_policy_is_domain_scoped | bool
+  tags:
+    - WN10-SO-000140
+    - CAT1
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220928r991589_rule
+    - V-220928
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  community.windows.win_security_policy:
+    section: System Access
+    key: LSAAnonymousNameLookup
+    value: 0
+
+- name: "HIGH | WN10-SO-000145 | PATCH | Anonymous enumeration of SAM accounts must not be allowed."
+  when: wn10_so_000145 | bool
+  tags:
+    - WN10-SO-000145
+    - CAT1
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220929r991589_rule
+    - V-220929
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+    name: RestrictAnonymousSAM
+    data: 1
+    type: dword
+
+- name: "HIGH | WN10-SO-000150 | PATCH | Anonymous enumeration of shares must be restricted."
+  when: wn10_so_000150 | bool
+  tags:
+    - WN10-SO-000150
+    - CAT1
+    - CCI-001090
+    - SRG-OS-000138-GPOS-00069
+    - SV-220930r1137695_rule
+    - V-220930
+    - NIST800-53_SC-4
+    - NIST800-53A_SC-4.1
+    - NIST800-53R4_SC-4
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+    name: RestrictAnonymous
+    data: 1
+    type: dword
+
+- name: "HIGH | WN10-SO-000165 | PATCH | Anonymous access to Named Pipes and Shares must be restricted."
+  when: wn10_so_000165 | bool
+  tags:
+    - WN10-SO-000165
+    - CAT1
+    - CCI-001090
+    - SRG-OS-000138-GPOS-00069
+    - SV-220932r1137695_rule
+    - V-220932
+    - NIST800-53_SC-4
+    - NIST800-53A_SC-4.1
+    - NIST800-53R4_SC-4
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\LanManServer\Parameters
+    name: RestrictNullSessAccess
+    data: 1
+    type: dword
+
+- name: "HIGH | WN10-SO-000195 | PATCH | The system must be configured to prevent the storage of the LAN Manager hash of passwords."
+  when: wn10_so_000195 | bool
+  tags:
+    - WN10-SO-000195
+    - CAT1
+    - CCI-000196
+    - CCI-004062
+    - SRG-OS-000073-GPOS-00041
+    - SV-220937r1051034_rule
+    - V-220937
+    - NIST800-53_IA-5_1_c
+    - NIST800-53A_IA-5_1.1_v
+    - NIST800-53R4_IA-5_1_c
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+    name: NoLMHash
+    data: 1
+    type: dword
+
+- name: "HIGH | WN10-SO-000205 | PATCH | The LanMan authentication level must be set to send NTLMv2 response only, and to refuse LM and NTLM."
+  when: wn10_so_000205 | bool
+  tags:
+    - WN10-SO-000205
+    - CAT1
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220938r991589_rule
+    - V-220938
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+    name: LmCompatibilityLevel
+    data: 5
+    type: dword

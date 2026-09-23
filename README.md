@@ -2,63 +2,80 @@
 
 ## Configure a Windows 10 Enterprise system to be [DISA STIG](https://public.cyber.mil/stigs/downloads/) compliant.
 
-### Based on [ Windows DISA STIG Version 3, Rel 3 released on January 30th, 2025 ](https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U_MS_Windows_10_V3R3_STIG.zip)
+### Based on [Windows DISA STIG Version 3, Rel 6 released on January 5th, 2026](https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U_MS_Windows_10_V3R6_STIG.zip)
 
 ---
 
 ![Org Stars](https://img.shields.io/github/stars/ansible-lockdown?label=Org%20Stars&style=social)
 ![Stars](https://img.shields.io/github/stars/ansible-lockdown/Windows-10-STIG?label=Repo%20Stars&style=social)
 ![Forks](https://img.shields.io/github/forks/ansible-lockdown/Windows-10-STIG?style=social)
-![followers](https://img.shields.io/github/followers/ansible-lockdown?style=social)
-[![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/AnsibleLockdown.svg?style=social&label=Follow%20%40AnsibleLockdown)](https://twitter.com/AnsibleLockdown)
+![Followers](https://img.shields.io/github/followers/ansible-lockdown?style=social)
+[![X URL](https://img.shields.io/twitter/url/https/x.com/AnsibleLockdown.svg?style=social&label=Follow%20%40AnsibleLockdown)](https://x.com/AnsibleLockdown)
 
-<!-- ![Ansible Galaxy Quality](https://img.shields.io/ansible/quality/61846?label=Quality&&logo=ansible) -->
 ![Discord Badge](https://img.shields.io/discord/925818806838919229?logo=discord)
 
 ![Release Branch](https://img.shields.io/badge/Release%20Branch-Main-brightgreen)
-![Release Tag](https://img.shields.io/github/v/tag/ansible-lockdown/Windows-10-STIG?label=Release%20Tag&&color=success)
+![Release Tag](https://img.shields.io/github/v/tag/ansible-lockdown/Windows-10-STIG?label=Release%20Tag&color=success)
 ![Main Release Date](https://img.shields.io/github/release-date/ansible-lockdown/Windows-10-STIG?label=Release%20Date)
 
-[![Main Pipeline Validation](https://github.com/ansible-lockdown/Windows-10-STIG/actions/workflows/main_pipeline_validation.yml/badge.svg?)](https://github.com/ansible-lockdown/Windows-10-STIG/actions/workflows/main_pipeline_validation.yml)
-
-[![Devel Pipeline Validation](https://github.com/ansible-lockdown/Windows-10-STIG/actions/workflows/devel_pipeline_validation.yml/badge.svg?)](https://github.com/ansible-lockdown/Windows-10-STIG/actions/workflows/devel_pipeline_validation.yml)
 ![Devel Commits](https://img.shields.io/github/commit-activity/m/ansible-lockdown/Windows-10-STIG/devel?color=dark%20green&label=Devel%20Branch%20Commits)
 
 ![Issues Open](https://img.shields.io/github/issues-raw/ansible-lockdown/Windows-10-STIG?label=Open%20Issues)
-![Issues Closed](https://img.shields.io/github/issues-closed-raw/ansible-lockdown/Windows-10-STIG?label=Closed%20Issues&&color=success)
+![Issues Closed](https://img.shields.io/github/issues-closed-raw/ansible-lockdown/Windows-10-STIG?label=Closed%20Issues&color=success)
 ![Pull Requests](https://img.shields.io/github/issues-pr/ansible-lockdown/Windows-10-STIG?label=Pull%20Requests)
 
 ![License](https://img.shields.io/github/license/ansible-lockdown/Windows-10-STIG?label=License)
 
 ---
 
-## Looking For Support? 🤝
+## Looking For Support?
 
 [Lockdown Enterprise](https://www.lockdownenterprise.com#GH_AL_WINDOWS_10_stig)
 
 [Ansible Support](https://www.mindpointgroup.com/cybersecurity-products/ansible-counselor#GH_AL_WINDOWS_10_stig)
 
-### Community 💬
+### Community
 
 Join us on our [Discord Server](https://www.lockdownenterprise.com/discord) to ask questions, discuss features, or just chat with other Ansible-Lockdown users.
 
+### Contributing
+
+Bug reports and feature requests are welcome from everyone, please raise an issue.
+
+Pull requests are accepted from approved contributors only. To be onboarded, join the [Discord Server](https://www.lockdownenterprise.com/discord) and request contributor access. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full process.
+
 ---
 
-## 🚨 Caution(s) 🚨
+## Caution(s)
 
 This role **will make changes to the system** which may have unintended consequences. This is not an auditing tool but rather a remediation tool to be used after an audit has been conducted.
 
-Check Mode is not supported! 🚫 The role will complete in check mode without errors, but it is not supported and should be used with caution.
+Check Mode is not supported! The role will complete in check mode without errors, but it is not supported and should be used with caution.
 
-This role was developed against a clean install of the Windows 10. If you are implementing to an existing system please review this role for any site specific changes that are needed.
+This role was developed against a clean install of Windows 10. If you are implementing to an existing system please review this role for any site specific changes that are needed.
 
-To use release version please point to main branch and relevant release for the stig benchmark you wish to work with.
+To use release version please point to main branch and relevant release for the STIG benchmark you wish to work with.
 
 ---
 
-## Matching A Security Level For STIG 🔐
+## Domain Members
 
-It is possible to to only run controls that are based on a particular for security level for STIG.
+Account policy is domain scoped. On a domain joined host the Default Domain Policy owns
+`[System Access]`, so the 13 secedit backed controls in this role cannot hold there. `prelim.yml`
+detects domain membership, skips those controls and warns once, rather than writing settings the
+domain will not keep. Set them in the Default Domain Policy instead.
+
+Everything outside `[System Access]` applies normally on a domain member.
+
+This behaviour was verified on a domain joined workstation during Windows Fleet testing, where a
+complete hardening run left all `[System Access]` values byte-identical to the pre-run baseline. It
+has not been separately measured on Windows 10.
+
+---
+
+## Matching A Security Level For STIG
+
+It is possible to only run controls that are based on a particular security level for STIG.
 This is managed using tags:
 
 - CAT1
@@ -67,18 +84,40 @@ This is managed using tags:
 
 The controls found in defaults/main also need to reflect those control numbers due to aligning every control to the audit component.
 
-## Coming From A Previous Release ⏪
+## Coming From A Previous Release
 
-STIG releases always contain changes, it is highly recommended to review the new references and available variables. This has changed significantly since the initial release of ansible-lockdown.
-This is now compatible with python3 if it is found to be the default interpreter. This does come with pre-requisites which it configures the system accordingly.
+STIG releases always include changes, so it is highly recommended to review the new references and available variables. This process has evolved significantly since the initial release of Ansible-Lockdown.
 
-Further details can be seen in the [Changelog](./ChangeLog.md)
+Further details can be seen in the [Changelog](./CHANGELOG.md)
 
-## Auditing (new) 🔍
+## Auditing (new)
 
-Currently this release does not have a auditing tool that is up to date.
+Currently, this release does not have an auditing tool.
 
-## Documentation 📖
+## Compliance facts
+
+With `create_benchmark_facts` enabled (the default), the role writes a record of what it applied to:
+
+```
+C:\ProgramData\ansible\facts.d\compliance_facts.json
+```
+
+It captures the benchmark release, the run date and which CAT levels were enabled.
+
+Windows has no default local-facts directory, so unlike the Linux roles this file is **not**
+collected automatically. Ask for it explicitly:
+
+```yaml
+- name: Read the compliance facts
+  ansible.windows.setup:
+    fact_path: 'C:\ProgramData\ansible\facts.d'
+```
+
+It then appears as `ansible_compliance_facts` - not under `ansible_local`, which is the Linux
+convention. Set `ansible_facts_path` to relocate the directory, or `create_benchmark_facts: false`
+to skip writing it.
+
+## Documentation
 
 - [Read The Docs](https://ansible-lockdown.readthedocs.io/en/latest/)
 - [Getting Started](https://www.lockdownenterprise.com/docs/getting-started-with-lockdown#GH_AL_WINDOWS_10_stig)
@@ -86,7 +125,7 @@ Currently this release does not have a auditing tool that is up to date.
 - [Per-Host Configuration](https://www.lockdownenterprise.com/docs/per-host-lockdown-enterprise-configuration#GH_AL_WINDOWS_10_stig)
 - [Getting the Most Out of the Role](https://www.lockdownenterprise.com/docs/get-the-most-out-of-lockdown-enterprise#GH_AL_WINDOWS_10_stig)
 
-## Requirements ✅
+## Requirements
 
 **General:**
 
@@ -97,26 +136,35 @@ Currently this release does not have a auditing tool that is up to date.
   - [Tower User Guide](https://docs.ansible.com/ansible-tower/latest/html/userguide/index.html)
   - [Ansible Community Info](https://docs.ansible.com/ansible/latest/community/index.html)
 - Functioning Ansible and/or Tower Installed, configured, and running. This includes all of the base Ansible/Tower configurations, needed packages installed, and infrastructure setup.
-- Please read through the tasks in this role to gain an understanding of what each control is doing. Some of the tasks are disruptive and can have unintended consequences in a live production system. Also familiarize yourself with the variables in the defaults/main.yml file.
+- Please read through the tasks in this role to gain an understanding of what each control is doing. Some of the tasks are disruptive and can have unintended consequences in a live production system. Also familiarize yourself with the variables in the defaults/main/main.yml file.
 
-**Technical Dependencies:** ⚙️
+**Technical Dependencies:**
 
 - Windows 10 Enterprise 22H2 - Other versions are not supported
-- Running Ansible/Tower setup (this role is tested against Ansible version 2.10.1 and newer)
+- Running Ansible/Tower setup. This role requires ansible-core 2.16.1 or newer; the role asserts this at run time.
 - Python3 Ansible run environment
-- passlib (or python2-passlib, if using python2)
-- python-lxml
-- python-xmltodict
-- python-jmespath
 - pywinrm
 
-Package 'python-xmltodict' is required if you enable the OpenSCAP tool installation and run a report. Packages python(2)-passlib and python-jmespath are required for tasks with custom filters or modules. These are all required on the controller host that executes Ansible.
+`pywinrm` is required on the controller host that executes Ansible; it is the connection library Ansible uses to reach a Windows target.
 
-## Role Variables 📋
+## Role Variables
 
-This role is designed so that the end user should not have to edit the tasks themselves. All customizing should be done via the defaults/main.yml file or with extra vars within the project, job, workflow, etc.
+### Breaking change in this release
 
-## Tags 🏷️
+Two security tunables still carried the legacy `wn10stig_` prefix. Role behaviour variables and
+security tunables now all share the `win10stig_` prefix, matching the sibling Windows roles. If you
+override either of these in inventory, group_vars or extra vars, rename them - the old names are no
+longer read and your setting will be silently ignored.
+
+- `wn10stig_internet_based_apps_to_check` becomes `win10stig_internet_based_apps_to_check`
+- `wn10stig_pass_age_administrator` becomes `win10stig_pass_age_administrator`
+
+Rule toggles are unchanged. They keep the `wn10_<control id>` form, for example
+`wn10_au_000010`.
+
+This role is designed so that the end user should not have to edit the tasks themselves. All customizing should be done via the defaults/main/main.yml file or with extra vars within the project, job, workflow, etc.
+
+## Tags
 
 There are many tags available for added control precision. Each control has its own set of tags noting what level, what OS element it relates to, whether it's a patch or audit, and the rule number. Additionally, NIST references follow a specific conversion format for consistency and clarity.
 
@@ -124,7 +172,7 @@ There are many tags available for added control precision. Each control has its 
 
   1. Standard Prefix:
 
-    - All references are prefixed with "NIST SP".
+    - All references are prefixed with "NIST".
 
   2. Standard Types:
 
@@ -158,45 +206,44 @@ tags:
       - NIST800-53_AC-2_4
       - NIST800-53_AU-12_c
       - NIST800-53A_AC-2_4.1_i&ii
-      - NIST800-53A_AC-12.1_iv
+      - NIST800-53A_AU-12.1_iv
       - NIST800-53R4_AC-2_4
       - NIST800-53R4_AU-12_c
+      - NIST800-53R4_AU-6_9
 ```
 ### Conversion Examples in Use:
-  - NIST SP 800-53 :: AC-2 (4) → NIST800-53_AC-2_4
-  - NIST SP 800-53A :: AC-2 (4).1 (i&ii) → NIST800-53A_AC-2_4.1_i&ii
-  - NIST SP 800-53 Revision 4 :: AC-2 (4) → NIST800-53_AC-2_4
-  - NIST SP 800-53 :: AU-12 c → NIST800-53_AU-12_c
-  - NIST SP 800-53A :: AU-12.1 (iv) → NIST800-53A_AC-12.1_iv
-  - NIST SP 800-53 Revision 4 :: AU-12 c →  NIST800-53R4_AU-12_c
+  - NIST SP 800-53 :: AC-2 (4) -> NIST800-53_AC-2_4
+  - NIST SP 800-53A :: AC-2 (4).1 (i&ii) -> NIST800-53A_AC-2_4.1_i&ii
+  - NIST SP 800-53 Revision 4 :: AC-2 (4) -> NIST800-53R4_AC-2_4
+  - NIST SP 800-53 :: AU-12 c -> NIST800-53_AU-12_c
+  - NIST SP 800-53A :: AU-12.1 (iv) -> NIST800-53A_AU-12.1_iv
+  - NIST SP 800-53 Revision 4 :: AU-12 c -> NIST800-53R4_AU-12_c
 
 By maintaining this consistent tagging structure, it becomes easier to filter and manage tasks based on specific controls and compliance requirements.
 
-## Community Contribution 🧑‍🤝‍🧑
+## Community Contribution
 
-We encourage you (the community) to contribute to this role. Please read the rules below.
+Pull requests are accepted from approved contributors only, and issues are welcome from everyone.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the onboarding process, the rules, and the commit signing
+requirements (GPG signature and Signed-off-by on every commit).
 
-- Your work is done in your own individual branch. Make sure to Signed-off and GPG sign all commits you intend to merge.
-- All community Pull Requests are pulled into the devel branch.
-- Pull Requests into devel will confirm your commits have a GPG signature, Signed-off, and a functional test before being approved.
-- Once your changes are merged and a more detailed review is complete, an authorized member will merge your changes into the main branch for a new release.
+## Pipeline Testing
 
-## Pipeline Testing 🔄
+- Pull requests into `devel` or a `benchmark*` branch run the devel pipeline; pull requests into
+  `main` or `latest` run the main pipeline
+- OpenTofu builds a Windows instance in Azure on a self-hosted runner, the role is applied to it
+  with `site.yml`, and the instance is destroyed when the run ends
+- ansible-core is the version pinned in the runner's virtualenv
+- The job runs only for pull requests raised from a branch in this repository, because it carries
+  the cloud credentials
 
-uses:
+## Local Testing
 
-- ansible-core 2.16.x
-- ansible collections - pulls in the latest version based on requirements file
-- runs the audit using the devel branch
-- This is an automated test that occurs on pull requests into devel
-- self-hosted runners using OpenTofu
+- Ansible
+  - ansible-core 2.16.1 or newer, with Python 3
+- `pywinrm` on the controller, which is the connection library Ansible uses to reach a Windows target
 
-## Local Testing 💻
-
-  - Ansible
-    - ansible-core 2.18.2 - python 3.13
-
-## Credits and Thanks 🙏
+## Credits and Thanks
 
 Massive thanks to the fantastic community and all its members.
 

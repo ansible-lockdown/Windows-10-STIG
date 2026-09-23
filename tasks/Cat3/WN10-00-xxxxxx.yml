@@ -1,0 +1,223 @@
+---
+
+- name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems."
+  when:
+    - wn10_00_000020 | bool
+    - not discovered_vdi_non_persistent | bool
+  tags:
+    - WN10-00-000020
+    - CAT3
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220700r991589_rule
+    - V-220700
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Check secure boot."
+      ansible.windows.win_shell: Confirm-SecureBootUEFI
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000020_secure_boot_audit
+
+    - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Virtual System Check."
+      when: "'undefined' in discovered_00_000020_secure_boot_audit.stderr | string"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Your running a virtual system that does not support Secure Boot."
+          - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
+
+    - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Hardware Not supported Check."
+      when: "'CMdlet' in discovered_00_000020_secure_boot_audit.stderr | string"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Your computers hardware does not support Secure Boot."
+          - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
+
+    - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Secure Boot Set To Disabled."
+      when: "'False' in discovered_00_000020_secure_boot_audit.stdout | string"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Secure Boot is set to DISABLED."
+          - "Please take note for audit purposes and verify it is compliant with sites policies to be STIG compliant."
+
+    - name: "LOW | WN10-00-000020 | AUDIT | Secure Boot must be enabled on Windows 10 systems. | Warn Count."
+      when: "('undefined' in discovered_00_000020_secure_boot_audit.stderr | string) or ('CMdlet' in discovered_00_000020_secure_boot_audit.stderr | string) or ('False' in discovered_00_000020_secure_boot_audit.stdout | string)"
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000020'
+
+- name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity."
+  when: wn10_00_000065 | bool
+  tags:
+    - WN10-00-000065
+    - CAT3
+    - CCI-000795
+    - CCI-003627
+    - SRG-OS-000118-GPOS-00060
+    - SV-220711r1051018_rule
+    - V-220711
+    - NIST800-53_IA-4_e
+    - NIST800-53A_IA-4.1_iii
+    - NIST800-53R4_IA-4_e
+  block:
+    - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Powershell To Get Accounts."
+      ansible.windows.win_shell: Get-LocalUser | Where-Object {$_.Lastlogon -le (Get-Date).AddDays(-35)} | Select-Object Name, Enabled, Lastlogon | Format-Table -AutoSize
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_00_000065_user_local_accounts
+
+    - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Print Results."
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Review the list below and make sure it meets site policies."
+          - "The list below includes all accounts that have not been logged into for the last 35 days, those unused accounts"
+          - "must be disabled or removed from the system after 35 days of inactivity per STIG."
+          - "Inactive accounts that have been reviewed and deemed to be required must be documented with the ISSO.."
+          - "{{ discovered_00_000065_user_local_accounts.stdout_lines }}"
+
+    - name: "LOW | WN10-00-000065 | AUDIT | Unused accounts must be disabled or removed from the system after 35 days of inactivity. | Warn Count."
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000065'
+
+- name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain."
+  when:
+    - wn10_00_000085 | bool
+    - discovered_domain_joined | bool
+  tags:
+    - WN10-00-000085
+    - CAT3
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220715r991589_rule
+    - V-220715
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Verify allowed built-in accounts are disabled"
+      ansible.windows.win_shell: |
+        $allowedBuiltIn = @("Administrator", "Guest", "DefaultAccount", "defaultuser0", "WDAGUtilityAccount")
+        $results = @()
+        foreach ($acct in $allowedBuiltIn) {
+          $user = Get-LocalUser -Name $acct -ErrorAction SilentlyContinue
+          if ($user) {
+            if (-not $user.Disabled) {
+              $results += [pscustomobject]@{
+                Name    = $acct
+                Issue   = "Built-in account is enabled"
+                Enabled = $true
+              }
+            }
+            else {
+              $results += [pscustomobject]@{
+                Name    = $acct
+                Issue   = "Built-in account is disabled"
+                Enabled = $false
+              }
+            }
+          }
+          else {
+            $results += [pscustomobject]@{
+              Name    = $acct
+              Issue   = "Account not found"
+              Enabled = $null
+            }
+          }
+        }
+        $results | ConvertTo-Json
+      changed_when: false
+      check_mode: false
+      register: discovered_00_000085_built_in_check
+
+    - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Set fact for built-in accounts check results."
+      ansible.builtin.set_fact:
+        discovered_00_000085_built_in_accounts: "{{ discovered_00_000085_built_in_check.stdout | from_json }}"
+
+    - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Find non-allowed local accounts."
+      ansible.windows.win_shell: |
+        $allowedBuiltIn = @("Administrator", "Guest", "DefaultAccount", "defaultuser0", "WDAGUtilityAccount")
+        $localAdmins = Get-LocalGroupMember -Group "Administrators" |
+                       Where-Object { $_.objectClass -eq "User" } |
+                       Select-Object -ExpandProperty Name
+        $results = @()
+        $allUsers = Get-LocalUser
+        foreach ($user in $allUsers) {
+          if (($allowedBuiltIn -notcontains $user.Name) -and ($localAdmins -notcontains $user.Name)) {
+             $results += [pscustomobject]@{
+                Name    = $user.Name
+                Issue   = "Account is not allowed"
+                Enabled = -not $user.Disabled
+             }
+          }
+        }
+        $results | ConvertTo-Json
+      changed_when: false
+      check_mode: false
+      register: discovered_00_000085_disallowed_check
+
+    - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Set fact for disallowed accounts check results."
+      ansible.builtin.set_fact:
+        discovered_00_000085_non_allowed_accounts: "{{ discovered_00_000085_disallowed_check.stdout | from_json }}"
+
+    - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Set compliance status fact based on local accounts checks."
+      ansible.builtin.set_fact:
+        discovered_00_000085_local_accounts_compliant: >-
+          {{
+            (discovered_00_000085_built_in_accounts | selectattr('Issue', 'equalto', 'Built-in account is disabled') | list | length == discovered_00_000085_built_in_accounts | length)
+            and
+            (
+              (discovered_00_000085_non_allowed_accounts is mapping and discovered_00_000085_non_allowed_accounts | length == 0)
+              or
+              (discovered_00_000085_non_allowed_accounts is sequence and discovered_00_000085_non_allowed_accounts | length == 0)
+            )
+          }}
+
+    - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Verify local account compliance and display results"
+      when: not discovered_00_000085_local_accounts_compliant
+      ansible.builtin.debug:
+        msg: >-
+          [
+            "═══════════════════════════════════════════════════════════════════════════════════",
+            "                 Local Account Compliance Check - Domain Connected                 ",
+            "═══════════════════════════════════════════════════════════════════════════════════",
+            "",
+            "Built-in Accounts Status:",
+            "",
+            {% for acct in discovered_00_000085_built_in_accounts %}
+            "  {{ acct.Name }} - {{ acct.Issue }} (Enabled: {{ acct.Enabled }})",
+            {% endfor %}
+            "───────────────────────────────────────────────────────────────────────────────────",
+            "",
+            "Disallowed Accounts:",
+            "",
+            {% if discovered_00_000085_non_allowed_accounts is mapping %}
+            "  {{ discovered_00_000085_non_allowed_accounts.Name }} - {{ discovered_00_000085_non_allowed_accounts.Issue }} (Enabled: {{ discovered_00_000085_non_allowed_accounts.Enabled }})",
+            {% elif discovered_00_000085_non_allowed_accounts | length > 0 %}
+              {% for acct in discovered_00_000085_non_allowed_accounts %}
+            "  {{ acct.Name }} - {{ acct.Issue }} (Enabled: {{ acct.Enabled }})",
+              {% endfor %}
+            {% else %}
+            "  No disallowed accounts found.",
+            {% endif %}
+            "",
+            "───────────────────────────────────────────────────────────────────────────────────",
+            "",
+            {% if (discovered_00_000085_built_in_accounts | selectattr('Issue', 'equalto', 'Built-in account is disabled') | list | length == discovered_00_000085_built_in_accounts | length) and ((discovered_00_000085_non_allowed_accounts is mapping and discovered_00_000085_non_allowed_accounts | length == 0) or (discovered_00_000085_non_allowed_accounts is sequence and discovered_00_000085_non_allowed_accounts | length == 0)) %}
+            "COMPLIANCE STATUS: COMPLIANT — All built-in accounts are disabled and no disallowed accounts found.",
+            {% else %}
+            "COMPLIANCE STATUS: Warning!! NON-COMPLIANT — Issues detected with local accounts.",
+            {% endif %}
+            "",
+            "═══════════════════════════════════════════════════════════════════════════════════"
+          ]
+
+    - name: "LOW | WN10-00-000085 | AUDIT | Standard local user accounts must not exist on a system in a domain. | Warn Count."
+      when: not discovered_00_000085_local_accounts_compliant
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-00-000085'

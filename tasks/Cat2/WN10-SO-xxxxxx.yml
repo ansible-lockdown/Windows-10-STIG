@@ -1,0 +1,845 @@
+---
+
+- name: "MEDIUM | WN10-SO-000010 | PATCH | The built-in guest account must be disabled."
+  when:
+    - wn10_so_000010 | bool
+    - not discovered_account_policy_is_domain_scoped | bool
+  tags:
+    - WN10-SO-000010
+    - CAT2
+    - CCI-000804
+    - SRG-OS-000121-GPOS-00062
+    - SV-220909r958504_rule
+    - V-220909
+    - NIST800-53_IA-8
+    - NIST800-53A_IA-8.1
+    - NIST800-53R4_IA-8
+  community.windows.win_security_policy:
+    section: System Access
+    key: EnableGuestAccount
+    value: 0
+
+- name: "MEDIUM | WN10-SO-000015 | PATCH | Local accounts with blank passwords must be restricted to prevent access from the network."
+  when: wn10_so_000015 | bool
+  tags:
+    - WN10-SO-000015
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220910r991589_rule
+    - V-220910
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+    name: LimitBlankPasswordUse
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000020 | PATCH | The built-in administrator account must be renamed."
+  when:
+    - wn10_so_000020 | bool
+    - not discovered_account_policy_is_domain_scoped | bool
+  tags:
+    - WN10-SO-000020
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220911r991589_rule
+    - V-220911
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-SO-000020 | PATCH | The built-in administrator account must be renamed. | Change Admin Name."
+      when: "'adminchangethis' not in win10stig_admin_username"
+      community.windows.win_security_policy:
+        section: System Access
+        key: NewAdministratorName
+        value: "{{ win10stig_admin_username }}"
+
+    - name: "MEDIUM | WN10-SO-000020 | AUDIT | The built-in administrator account must be renamed. | Warning Msg For Default Variable Not Edited."
+      when: "'adminchangethis' in win10stig_admin_username"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have not changed the default admin username in win10stig_admin_username please"
+          - "make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-SO-000020 | AUDIT | The built-in administrator account must be renamed. | Add Warn Count."
+      when: "'adminchangethis' in win10stig_admin_username"
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-SO-000020'
+
+- name: "MEDIUM | WN10-SO-000025 | PATCH | The built-in guest account must be renamed."
+  when:
+    - wn10_so_000025 | bool
+    - not discovered_account_policy_is_domain_scoped | bool
+  tags:
+    - WN10-SO-000025
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220912r991589_rule
+    - V-220912
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-SO-000025 | PATCH | The built-in guest account must be renamed. | Change Guest Name."
+      when: "'guestchangethis' not in win10stig_guest_username"
+      community.windows.win_security_policy:
+        section: System Access
+        key: NewGuestName
+        value: "{{ win10stig_guest_username }}"
+
+    - name: "MEDIUM | WN10-SO-000025 | AUDIT | The built-in guest account must be renamed. | Warning Msg For Default Variable Not Edited."
+      when: "'guestchangethis' in win10stig_guest_username"
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have not changed the default guest name in win10stig_guest_username please"
+          - "make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-SO-000025 | AUDIT | The built-in guest account must be renamed. | Add Warn Count."
+      when: "'guestchangethis' in win10stig_guest_username"
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-SO-000025'
+
+- name: "MEDIUM | WN10-SO-000030 | PATCH | Audit policy using subcategories must be enabled"
+  when: wn10_so_000030 | bool
+  tags:
+    - WN10-SO-000030
+    - CAT2
+    - CCI-000169
+    - SRG-OS-000062-GPOS-00031
+    - SV-220913r958442_rule
+    - V-220913
+    - NIST800-53_AU-12_a
+    - NIST800-53A_AU-12.1_ii
+    - NIST800-53R4_AU-12_a
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+    name: SCENoApplyLegacyAuditPolicy
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000035 | PATCH | Outgoing secure channel traffic must be encrypted or signed."
+  when: wn10_so_000035 | bool
+  tags:
+    - WN10-SO-000035
+    - CAT2
+    - CCI-002418
+    - CCI-002421
+    - SRG-OS-000423-GPOS-00187
+    - SV-220914r958908_rule
+    - V-220914
+    - NIST800-53R4_SC-8
+    - NIST800-53R4_SC-8_1
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
+    name: RequireSignOrSeal
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000040 | PATCH | Outgoing secure channel traffic must be encrypted when possible."
+  when: wn10_so_000040 | bool
+  tags:
+    - WN10-SO-000040
+    - CAT2
+    - CCI-002418
+    - CCI-002421
+    - SRG-OS-000423-GPOS-00187
+    - SV-220915r958908_rule
+    - V-220915
+    - NIST800-53R4_SC-8
+    - NIST800-53R4_SC-8_1
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
+    name: SealSecureChannel
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000045 | PATCH | Outgoing secure channel traffic must be signed when possible."
+  when: wn10_so_000045 | bool
+  tags:
+    - WN10-SO-000045
+    - CAT2
+    - CCI-002418
+    - CCI-002421
+    - SRG-OS-000423-GPOS-00187
+    - SV-220916r958908_rule
+    - V-220916
+    - NIST800-53R4_SC-8
+    - NIST800-53R4_SC-8_1
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
+    name: SignSecureChannel
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000060 | PATCH | The system must be configured to require a strong session key."
+  when: wn10_so_000060 | bool
+  tags:
+    - WN10-SO-000060
+    - CAT2
+    - CCI-002418
+    - CCI-002421
+    - SRG-OS-000423-GPOS-00187
+    - SV-220919r958908_rule
+    - V-220919
+    - NIST800-53R4_SC-8
+    - NIST800-53R4_SC-8_1
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
+    name: RequireStrongKey
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000070 | PATCH | The machine inactivity limit must be set to 15 minutes, locking the system with the screensaver."
+  when: wn10_so_000070 | bool
+  tags:
+    - WN10-SO-000070
+    - CAT2
+    - CCI-000057
+    - SRG-OS-000029-GPOS-00010
+    - SV-220920r958402_rule
+    - V-220920
+    - NIST800-53_AC-11_a
+    - NIST800-53A_AC-11.1_ii
+    - NIST800-53R4_AC-11_a
+  block:
+    - name: "MEDIUM | WN10-SO-000070 | PATCH | The machine inactivity limit must be set to 15 minutes, locking the system with the screensaver. | Set Registry Variable."
+      when:
+        - win10stig_inactivity_timeout_seconds <= 900
+        - win10stig_inactivity_timeout_seconds > 0
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+        name: InactivityTimeoutSecs
+        data: "{{ win10stig_inactivity_timeout_seconds }}"
+        type: dword
+
+    - name: "MEDIUM | WN10-SO-000070 | AUDIT | The machine inactivity limit must be set to 15 minutes, locking the system with the screensaver. | Warning Check For Variable Standards."
+      when: win10stig_inactivity_timeout_seconds > 900 or win10stig_inactivity_timeout_seconds == 0
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid number of seconds set for win10stig_inactivity_timeout_seconds. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-SO-000070 | AUDIT | The machine inactivity limit must be set to 15 minutes, locking the system with the screensaver. | Warn Count."
+      when: win10stig_inactivity_timeout_seconds > 900 or win10stig_inactivity_timeout_seconds == 0
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-SO-000070'
+
+- name: "MEDIUM | WN10-SO-000075 | PATCH | The required legal notice must be configured to display before console logon."
+  when: wn10_so_000075 | bool
+  tags:
+    - WN10-SO-000075
+    - CAT2
+    - CCI-000048
+    - CCI-000050
+    - CCI-001384
+    - CCI-001385
+    - CCI-001386
+    - CCI-001387
+    - CCI-001388
+    - SRG-OS-000023-GPOS-00006
+    - SV-220921r958390_rule
+    - V-220921
+    - NIST800-53_AC-8_a
+    - NIST800-53_AC-8_b
+    - NIST800-53_AC-8_c
+    - NIST800-53A_AC-8.1_ii
+    - NIST800-53A_AC-8.1_iii
+    - NIST800-53A_AC-8.2_ii
+    - NIST800-53A_AC-8.2_iii
+    - NIST800-53R4_AC-8_a
+    - NIST800-53R4_AC-8_b
+    - NIST800-53R4_AC-8_c_1
+    - NIST800-53R4_AC-8_c_2
+    - NIST800-53R4_AC-8_c_3
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: LegalNoticeText
+    data: "{{ win10stig_legal_notice }}"
+    type: string
+
+- name: "MEDIUM | WN10-SO-000095 | PATCH | The Smart Card removal option must be configured to Force Logoff or Lock Workstation."
+  when: wn10_so_000095 | bool
+  tags:
+    - WN10-SO-000095
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220924r991589_rule
+    - V-220924
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  block:
+    - name: "MEDIUM | WN10-SO-000095 | PATCH | The Smart Card removal option must be configured to Force Logoff or Lock Workstation. | Apply Variable To Registry."
+      when:
+        - win10stig_sc_remove_option >= 1
+        - win10stig_sc_remove_option <= 2
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon
+        name: SCRemoveOption
+        data: "{{ win10stig_sc_remove_option }}"
+        type: string
+
+    - name: "MEDIUM | WN10-SO-000095 | AUDIT | The Smart Card removal option must be configured to Force Logoff or Lock Workstation. | Warning Check For Variable Standards."
+      when: win10stig_sc_remove_option < 1 or win10stig_sc_remove_option > 2
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! You have an invalid setting for win10stig_sc_remove_option. Please read"
+          - "the notes for the variable and make the necessary change to the variable to be in compliance."
+
+    - name: "MEDIUM | WN10-SO-000095 | AUDIT | The Smart Card removal option must be configured to Force Logoff or Lock Workstation. | Warn Count."
+      when: win10stig_sc_remove_option < 1 or win10stig_sc_remove_option > 2
+      ansible.builtin.import_tasks:
+        file: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-SO-000095'
+
+- name: "MEDIUM | WN10-SO-000100 | PATCH | The Windows SMB client must be configured to always perform SMB packet signing."
+  when: wn10_so_000100 | bool
+  tags:
+    - WN10-SO-000100
+    - CAT2
+    - CCI-002418
+    - CCI-002421
+    - SRG-OS-000423-GPOS-00187
+    - SV-220925r958908_rule
+    - V-220925
+    - NIST800-53R4_SC-8
+    - NIST800-53R4_SC-8_1
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters
+    name: RequireSecuritySignature
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000110 | PATCH | Unencrypted passwords must not be sent to third-party SMB Servers."
+  when: wn10_so_000110 | bool
+  tags:
+    - WN10-SO-000110
+    - CAT2
+    - CCI-000197
+    - SRG-OS-000074-GPOS-00042
+    - SV-220926r987796_rule
+    - V-220926
+    - NIST800-53_IA-5_1_c
+    - NIST800-53A_IA-5_1.1_v
+    - NIST800-53R4_IA-5_1_c
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters
+    name: EnablePlainTextPassword
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000120 | PATCH | The Windows SMB server must be configured to always perform SMB packet signing."
+  when: wn10_so_000120 | bool
+  tags:
+    - WN10-SO-000120
+    - CAT2
+    - CCI-002418
+    - CCI-002421
+    - SRG-OS-000423-GPOS-00187
+    - SV-220927r958908_rule
+    - V-220927
+    - NIST800-53R4_SC-8
+    - NIST800-53R4_SC-8_1
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\LanManServer\Parameters
+    name: RequireSecuritySignature
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000160 | PATCH | The system must be configured to prevent anonymous users from having the same rights as the Everyone group."
+  when: wn10_so_000160 | bool
+  tags:
+    - WN10-SO-000160
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220931r991589_rule
+    - V-220931
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+    name: EveryoneIncludesAnonymous
+    data: 0
+    type: dword
+
+# Windows 10 v1507 LTSB version does not include this setting, it is NA for those systems.
+- name: "MEDIUM | WN10-SO-000167 | PATCH | Remote calls to the Security Account Manager (SAM) must be restricted to Administrators."
+  when:
+    - wn10_so_000167 | bool
+    - ansible_facts['distribution_version'] != '10.0.10240.0'
+  tags:
+    - WN10-SO-000167
+    - CAT2
+    - CCI-002235
+    - SRG-OS-000324-GPOS-00125
+    - SV-220933r1081053_rule
+    - V-220933
+    - NIST800-53R4_AC-6_10
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+    name: RestrictRemoteSAM
+    data: O:BAG:BAD:(A;;RC;;;BA)
+    type: string
+
+- name: "MEDIUM | WN10-SO-000180 | PATCH | NTLM must be prevented from falling back to a Null session."
+  when: wn10_so_000180 | bool
+  tags:
+    - WN10-SO-000180
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220934r991589_rule
+    - V-220934
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\LSA\MSV1_0
+    name: allownullsessionfallback
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000185 | PATCH | PKU2U authentication using online identities must be prevented."
+  when: wn10_so_000185 | bool
+  tags:
+    - WN10-SO-000185
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220935r991589_rule
+    - V-220935
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\LSA\pku2u
+    name: AllowOnlineID
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000190 | PATCH | Kerberos encryption types must be configured to prevent the use of DES and RC4 encryption suites."
+  when: wn10_so_000190 | bool
+  tags:
+    - WN10-SO-000190
+    - CAT2
+    - CCI-000803
+    - SRG-OS-000120-GPOS-00061
+    - SV-220936r971535_rule
+    - V-220936
+    - NIST800-53_IA-7
+    - NIST800-53A_IA-7.1
+    - NIST800-53R4_IA-7
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters
+    name: SupportedEncryptionTypes
+    data: 2147483640
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000210 | PATCH | The system must be configured to the required LDAP client signing level."
+  when: wn10_so_000210 | bool
+  tags:
+    - WN10-SO-000210
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220939r991589_rule
+    - V-220939
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\LDAP
+    name: LDAPClientIntegrity
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000215 | PATCH | The system must be configured to meet the minimum session security requirement for NTLM SSP based clients."
+  when: wn10_so_000215 | bool
+  tags:
+    - WN10-SO-000215
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220940r991589_rule
+    - V-220940
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0
+    name: NTLMMinClientSec
+    data: 537395200
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000220 | PATCH | The system must be configured to meet the minimum session security requirement for NTLM SSP based servers."
+  when: wn10_so_000220 | bool
+  tags:
+    - WN10-SO-000220
+    - CAT2
+    - CCI-000366
+    - SRG-OS-000480-GPOS-00227
+    - SV-220941r991589_rule
+    - V-220941
+    - NIST800-53_CM-6_b
+    - NIST800-53A_CM-6.1_iv
+    - NIST800-53R4_CM-6_b
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0
+    name: NTLMMinServerSec
+    data: 537395200
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000230 | PATCH | The system must be configured to use FIPS-compliant algorithms for encryption, hashing, and signing."
+  when:
+    - wn10_so_000230 | bool
+    - not win_skip_for_test
+  tags:
+    - WN10-SO-000230
+    - CAT2
+    - CCI-002450
+    - SRG-OS-000478-GPOS-00223
+    - SV-220942r1137699_rule
+    - V-220942
+    - NIST800-53R4_SC-13
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\FIPSAlgorithmPolicy
+    name: Enabled
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000245 | PATCH | User Account Control approval mode for the built-in Administrator must be enabled."
+  when: wn10_so_000245 | bool
+  tags:
+    - WN10-SO-000245
+    - CAT2
+    - CCI-002038
+    - SRG-OS-000373-GPOS-00157
+    - SV-220944r1051035_rule
+    - V-220944
+    - NIST800-53R4_IA-11
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: FilterAdministratorToken
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000250 | PATCH | User Account Control must, at minimum, prompt administrators for consent on the secure desktop."
+  when: wn10_so_000250 | bool
+  tags:
+    - WN10-SO-000250
+    - CAT2
+    - CCI-001084
+    - SRG-OS-000134-GPOS-00068
+    - SV-220945r958518_rule
+    - V-220945
+    - NIST800-53_SC-3
+    - NIST800-53A_SC-3.1_ii
+    - NIST800-53R4_SC-3
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: ConsentPromptBehaviorAdmin
+    data: 2
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and nonprivileged accounts."
+  when: wn10_so_000251 | bool
+  tags:
+    - WN10-SO-000251
+    - CAT2
+    - CCI-000765
+    - SRG-OS-000105-GPOS-00052
+    - SV-220946r1153410_rule
+    - V-220946
+    - NIST800-53_IA-2_1
+    - NIST800-53A_IA-2_1.1
+    - NIST800-53R4_IA-2_1
+  block:
+    - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and nonprivileged accounts. | Ensure Smart Card Readers Registry Key Exists"
+      when: discovered_domain_joined
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Cryptography\Calais\Readers
+        state: present
+
+    - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and nonprivileged accounts. | Ensure Smart Cards Registry Key Exists"
+      when: discovered_domain_joined
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Cryptography\Calais\SmartCards
+        state: present
+
+    - name: "MEDIUM | WN10-SO-000251 | AUDIT | Windows 10 must use multifactor authentication for local and network access to privileged and nonprivileged accounts. | Check Smart Card Readers Registry Key"
+      when: discovered_domain_joined
+      ansible.windows.win_reg_stat:
+        path: HKLM:\SOFTWARE\Microsoft\Cryptography\Calais\Readers
+      register: discovered_so_000251_smartcard_readers_check
+
+    - name: "MEDIUM | WN10-SO-000251 | AUDIT | Windows 10 must use multifactor authentication for local and network access to privileged and nonprivileged accounts. | Check Smart Cards Registry Key"
+      when: discovered_domain_joined
+      ansible.windows.win_reg_stat:
+        path: HKLM:\SOFTWARE\Microsoft\Cryptography\Calais\SmartCards
+      register: discovered_so_000251_smartcards_check
+
+    - name: "MEDIUM | WN10-SO-000251 | AUDIT | Windows 10 must use multifactor authentication for local and network access to privileged and nonprivileged accounts. | Determine if Registry Keys are Populated"
+      when: discovered_domain_joined
+      ansible.builtin.set_fact:
+        # sub_keys, not values. win_reg_stat returns exists, properties and sub_keys; there is no
+        # values field, and because the register is a dict, .values silently resolves to the Python
+        # dict method instead of raising, so the mistake only surfaces when a filter is applied to
+        # it - "object of type 'method' has no len()". Calais\Readers and Calais\SmartCards carry
+        # one sub-key per reader or card, so sub_keys is what "populated" means for this control.
+        discovered_so_000251_smart_card_compliant: "{{
+          discovered_so_000251_smartcard_readers_check.exists and discovered_so_000251_smartcards_check.exists and
+          (discovered_so_000251_smartcard_readers_check.sub_keys | default([]) | length > 0) and
+          (discovered_so_000251_smartcards_check.sub_keys | default([]) | length > 0) }}"
+
+    - name: "MEDIUM | WN10-SO-000251 | AUDIT | Windows 10 must use multifactor authentication for local and network access to privileged and nonprivileged accounts. | Display Compliance Results (Populated)"
+      when:
+        - discovered_domain_joined
+        - discovered_so_000251_smart_card_compliant
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Compliance Check Passed: Smart Card registry keys are present and populated."
+          - "Please verify the settings meet your company standards for compliance."
+          - "═══════════════════════════════════════════════════════"
+          - "    Smartcard Readers Check Current Registry Values    "
+          - "═══════════════════════════════════════════════════════"
+          - "{{ discovered_so_000251_smartcard_readers_check.sub_keys | default([]) }}"
+          - "═══════════════════════════════════════════════════════"
+          - "          Smartcard Current Registry Values            "
+          - "═══════════════════════════════════════════════════════"
+          - "{{ discovered_so_000251_smartcards_check.sub_keys | default([]) }}"
+
+    - name: "MEDIUM | WN10-SO-000251 | AUDIT | Windows 10 must use multifactor authentication for local and network access to privileged and nonprivileged accounts. | Display Non-Compliance Results (Keys Exist but Are Not Populated)"
+      when:
+        - discovered_domain_joined
+        - discovered_so_000251_smartcard_readers_check.exists or discovered_so_000251_smartcards_check.exists
+        - not discovered_so_000251_smart_card_compliant
+      ansible.builtin.debug:
+        msg:
+          - "Warning!! Smart Card registry keys are present but are NOT populated."
+          - "This is a finding! Ensure these registry keys have valid settings."
+          - "═══════════════════════════════════════════════════════"
+          - "    Smartcard Readers Check Current Registry Values    "
+          - "═══════════════════════════════════════════════════════"
+          - "{{ discovered_so_000251_smartcard_readers_check.sub_keys | default([]) if discovered_so_000251_smartcard_readers_check.sub_keys | default([]) else 'Not Valid (Finding)' }}"
+          - "═══════════════════════════════════════════════════════"
+          - "          Smartcard Current Registry Values            "
+          - "═══════════════════════════════════════════════════════"
+          - "{{ discovered_so_000251_smartcards_check.sub_keys | default([]) if discovered_so_000251_smartcards_check.sub_keys | default([]) else 'Not Valid (Finding)' }}"
+
+    - name: "MEDIUM | WN10-SO-000251 | AUDIT | Windows 10 must use multifactor authentication for local and network access to privileged and nonprivileged accounts. | Warning Message."
+      when: not discovered_domain_joined
+      ansible.builtin.debug:
+        msg:
+          - "Warning!!"
+          - "Check Text: If the system is not a member of a domain, this is Not Applicable."
+          - "Fix Text: For non-domain joined systems, configuring Windows Hello for sign-on"
+          - "options would be suggested based on the organization's needs and capabilities."
+          - "We have decided to add this warning as a precaution based on STIG recommendations."
+
+    - name: "MEDIUM | WN10-SO-000251 | PATCH | Windows 10 must use multifactor authentication for local and network access to privileged and nonprivileged accounts. | Warn Count."
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-SO-000251'
+
+- name: "MEDIUM | WN10-SO-000255 | PATCH | User Account Control must automatically deny elevation requests for standard users."
+  when: wn10_so_000255 | bool
+  tags:
+    - WN10-SO-000255
+    - CAT2
+    - CCI-002038
+    - SRG-OS-000373-GPOS-00157
+    - SV-220947r1051036_rule
+    - V-220947
+    - NIST800-53R4_IA-11
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: ConsentPromptBehaviorUser
+    data: 0
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000260 | PATCH | User Account Control must be configured to detect application installations and prompt for elevation."
+  when: wn10_so_000260 | bool
+  tags:
+    - WN10-SO-000260
+    - CAT2
+    - CCI-001084
+    - SRG-OS-000134-GPOS-00068
+    - SV-220948r958518_rule
+    - V-220948
+    - NIST800-53_SC-3
+    - NIST800-53A_SC-3.1_ii
+    - NIST800-53R4_SC-3
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: EnableInstallerDetection
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000265 | PATCH | User Account Control must only elevate UIAccess applications that are installed in secure locations."
+  when: wn10_so_000265 | bool
+  tags:
+    - WN10-SO-000265
+    - CAT2
+    - CCI-001084
+    - SRG-OS-000134-GPOS-00068
+    - SV-220949r958518_rule
+    - V-220949
+    - NIST800-53_SC-3
+    - NIST800-53A_SC-3.1_ii
+    - NIST800-53R4_SC-3
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: EnableSecureUIAPaths
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000270 | PATCH | User Account Control must run all administrators in Admin Approval Mode, enabling UAC."
+  when: wn10_so_000270 | bool
+  tags:
+    - WN10-SO-000270
+    - CAT2
+    - CCI-002038
+    - SRG-OS-000373-GPOS-00157
+    - SV-220950r1051037_rule
+    - V-220950
+    - NIST800-53R4_IA-11
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: EnableLUA
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000275 | PATCH | User Account Control must virtualize file and registry write failures to per-user locations."
+  when: wn10_so_000275 | bool
+  tags:
+    - WN10-SO-000275
+    - CAT2
+    - CCI-001084
+    - SRG-OS-000134-GPOS-00068
+    - SV-220951r958518_rule
+    - V-220951
+    - NIST800-53_SC-3
+    - NIST800-53A_SC-3.1_ii
+    - NIST800-53R4_SC-3
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: EnableVirtualization
+    data: 1
+    type: dword
+
+- name: "MEDIUM | WN10-SO-000280 | AUDIT | Passwords for enabled local Administrator accounts must be changed at least every 60 days."
+  when: wn10_so_000280 | bool
+  tags:
+    - WN10-SO-000280
+    - CAT2
+    - CCI-000199
+    - CCI-004066
+    - SRG-OS-000076-GPOS-00044
+    - SV-220952r1051038_rule
+    - V-220952
+    - NIST800-53_IA-5_1_d
+    - NIST800-53A_IA-5_1.1_v
+    - NIST800-53R4_IA-5_1_d
+  block:
+    - name: "MEDIUM | WN10-SO-000280 | AUDIT | Passwords for enabled local Administrator accounts must be changed at least every 60 days. | Find the built-in Administrator account (RID 500)"
+      ansible.windows.win_shell: |
+        $admin = Get-WmiObject Win32_UserAccount | Where-Object { $_.SID -match '-500$' }
+        if ($admin) { $admin.Name } else { "Not Found" }
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_so_000280_local_admin_name
+
+    - name: "MEDIUM | WN10-SO-000280 | AUDIT | Passwords for enabled local Administrator accounts must be changed at least every 60 days. | Set Local Administrator Name Fact"
+      ansible.builtin.set_fact:
+        discovered_so_000280_local_admin_username: "{{ discovered_so_000280_local_admin_name.stdout | trim }}"
+
+    - name: "MEDIUM | WN10-SO-000280 | AUDIT | Passwords for enabled local Administrator accounts must be changed at least every 60 days. | Check if Local Administrator Account is Enabled"
+      when: discovered_so_000280_local_admin_username != "Not Found"
+      ansible.windows.win_shell: Get-LocalUser -Name "{{ discovered_so_000280_local_admin_username }}" | Select-Object Name, Enabled, PasswordLastSet | ConvertTo-Json
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_so_000280_local_admin_check
+
+    - name: "MEDIUM | WN10-SO-000280 | AUDIT | Passwords for enabled local Administrator accounts must be changed at least every 60 days. | Local Administrator Check Result"
+      when: discovered_so_000280_local_admin_username != "Not Found"
+      ansible.builtin.set_fact:
+        discovered_so_000280_enabled_local_admin: "{{ (discovered_so_000280_local_admin_check.stdout | from_json) if discovered_so_000280_local_admin_check.stdout | length > 0 else {} }}"
+
+    - name: "MEDIUM | WN10-SO-000280 | AUDIT | Passwords for enabled local Administrator accounts must be changed at least every 60 days. | Display Detected Local Administrator Status"
+      ansible.builtin.debug:
+        msg: "Detected Local Admin Account: {{ discovered_so_000280_local_admin_username }} | Enabled: {{ discovered_so_000280_enabled_local_admin.Enabled | default('Unknown') }}"
+
+    - name: "MEDIUM | WN10-SO-000280 | AUDIT | Passwords for enabled local Administrator accounts must be changed at least every 60 days. | Mark as Not Applicable if the Local Administrator account is missing or disabled"
+      when: discovered_so_000280_local_admin_username == "Not Found" or not discovered_so_000280_enabled_local_admin.Enabled | default(false)
+      ansible.builtin.debug:
+        msg: "Warning!! This control is Not Applicable: No enabled local Administrator account found."
+
+    - name: "MEDIUM | WN10-SO-000280 | AUDIT | Passwords for enabled local Administrator accounts must be changed at least every 60 days. | Check if Administrator password is older than this many days {{ win10stig_pass_age_administrator }}"
+      when: discovered_so_000280_enabled_local_admin.Enabled | default(false)
+      ansible.windows.win_shell: |
+        Get-LocalUser -Name * | Where SID -like S-1-5-21-*-500 |
+        Where-Object {$_.PasswordLastSet -lt ((Get-Date).AddDays(-{{ win10stig_pass_age_administrator }}))} |
+        Select Name,PasswordLastSet
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: discovered_so_000280_password_age_check
+
+    - name: "MEDIUM | WN10-SO-000280 | AUDIT | Passwords for enabled local Administrator accounts must be changed at least every 60 days. | Check if password age exceeds the required limit"
+      when: discovered_so_000280_enabled_local_admin.Enabled | default(false)
+      ansible.builtin.set_fact:
+        discovered_so_000280_password_compliant: "{{ discovered_so_000280_password_age_check.stdout | trim == '' }}"
+
+    - name: "MEDIUM | WN10-SO-000280 | AUDIT | Passwords for enabled local Administrator accounts must be changed at least every 60 days. | Display Password Compliance Status"
+      when: discovered_so_000280_enabled_local_admin.Enabled | default(false)
+      ansible.builtin.debug:
+        msg:
+          - "Password Compliance: {{ discovered_so_000280_password_compliant }}"
+          - "Detected Accounts (if any): {{ discovered_so_000280_password_age_check.stdout_lines }}"
+
+    - name: "MEDIUM | WN10-SO-000280 | AUDIT | Passwords for enabled local Administrator accounts must be changed at least every 60 days. | Check if LAPS is enabled in Group Policy"
+      when: discovered_so_000280_enabled_local_admin.Enabled | default(false)
+      ansible.windows.win_reg_stat:
+        path: HKLM:\SOFTWARE\Policies\Microsoft Services\AdmPwd
+        name: AdmPwdEnabled
+      register: discovered_so_000280_laps_enabled
+
+    - name: "MEDIUM | WN10-SO-000280 | AUDIT | Passwords for enabled local Administrator accounts must be changed at least every 60 days. | Set LAPS Compliance Fact"
+      when: discovered_so_000280_enabled_local_admin.Enabled | default(false)
+      ansible.builtin.set_fact:
+        discovered_so_000280_laps_compliant: "{{ discovered_so_000280_laps_enabled.exists and discovered_so_000280_laps_enabled.value == 1 }}"
+
+    - name: "MEDIUM | WN10-SO-000280 | AUDIT | Passwords for enabled local Administrator accounts must be changed at least every 60 days. | Local Administrator Password Age & LAPS Compliance"
+      when: discovered_so_000280_enabled_local_admin.Enabled | default(false)
+      ansible.builtin.debug:
+        msg:
+          - "{{ 'Warning!! The built-in Administrator password has not been changed in over ' ~ win10stig_pass_age_administrator ~ ' days.' if not discovered_so_000280_password_compliant else 'Password is compliant.' }}"
+          - "{{ 'Detected Accounts: ' ~ discovered_so_000280_password_age_check.stdout_lines | join(', ') if not discovered_so_000280_password_compliant else '' }}"
+          - "{{ 'Warning!! Windows LAPS is NOT enabled! This is a finding.' if not discovered_so_000280_laps_compliant else 'LAPS is enabled and compliant.' }}"
+
+    - name: "MEDIUM | WN10-SO-000280 | PATCH | Passwords for enabled local Administrator accounts must be changed at least every 60 days. | Warn Count."
+      when: >-
+        (discovered_so_000280_local_admin_username == "Not Found" or
+        not discovered_so_000280_enabled_local_admin.Enabled | default(false) or
+        discovered_so_000280_enabled_local_admin.Enabled | default(false))
+      ansible.builtin.import_tasks: warning_facts.yml
+      vars:
+        warn_control_id: 'WN10-SO-000280'

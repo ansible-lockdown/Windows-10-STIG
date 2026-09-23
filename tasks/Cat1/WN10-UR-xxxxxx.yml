@@ -1,0 +1,46 @@
+---
+
+- name: "HIGH | WN10-UR-000015 | PATCH | The Act as part of the operating system user right must not be assigned to any groups or accounts."
+  when: wn10_ur_000015 | bool
+  tags:
+    - WN10-UR-000015
+    - CAT1
+    - CCI-002235
+    - SRG-OS-000324-GPOS-00125
+    - SV-220958r958726_rule
+    - V-220958
+    - NIST800-53R4_AC-6_10
+  ansible.windows.win_user_right:
+    name: SeTcbPrivilege
+    users: []
+    action: set
+
+- name: "HIGH | WN10-UR-000045 | PATCH | The Create a token object user right must not be assigned to any groups or accounts."
+  when: wn10_ur_000045 | bool
+  tags:
+    - WN10-UR-000045
+    - CAT1
+    - CCI-002235
+    - SRG-OS-000324-GPOS-00125
+    - SV-220963r958726_rule
+    - V-220963
+    - NIST800-53R4_AC-6_10
+  ansible.windows.win_user_right:
+    name: SeCreateTokenPrivilege
+    users: []
+    action: set
+
+- name: "HIGH | WN10-UR-000065 | PATCH | The Debug programs user right must only be assigned to the Administrators group."
+  when: wn10_ur_000065 | bool
+  tags:
+    - WN10-UR-000065
+    - CAT1
+    - CCI-002235
+    - SRG-OS-000324-GPOS-00125
+    - SV-220967r958726_rule
+    - V-220967
+    - NIST800-53R4_AC-6_10
+  ansible.windows.win_user_right:
+    name: SeDebugPrivilege
+    users: Administrators
+    action: set
